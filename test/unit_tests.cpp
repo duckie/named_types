@@ -3,9 +3,13 @@
 #include <iostream>
 #include <vector>
 
+
+namespace {
+unsigned constexpr operator "" _h(const char* c,size_t) { return named_tuples::const_hash(c); }
 template <typename Id> using _ = named_tuples::attribute_init_placeholder<Id>;
-template <int Id> using at = named_tuples::attribute_init_int_placeholder<Id>;
+template <unsigned Id> using at = named_tuples::attribute_init_int_placeholder<Id>;
 using named_tuples::make_tuple;
+}
 
 namespace {
   struct name;
@@ -27,6 +31,8 @@ int main() {
   std::cout << test._<taille>() << std::endl;
   std::cout << test._<liste>().size() << std::endl;
 
+  test._<name>() = "Test";
+
   std::cout << test.get<0>() << std::endl;
   std::cout << test.get<1>() << std::endl;
   std::cout << test.get<2>() << std::endl;
@@ -43,5 +49,18 @@ int main() {
   std::cout << test2.at<2>() << std::endl;
   std::cout << test2.at<4>() << std::endl;
   std::cout << test2.at<6>().size() << std::endl;
+
+  auto test3 = make_tuple( 
+      at<"nom"_h>() = std::string("Roger")
+      , at<"age"_h>() = 47
+      , at<"taille"_h>() = 1.92
+      , at<"liste"_h>() = std::vector<int>({1,2,3})
+      );
+
+  std::cout << test3.at<"nom"_h>() << std::endl;
+  std::cout << test3.at<"age"_h>() << std::endl;
+  std::cout << test3.at<"taille"_h>() << std::endl;
+  std::cout << test3.at<"liste"_h>().size() << std::endl;
+
   return 0;
 }

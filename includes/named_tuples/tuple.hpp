@@ -1,5 +1,5 @@
-#ifndef ANONYMOUS_STRUCTURE_STRUCTURE_HEADER
-#define ANONYMOUS_STRUCTURE_STRUCTURE_HEADER
+#ifndef NAMED_TUPLES_TUPLE_HEADER
+#define NAMED_TUPLES_TUPLE_HEADER
 
 #include <type_traits>
 
@@ -47,53 +47,70 @@ struct named_tuple<Index, Attribute, RemainingAttributes...> : public Attribute,
   named_tuple(Attribute const& attr, RemainingAttributes const ... args) : Attribute(attr), named_tuple<Index+1, RemainingAttributes ...> (args ...) {}
 
   template <typename Id> 
+  auto _() const ->
+  typename std::enable_if<std::is_same< attribute_id<Id>, typename Attribute::id_type>::value, typename Attribute::value_type const&>::type 
+  { return Attribute::value_; }
+  
+  template <typename Id> 
+  auto _() const ->
+  typename std::enable_if<!std::is_same< attribute_id<Id>, typename Attribute::id_type>::value, decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
+  { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
+
+  template <typename Id> 
   auto _() ->
   typename std::enable_if<std::is_same< attribute_id<Id>, typename Attribute::id_type>::value, typename Attribute::value_type&>::type 
-  { 
-    return Attribute::value_;
-  }
+  { return Attribute::value_; }
   
   template <typename Id> 
   auto _() ->
   typename std::enable_if<!std::is_same< attribute_id<Id>, typename Attribute::id_type>::value, decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
-  { 
-    return named_tuple<Index+1, RemainingAttributes...>::template _<Id>();
-  }
+  { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
+
+  template <unsigned Id> 
+  auto at() const ->
+  typename std::enable_if<std::is_same< attribute_int_id<Id>, typename Attribute::id_type>::value, typename Attribute::value_type const&>::type 
+  { return Attribute::value_; }
+  
+  template <unsigned Id> 
+  auto at() const ->
+  typename std::enable_if<!std::is_same< attribute_int_id<Id>, typename Attribute::id_type>::value, decltype(named_tuple<Index+1, RemainingAttributes...>().template at<Id>()) >::type 
+  { return named_tuple<Index+1, RemainingAttributes...>::template at<Id>(); }
 
   template <unsigned Id> 
   auto at() ->
   typename std::enable_if<std::is_same< attribute_int_id<Id>, typename Attribute::id_type>::value, typename Attribute::value_type&>::type 
-  { 
-    return Attribute::value_;
-  }
+  { return Attribute::value_; }
   
   template <unsigned Id> 
   auto at() ->
   typename std::enable_if<!std::is_same< attribute_int_id<Id>, typename Attribute::id_type>::value, decltype(named_tuple<Index+1, RemainingAttributes...>().template at<Id>()) >::type 
-  { 
-    return named_tuple<Index+1, RemainingAttributes...>::template at<Id>();
-  }
+  { return named_tuple<Index+1, RemainingAttributes...>::template at<Id>(); }
+
+  template <int GetIndex> 
+  auto get() const ->
+  typename std::enable_if<GetIndex == Index, typename Attribute::value_type const&>::type 
+  { return Attribute::value_; }
+  
+  template <int GetIndex> 
+  auto get() const ->
+  typename std::enable_if<GetIndex != Index, decltype(named_tuple<Index+1, RemainingAttributes...>().template get<GetIndex>()) >::type 
+  { return named_tuple<Index+1, RemainingAttributes...>::template get<GetIndex>(); }
+
   template <int GetIndex> 
   auto get() ->
   typename std::enable_if<GetIndex == Index, typename Attribute::value_type&>::type 
-  { 
-    return Attribute::value_;
-  }
+  { return Attribute::value_; }
   
   template <int GetIndex> 
   auto get() ->
   typename std::enable_if<GetIndex != Index, decltype(named_tuple<Index+1, RemainingAttributes...>().template get<GetIndex>()) >::type 
-  { 
-    return named_tuple<Index+1, RemainingAttributes...>::template get<GetIndex>();
-  }
+  { return named_tuple<Index+1, RemainingAttributes...>::template get<GetIndex>(); }
 };
 
 template <typename ...T> named_tuple<0, T...> make_tuple(T... args) {
   return named_tuple<0, T...>(args...);
 }
 
+}  // namespace name_tuple 
 
-
-}  // namespace anonymous_structure
-
-#endif  // ANONYMOUS_STRUCTURE_STRUCTURE_HEADER
+#endif  // NAMED_TUPLES_TUPLE_HEADER
