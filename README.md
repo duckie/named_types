@@ -42,6 +42,8 @@ int main() {
 }
 ```
 
+###  
+
 ```c++
 #include <named_tuples/tuple.hpp>
 #include <string>
@@ -84,3 +86,18 @@ int main() {
   return 0;
 }
 ```
+
+### Introduction
+
+The aim of a `named_tuple` is to provide compile time access to elements by name, as a classic `struct` would, __and__ compile time access to elements by their index, as a `std::tuple` would.
+
+`named_tuple` has no overhead as long as you enable inlining (most of the time by enabling optimizations). The overhead is still tiny when disabling inlining.
+
+### References
+
+`named_tuple` is not the only project with such goals in mind. You migh consider the following resources:
+
+* Discussions on [StackOverflow](http://stackoverflow.com/questions/13065166/c11-tagged-tuple) and [GoogleGroups](https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/N-kIXNrkTUk)
+* [Inline Object Declaration](https://github.com/matt-42/iod)
+
+If you are looking for similar things but at runtime (dynamic strcutures), head to [this project](https://github.com/duckie/CppNestedContainer) and other resources referenced in it.
