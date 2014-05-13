@@ -62,5 +62,17 @@ int main() {
   std::cout << test3.at<"taille"_h>() << std::endl;
   std::cout << test3.at<"liste"_h>().size() << std::endl;
 
+  decltype(test) test4 = test;
+  std::cout << test._<name>() << std::endl;
+  std::cout << test._<age>() << std::endl;
+  std::cout << test._<taille>() << std::endl;
+  std::cout << test._<liste>().size() << std::endl;
+
+  decltype(test) test5 = std::move(test);
+  std::cout << test._<name>() << std::endl;
+  std::cout << test._<age>() << std::endl;
+  std::cout << test._<taille>() << std::endl;
+  std::cout << test._<liste>().size() << std::endl;
+
   return 0;
 }

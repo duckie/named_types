@@ -27,7 +27,7 @@ int main() {
     << test._<taille>() << "\n"
     << test._<liste>().size() << std::endl;
 
-  test._<nom>() = "Marcel";
+  test._<name>() = "Marcel";
   ++test.get<1>();
   
   std::cout 
