@@ -100,4 +100,4 @@ The aim of a `named_tuple` is to provide compile time access to elements by name
 * Discussions on [StackOverflow](http://stackoverflow.com/questions/13065166/c11-tagged-tuple) and [GoogleGroups](https://groups.google.com/a/isocpp.org/forum/#!topic/std-proposals/N-kIXNrkTUk)
 * [Inline Object Declaration](https://github.com/matt-42/iod)
 
-If you are looking for similar things but at runtime (dynamic strcutures), head to [this project](https://github.com/duckie/CppNestedContainer) and other resources referenced in it.
+If you are looking for similar things but at runtime (dynamic structures), head to [this project](https://github.com/duckie/CppNestedContainer) and other resources referenced in it.
