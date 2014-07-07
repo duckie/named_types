@@ -4,8 +4,8 @@
 #include <vector>
 
 namespace {
-template <typename Id> using _ = named_tuples::attribute_init_placeholder<Id>;
 using named_tuples::make_tuple;
+using named_tuples::attribute_helper::_;
 
 struct name;
 struct age;

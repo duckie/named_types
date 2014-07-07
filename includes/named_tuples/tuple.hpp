@@ -69,60 +69,62 @@ template <typename Id, typename ValueType> struct attribute_holder {
 
 template <int Index, typename ... T> struct named_tuple;
 template <int Index> struct named_tuple<Index> {
-  template <typename Id> typename enable_if<!is_integral<Id>(), void>::type _() {}
-  template <int Id> void at() {}
+  template <typename Id> void _() {}
+  template <int Id> void _() {}
   //template <const_string & Id> void at() {}
   template <int GetIndex> void get() {}
 };
 
+
 template <int Index, typename Attribute, typename ... RemainingAttributes>
 struct named_tuple<Index, Attribute, RemainingAttributes...> : public Attribute, public named_tuple<Index+1, RemainingAttributes ...> 
 {
-
-  //named_tuple();  // Not implemented, declared for use in a decltype
   named_tuple() : Attribute(), named_tuple<Index+1, RemainingAttributes ...> () {}
   named_tuple(Attribute const& attr, RemainingAttributes const ... args) : Attribute(attr), named_tuple<Index+1, RemainingAttributes ...> (args ...) {}
 
+  // Type version
   template <typename Id> 
   inline auto _() const ->
-  typename enable_if<!is_integral<Id>() && is_same< attribute_id<Id>, typename Attribute::id_type>(), typename Attribute::value_type const&>::type 
+  typename enable_if<(is_same< attribute_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type const&>::type 
   { return Attribute::value_; }
   
   template <typename Id> 
   inline auto _() const ->
-  typename enable_if<!is_integral<Id>() && !is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
+  typename enable_if<!is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
   { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
 
   template <typename Id> 
   inline auto _() ->
-  typename enable_if<!is_integral<Id>() && is_same< attribute_id<Id>, typename Attribute::id_type>(), typename Attribute::value_type&>::type 
+  typename enable_if<(is_same< attribute_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type&>::type 
   { return Attribute::value_; }
   
+  // Integral version
   template <typename Id> 
   inline auto _() ->
-  typename enable_if<!is_integral<Id>() && !is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
+  typename enable_if<!is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
   { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
 
   template <unsigned Id> 
-  inline auto at() const ->
+  inline auto _() const ->
   typename enable_if<(is_same< attribute_int_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type const&>::type 
   { return Attribute::value_; }
   
   template <unsigned Id> 
-  inline auto at() const ->
-  typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template at<Id>()) >::type 
-  { return named_tuple<Index+1, RemainingAttributes...>::template at<Id>(); }
+  inline auto _() const ->
+  typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
+  { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
 
   template <unsigned Id> 
-  inline auto at() ->
+  inline auto _() ->
   typename enable_if<(is_same< attribute_int_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type&>::type 
   { return Attribute::value_; }
   
   template <unsigned Id> 
-  inline auto at() ->
-  typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template at<Id>()) >::type 
-  { return named_tuple<Index+1, RemainingAttributes...>::template at<Id>(); }
+  inline auto _() ->
+  typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
+  { return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
 
+  // By index accessors
   template <int GetIndex> 
   inline auto get() const ->
   typename enable_if<GetIndex == Index, typename Attribute::value_type const&>::type 
@@ -147,6 +149,10 @@ struct named_tuple<Index, Attribute, RemainingAttributes...> : public Attribute,
 template <typename ...T> inline named_tuple<0, T...> make_tuple(T... args) {
   return named_tuple<0, T...>(args...);
 }
+namespace attribute_helper {
+template <typename Id> attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
+template <unsigned Id> attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
+}  // namespace attribute_helper
 
 }  // namespace name_tuple 
 
