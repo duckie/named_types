@@ -10,27 +10,27 @@ using named_tuples::make_tuple;
 }
 
 int main() {
-  auto test = make_tuple( 
-      at<"nom"_h>() = std::string("Roger")
-      , at<"age"_h>() = 47
-      , at<"taille"_h>() = 1.92
-      , at<"liste"_h>() = std::vector<int>({1,2,3})
-      );
-
-  std::cout 
-    << test.at<"nom"_h>() << "\n"
-    << test.at<"age"_h>() << "\n"
-    << test.at<"taille"_h>() << "\n"
-    << test.at<"liste"_h>().size() << std::endl;
-
-  test.at<"nom"_h>() = "Marcel";
-  ++test.get<1>();
-  
-  std::cout 
-    << test.get<0>() << "\n"
-    << test.get<1>() << "\n"
-    << test.get<2>() << "\n"
-    << test.get<3>().size() << std::endl;
+  //auto test = make_tuple( 
+      //at<"nom"_h>() = std::string("Roger")
+      //, at<"age"_h>() = 47
+      //, at<"taille"_h>() = 1.92
+      //, at<"liste"_h>() = std::vector<int>({1,2,3})
+      //);
+//
+  //std::cout 
+    //<< test.at<"nom"_h>() << "\n"
+    //<< test.at<"age"_h>() << "\n"
+    //<< test.at<"taille"_h>() << "\n"
+    //<< test.at<"liste"_h>().size() << std::endl;
+//
+  //test.at<"nom"_h>() = "Marcel";
+  //++test.get<1>();
+  //
+  //std::cout 
+    //<< test.get<0>() << "\n"
+    //<< test.get<1>() << "\n"
+    //<< test.get<2>() << "\n"
+    //<< test.get<3>().size() << std::endl;
 
   return 0;
 }
