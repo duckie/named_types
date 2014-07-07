@@ -6,9 +6,7 @@
 #include <stdexcept>
 
 namespace named_tuples {
-
 using std::is_same;
-using std::is_integral;
 using std::enable_if;
 
 unsigned constexpr const_str_size(char const *input) {
@@ -150,8 +148,8 @@ template <typename ...T> inline named_tuple<0, T...> make_tuple(T... args) {
   return named_tuple<0, T...>(args...);
 }
 namespace attribute_helper {
-template <typename Id> attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
-template <unsigned Id> attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
+template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
+template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
 }  // namespace attribute_helper
 
 }  // namespace name_tuple 
