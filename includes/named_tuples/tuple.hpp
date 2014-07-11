@@ -5,6 +5,7 @@
 #include <utility>
 #include <stdexcept>
 #include <tuple>
+#include "type_traits.hpp"
 
 namespace named_tuples {
 using std::is_same;
@@ -17,7 +18,6 @@ unsigned constexpr const_str_size(char const *input) {
 unsigned constexpr const_hash(char const *input) {
   return *input ?  static_cast<unsigned int>(*input) + 33 * const_hash(input + 1) : 5381;
 }
-
 
 class const_string {
   const char * data_;
@@ -33,7 +33,6 @@ class const_string {
   constexpr char const* str() const { return data_; }
   constexpr operator unsigned() const { return const_hash(data_); }
 };
-
 
 template <typename Id> struct attribute_id;
 template <unsigned Id> struct attribute_int_id;
@@ -69,121 +68,79 @@ template <typename Id, typename ValueType> struct attribute_holder {
 template <typename T> struct is_attribute_holder {
   static bool constexpr value = false;
   constexpr is_attribute_holder() {}
-  constexpr operator bool () const { return value; }
+  inline constexpr operator bool () const { return value; }
 };
 
 template <typename Id, typename ValueType> struct is_attribute_holder<attribute_holder<Id, ValueType>> {
   static bool constexpr value = true;
   constexpr is_attribute_holder() {}
-  constexpr operator bool () const { return value; }
+  inline constexpr operator bool () const { return value; }
 };
-
-template <template <typename Arg> class Trait, typename ... Types> struct all_of;
-
-template <template <typename Arg> class Trait, typename HeadType, typename ... RemainingTypes> struct all_of<Trait, HeadType, RemainingTypes...> {
-  static bool constexpr value = Trait<HeadType>::value && all_of<Trait, RemainingTypes...>::value;
-  constexpr all_of () {}
-  constexpr operator bool () const { return value; }
-};
-
-template <template <typename Arg> class Trait> struct all_of<Trait> {
-  static bool constexpr value = true;
-  constexpr all_of () {}
-  constexpr operator bool () const { return value; }
-};
-
-
-//template <int Index, typename ... T> struct named_tuple;
-//template <int Index> struct named_tuple<Index> {
-  //template <typename Id> void _() {}
-  //template <int Id> void _() {}
-  ////template <const_string & Id> void at() {}
-  //template <int GetIndex> void get() {}
-//};
-
 
 template <typename ... Attributes>
 class named_tuple 
 {
+  using IdList = type_list<typename Attributes::id_type ...>;
+  using Tuple = std::tuple<typename Attributes::value_type ...>;
   static_assert(all_of<is_attribute_holder, Attributes...>::value, "All template arguments of a named tuple must be attribute_holder<...>");
-  std::tuple<Attributes ...> values_;
+  Tuple values_;
 
  public:
-  named_tuple() {}
-  named_tuple(Attributes&& ... args) : values_(std::make_tuple(std::forward<Attributes>(args) ...)) {};
+  using tuple_type = Tuple;
 
-  //// Type version
-  //template <typename Id> 
-  //inline auto _() const ->
-  //typename enable_if<(is_same< attribute_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type const&>::type 
-  //{ return Attribute::value_; }
-  //
-  //template <typename Id> 
-  //inline auto _() const ->
-  //typename enable_if<!is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
-//
-  //template <typename Id> 
-  //inline auto _() ->
-  //typename enable_if<(is_same< attribute_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type&>::type 
-  //{ return Attribute::value_; }
-  //
-  //// Integral version
-  //template <typename Id> 
-  //inline auto _() ->
-  //typename enable_if<!is_same< attribute_id<Id>, typename Attribute::id_type>(), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
-//
-  //template <unsigned Id> 
-  //inline auto _() const ->
-  //typename enable_if<(is_same< attribute_int_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type const&>::type 
-  //{ return Attribute::value_; }
-  //
-  //template <unsigned Id> 
-  //inline auto _() const ->
-  //typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
-//
-  //template <unsigned Id> 
-  //inline auto _() ->
-  //typename enable_if<(is_same< attribute_int_id<Id>, typename Attribute::id_type>()), typename Attribute::value_type&>::type 
-  //{ return Attribute::value_; }
-  //
-  //template <unsigned Id> 
-  //inline auto _() ->
-  //typename enable_if<(!is_same< attribute_int_id<Id>, typename Attribute::id_type>()), decltype(named_tuple<Index+1, RemainingAttributes...>().template _<Id>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template _<Id>(); }
-//
-  //// By index accessors
-  //template <int GetIndex> 
-  //inline auto get() const ->
-  //typename enable_if<GetIndex == Index, typename Attribute::value_type const&>::type 
-  //{ return Attribute::value_; }
-  //
-  //template <int GetIndex> 
-  //inline auto get() const ->
-  //typename enable_if<GetIndex != Index, decltype(named_tuple<Index+1, RemainingAttributes...>().template get<GetIndex>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template get<GetIndex>(); }
-//
-  //template <int GetIndex> 
-  //inline auto get() ->
-  //typename enable_if<GetIndex == Index, typename Attribute::value_type&>::type 
-  //{ return Attribute::value_; }
-  //
-  //template <int GetIndex> 
-  //inline auto get() ->
-  //typename enable_if<GetIndex != Index, decltype(named_tuple<Index+1, RemainingAttributes...>().template get<GetIndex>()) >::type 
-  //{ return named_tuple<Index+1, RemainingAttributes...>::template get<GetIndex>(); }
+  named_tuple() {}
+  named_tuple(Attributes&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
+
+  static constexpr std::size_t size = sizeof ... (Attributes);
+
+  tuple_type const& as_tuple() const { return values_; }
+  tuple_type& as_tuple() { return values_; }
+
+  operator tuple_type const& () const { return values_; }
+  operator tuple_type& () { return values_; }
+  
+  // Access by name as a type
+  template <typename Id> 
+  inline auto _() const -> 
+  typename enable_if<(IdList::template contains<attribute_id<Id>>()), decltype(std::get<IdList::template index_of<attribute_id<Id>>()>(values_))>::type 
+  { return std::get<IdList::template index_of<attribute_id<Id>>()>(values_); }
+
+  template <typename Id> 
+  inline auto _() -> 
+  typename enable_if<(IdList::template contains<attribute_id<Id>>()), decltype(std::get<IdList::template index_of<attribute_id<Id>>()>(values_))>::type 
+  { return std::get<IdList::template index_of<attribute_id<Id>>()>(values_); }
+
+  // Access by name as a integral (ex: hash)
+  template <unsigned Id> 
+  inline auto _() const -> 
+  typename enable_if<(IdList::template contains<attribute_int_id<Id>>()), decltype(std::get<IdList::template index_of<attribute_int_id<Id>>()>(values_))>::type 
+  { return std::get<IdList::template index_of<attribute_int_id<Id>>()>(values_); }
+
+  template <unsigned Id> 
+  inline auto _() -> 
+  typename enable_if<(IdList::template contains<attribute_int_id<Id>>()), decltype(std::get<IdList::template index_of<attribute_int_id<Id>>()>(values_))>::type 
+  { return std::get<IdList::template index_of<attribute_int_id<Id>>()>(values_); }
+
+  // Access by index
+  template <unsigned Index> 
+  inline auto get() const -> 
+  typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
+  { return std::get<Index>(values_); }
+
+  template <unsigned Index> 
+  inline auto get() -> 
+  typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
+  { return std::get<Index>(values_); }
 };
 
 template <typename ... T> inline named_tuple<T ...> make_named_tuple(T&& ... args) {
   return named_tuple<T...>(std::forward<T>(args)...);
 }
 
-//namespace attribute_helper {
-//template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
-//template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
-//}  // namespace attribute_helper
+namespace attribute_helper {
+template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
+template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
+}  // namespace attribute_helper
 
 }  // namespace name_tuple 
 
