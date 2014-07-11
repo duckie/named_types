@@ -11,12 +11,12 @@ named\_tuple
 
 namespace {
 unsigned constexpr operator "" _h(const char* c,size_t s) { return named_tuples::const_string(c,s); }
-using named_tuples::make_tuple;
+using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
 }
 
 int main() {
-  auto test = make_tuple( 
+  auto test = make_named_tuple( 
       _<"nom"_h>() = std::string("Roger")
       , _<"age"_h>() = 47
       , _<"taille"_h>() = 1.92
@@ -51,7 +51,7 @@ int main() {
 #include <vector>
 
 namespace {
-using named_tuples::make_tuple;
+using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
 
 struct name;
@@ -61,7 +61,7 @@ struct liste;
 }
 
 int main() {
-  auto test = make_tuple( 
+  auto test = make_named_tuple( 
       _<name>() = std::string("Roger")
       , _<age>() = 47
       , _<taille>() = 1.92

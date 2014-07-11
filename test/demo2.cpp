@@ -4,7 +4,7 @@
 #include <vector>
 
 namespace {
-using named_tuples::make_tuple;
+using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
 
 struct name;
@@ -13,8 +13,8 @@ struct taille;
 struct liste;
 }
 
-int main() {
-  auto test = make_tuple( 
+int main() { 
+  auto test = make_named_tuple( 
       _<name>() = std::string("Roger")
       , _<age>() = 47
       , _<taille>() = 1.92
