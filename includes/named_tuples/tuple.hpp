@@ -75,7 +75,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 {
   using IdList = type_list<Ids ...>;
   using Tuple = std::tuple<Types ...>;
-  //static_assert(all_of<is_attribute_holder, Attributes...>::value, "All template arguments of a named tuple must be attribute_holder<...>");
+  static_assert(sizeof ... (Ids) == sizeof ... (Types), "Template failed to resolve : it must have exactly one Id for each Type.");
   static_assert(!IdList::has_duplicates(), "A named tuple cannot have two parameters with the same identifier.");
   Tuple values_;
 
@@ -84,6 +84,10 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
   named_tuple() {}
   named_tuple(attribute_holder<Ids,Types>&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
+  named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
+  named_tuple(tuple_type && values) : values_(std::forward<tuple_type>(values)) {};
+  named_tuple(named_tuple const& other) : values_(other) {};
+  named_tuple(named_tuple && other) : values_(std::move(other)) {};
 
   static constexpr std::size_t size = sizeof ... (Types);
 

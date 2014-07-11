@@ -12,6 +12,7 @@ namespace {
 //named_tuples::const_string constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
 unsigned constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
 using named_tuples::named_tuple;
+using named_tuples::attr;
 using named_tuples::tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
@@ -84,6 +85,18 @@ int main() {
   std::tie(name_str,age_value) = tuple_cast(std::make_tuple(std::string("Marcel"), 12));
 
   named_tuple<std::string(name), int(age)> test7 = test6;
+  named_tuple<std::string(name), int(age)> test8("Marcel",86);
+
+  test8._<name>() = "Robert";
+
+  named_tuple<std::string(name), int(age)> test9 = std::make_tuple(std::string("Marcel"),86);
+  //std::tuple<std::string, int> test10 = std::make_tuple(std::string("Marcel"),86);
+
+  named_tuple<std::string(attr<"nom"_h>), int(attr<"age"_h>)> test10;
+  test10._<"nom"_h>() = "Lebron";
+  std::cout << test10._<"nom"_h>() << std::endl;
+
+  named_tuple<std::string(attr<"nom"_h>), int(attr<"age"_h>)> test11(std::string("Marcel"),86);
 
 
   return 0;
