@@ -36,6 +36,9 @@ template <typename Head, typename ... Tail> struct type_list<Head, Tail...> fina
 
   template <typename Id> inline static bool constexpr contains() 
   { return (is_same<Id, Head>() ? true : type_list<Tail...>::template contains<Id>()); }
+
+  inline static bool constexpr has_duplicates() 
+  { return type_list<Tail...>::template contains<Head>() || type_list<Tail...>::has_duplicates(); }
   
   template <typename Id, std::size_t CurrentIndex = 0u> 
   inline static auto constexpr index_of() ->
@@ -55,6 +58,9 @@ template <> struct type_list<> final {
   { return 0u; }
   
   template <typename Id> inline static bool constexpr contains() 
+  { return false; }
+
+  inline static bool constexpr has_duplicates() 
   { return false; }
 
   template <typename Id, std::size_t CurrentIndex = 0u> inline static std::size_t constexpr index_of() 

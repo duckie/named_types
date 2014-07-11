@@ -44,21 +44,7 @@ int main() {
   std::cout << test.get<1>() << std::endl;
   std::cout << test.get<2>() << std::endl;
   std::cout << test.get<3>().size() << std::endl;
-//
-  //auto test2 = make_tuple( 
-      //_<0>() = std::string("Roger")
-      //, _<2>() = 47
-      //, _<4>() = 1.92
-      //, _<6>() = std::vector<int>({1,2,3})
-      //);
-//
-  //std::cout << test2._<0>() << std::endl;
-  //std::cout << test2._<2>() << std::endl;
-  //std::cout << test2._<4>() << std::endl;
-  //std::cout << test2._<6>().size() << std::endl;
-//
-  //
-//
+
   auto test3 = make_named_tuple( 
       _<"nom"_h>() = std::string("Roger")
       , _<"age"_h>() = 47

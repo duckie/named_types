@@ -83,6 +83,7 @@ class named_tuple
   using IdList = type_list<typename Attributes::id_type ...>;
   using Tuple = std::tuple<typename Attributes::value_type ...>;
   static_assert(all_of<is_attribute_holder, Attributes...>::value, "All template arguments of a named tuple must be attribute_holder<...>");
+  static_assert(!IdList::has_duplicates(), "A named tuple cannot have two parameters with the same identifier.");
   Tuple values_;
 
  public:
