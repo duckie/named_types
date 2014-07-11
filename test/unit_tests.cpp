@@ -11,6 +11,7 @@ template <unsigned N> unsigned constexpr add() { return N+1; }
 namespace {
 //named_tuples::const_string constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
 unsigned constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
+using named_tuples::tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
 }
@@ -68,6 +69,19 @@ int main() {
   std::cout << test._<age>() << std::endl;
   std::cout << test._<taille>() << std::endl;
   std::cout << test._<liste>().size() << std::endl;
+
+  auto test6 = make_named_tuple(
+      _<name>() = std::string("Roger")
+      , _<age>() = 47
+      );
+
+  std::string name;
+  int age = 0;
+  std::tie(name,age) = tuple_cast(test6);
+  std::cout << name << " " << age << std::endl;
+
+  std::tie(name,age) = tuple_cast(std::make_tuple(std::string("Marcel"), 12));
+
 
   return 0;
 }

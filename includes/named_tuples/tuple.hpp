@@ -82,12 +82,14 @@ class named_tuple
 {
   using IdList = type_list<typename Attributes::id_type ...>;
   using Tuple = std::tuple<typename Attributes::value_type ...>;
+  using TiedTuple = std::tuple<typename Attributes::value_type & ...>;
   static_assert(all_of<is_attribute_holder, Attributes...>::value, "All template arguments of a named tuple must be attribute_holder<...>");
   static_assert(!IdList::has_duplicates(), "A named tuple cannot have two parameters with the same identifier.");
   Tuple values_;
 
  public:
   using tuple_type = Tuple;
+  using tied_tuple_type = TiedTuple;
 
   named_tuple() {}
   named_tuple(Attributes&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
@@ -99,6 +101,12 @@ class named_tuple
 
   operator tuple_type const& () const { return values_; }
   operator tuple_type& () { return values_; }
+  
+  //operator const tied_tuple_type () const { return values_; }
+  //operator tied_tuple_type () { 
+    //tied_tuple_type v = values_;
+    //return v;
+  //}
   
   // Access by name as a type
   template <typename Id> 
@@ -133,6 +141,28 @@ class named_tuple
   typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
   { return std::get<Index>(values_); }
 };
+
+// Tuple cast forwards std::tuple and converts named_tuple
+template <typename ... Types>
+inline auto tuple_cast(std::tuple<Types...> const & tuple) ->
+typename enable_if<!all_of<is_attribute_holder, Types...>::value, std::tuple<Types...>>::type const& 
+{ return tuple; }
+
+template <typename ... Types>
+inline auto tuple_cast(std::tuple<Types...>&& tuple) ->
+typename enable_if<!all_of<is_attribute_holder, Types...>::value, std::tuple<Types...>>::type && 
+{ return std::move(tuple); }
+
+template <typename ... Attributes>
+inline auto tuple_cast(named_tuple<Attributes...> const& tuple) ->
+typename enable_if<all_of<is_attribute_holder, Attributes...>::value, std::tuple<typename Attributes::value_type...>>::type const& 
+{ return tuple; }
+
+template <typename ... Attributes>
+inline auto tuple_cast(named_tuple<Attributes...>&& tuple) ->
+typename enable_if<all_of<is_attribute_holder, Attributes...>::value, std::tuple<typename Attributes::value_type...>>::type && 
+{ return std::move(tuple); }
+
 
 template <typename ... T> inline named_tuple<T ...> make_named_tuple(T&& ... args) {
   return named_tuple<T...>(std::forward<T>(args)...);
