@@ -75,7 +75,8 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   named_tuple() {};
   named_tuple(attribute_holder<Ids,Types>&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
   named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
-  named_tuple(tuple_type && values) : values_(std::forward<tuple_type>(values)) {};
+  named_tuple(tuple_type const& values) : values_(values) {};
+  named_tuple(tuple_type && values) : values_(std::move(values)) {};
   named_tuple(named_tuple const& other) : values_(other) {};
   named_tuple(named_tuple && other) : values_(std::move(other)) {};
 
@@ -144,6 +145,17 @@ template <typename ... Ids, typename ... Types>
 inline auto tuple_cast(named_tuple<Types(Ids)...> && tuple) ->
 std::tuple<Types ...>&& 
 { return std::move(tuple); }
+
+// Access by index
+template <unsigned Index, typename ... Ids, typename ... Types> 
+inline auto get(named_tuple<Types(Ids)...> const& tuple)  -> 
+typename enable_if<(Index < named_tuple<Types(Ids)...>::size), decltype(std::get<Index>(tuple_cast(tuple)))>::type 
+{ return std::get<Index>(tuple_cast(tuple)); }
+
+template <unsigned Index, typename ... Ids, typename ... Types> 
+inline auto get(named_tuple<Types(Ids)...>& tuple)  -> 
+typename enable_if<(Index < named_tuple<Types(Ids)...>::size), decltype(std::get<Index>(tuple_cast(tuple)))>::type 
+{ return std::get<Index>(tuple_cast(tuple)); }
 
 
 // Make tuple
