@@ -26,12 +26,12 @@ template <typename Head, typename ... Tail> struct type_list<Head, Tail...> fina
   
   template <typename Id, std::size_t CurrentIndex = 0u> 
   inline static auto constexpr index_of() ->
-  typename enable_if<(contains<Id>()), std::size_t>::type
+  typename enable_if<(type_list<Head, Tail...>::template contains<Id>()), std::size_t>::type
   { return (is_same<Id, Head>() ? CurrentIndex : type_list<Tail...>::template index_of<Id, CurrentIndex+1>()); }
 
   template <typename Id, std::size_t CurrentIndex = 0u> 
   inline static auto constexpr index_of() ->
-  typename enable_if<!(contains<Id>()), std::size_t>::type
+  typename enable_if<!(type_list::template contains<Id>()), std::size_t>::type
   { return CurrentIndex + type_list::size(); }
 };
 

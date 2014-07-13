@@ -48,18 +48,45 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
  public:
   using tuple_type = Tuple;
 
-  named_tuple() {}
+  static constexpr std::size_t size = sizeof ... (Types);
+
+  // Test member existance at compile time
+  template <typename Id> 
+  static inline constexpr auto has_member() -> 
+  typename enable_if<(IdList::template contains<Id>()), bool>::type 
+  { return true; }
+  
+  template <typename Id> 
+  static inline constexpr auto has_member() -> 
+  typename enable_if<!(IdList::template contains<Id>()), bool>::type 
+  { return false; }
+
+  template <unsigned Id> 
+  static inline constexpr auto has_member() -> 
+  typename enable_if<(IdList::template contains<attr<Id>>()), bool>::type 
+  { return true; }
+
+  template <unsigned Id> 
+  static inline constexpr auto has_member() -> 
+  typename enable_if<!(IdList::template contains<attr<Id>>()), bool>::type 
+  { return false; }
+
+  // Ctors
+  named_tuple() {};
   named_tuple(attribute_holder<Ids,Types>&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
   named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
   named_tuple(tuple_type && values) : values_(std::forward<tuple_type>(values)) {};
   named_tuple(named_tuple const& other) : values_(other) {};
   named_tuple(named_tuple && other) : values_(std::move(other)) {};
 
-  static constexpr std::size_t size = sizeof ... (Types);
+  named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
+  named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
 
+  // Conversion
   tuple_type const& as_tuple() const { return values_; }
   tuple_type& as_tuple() { return values_; }
 
+  // Assignment
   operator tuple_type const& () const { return values_; }
   operator tuple_type& () { return values_; }
   
