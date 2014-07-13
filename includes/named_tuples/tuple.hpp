@@ -42,7 +42,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   using IdList = type_list<Ids ...>;
   using Tuple = std::tuple<Types ...>;
   static_assert(sizeof ... (Ids) == sizeof ... (Types), "Template failed to resolve : it must have exactly one Id for each Type.");
-  static_assert(!IdList::has_duplicates(), "A named tuple cannot have two parameters with the same identifier.");
+  static_assert(!has_duplicates<IdList>(), "A named tuple cannot have two parameters with the same identifier.");
   Tuple values_;
 
  public:
@@ -53,22 +53,22 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   // Test member existance at compile time
   template <typename Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<(IdList::template contains<Id>()), bool>::type 
+  typename enable_if<(contains<IdList,Id>()), bool>::type 
   { return true; }
   
   template <typename Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<!(IdList::template contains<Id>()), bool>::type 
+  typename enable_if<!(contains<IdList, Id>()), bool>::type 
   { return false; }
 
   template <unsigned Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<(IdList::template contains<attr<Id>>()), bool>::type 
+  typename enable_if<(contains<IdList, attr<Id>>()), bool>::type 
   { return true; }
 
   template <unsigned Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<!(IdList::template contains<attr<Id>>()), bool>::type 
+  typename enable_if<!(contains<IdList, attr<Id>>()), bool>::type 
   { return false; }
 
   // Ctors
@@ -93,24 +93,24 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   // Access by name as a type
   template <typename Id> 
   inline auto _() const -> 
-  typename enable_if<(IdList::template contains<Id>()), decltype(std::get<IdList::template index_of<Id>()>(values_))>::type 
-  { return std::get<IdList::template index_of<Id>()>(values_); }
+  typename enable_if<(contains<IdList,Id>()), decltype(std::get<index_of<IdList,Id>::value>(values_))>::type 
+  { return std::get<index_of<IdList,Id>::value>(values_); }
 
   template <typename Id> 
   inline auto _() -> 
-  typename enable_if<(IdList::template contains<Id>()), decltype(std::get<IdList::template index_of<Id>()>(values_))>::type 
-  { return std::get<IdList::template index_of<Id>()>(values_); }
+  typename enable_if<(contains<IdList,Id>()), decltype(std::get<index_of<IdList,Id>::value>(values_))>::type 
+  { return std::get<index_of<IdList,Id>::value>(values_); }
 
   // Access by name as a integral (ex: hash)
   template <unsigned Id> 
   inline auto _() const -> 
-  typename enable_if<(IdList::template contains<attr<Id>>()), decltype(std::get<IdList::template index_of<attr<Id>>()>(values_))>::type 
-  { return std::get<IdList::template index_of<attr<Id>>()>(values_); }
+  typename enable_if<(contains<IdList, attr<Id>>()), decltype(std::get<index_of<IdList,attr<Id>>::value>(values_))>::type 
+  { return std::get<index_of<IdList,attr<Id>>::value>(values_); }
 
   template <unsigned Id> 
   inline auto _() -> 
-  typename enable_if<(IdList::template contains<attr<Id>>()), decltype(std::get<IdList::template index_of<attr<Id>>()>(values_))>::type 
-  { return std::get<IdList::template index_of<attr<Id>>()>(values_); }
+  typename enable_if<(contains<IdList, attr<Id>>()), decltype(std::get<index_of<IdList,attr<Id>>::value>(values_))>::type 
+  { return std::get<index_of<IdList,attr<Id>>::value>(values_); }
 
   // Access by index
   template <unsigned Index> 

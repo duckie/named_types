@@ -98,6 +98,11 @@ int main() {
 
   named_tuple<std::string(attr<"nom"_h>), int(attr<"age"_h>)> test11(std::string("Marcel"),86);
 
+  test11 = std::make_tuple("Allo", 15);
+  std::cout << test11._<"nom"_h>() << std::endl;
+
+  std::cout << test11.has_member<"nom"_h>() << std::endl;
+
 
   return 0;
 }
