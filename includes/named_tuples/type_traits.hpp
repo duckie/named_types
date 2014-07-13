@@ -10,22 +10,6 @@ namespace named_tuples {
 using std::is_same;
 using std::enable_if;
 
-template <typename T> inline bool constexpr always_false() { return false; }
-
-template <template <typename Arg> class Trait, typename ... Types> struct all_of;
-
-template <template <typename Arg> class Trait, typename HeadType, typename ... RemainingTypes> struct all_of<Trait, HeadType, RemainingTypes...> {
-  static bool constexpr value = Trait<HeadType>::value && all_of<Trait, RemainingTypes...>::value;
-  constexpr all_of () {}
-  inline constexpr operator bool () const { return value; }
-};
-
-template <template <typename Arg> class Trait> struct all_of<Trait> {
-  static bool constexpr value = true;
-  constexpr all_of () {}
-  inline constexpr operator bool () const { return value; }
-};
-
 template <typename ... T> struct type_list;
 
 template <typename Head, typename ... Tail> struct type_list<Head, Tail...> final {

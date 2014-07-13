@@ -6,33 +6,11 @@
 #include <stdexcept>
 #include <tuple>
 #include "type_traits.hpp"
+#include "const_string.hpp"
 
 namespace named_tuples {
 using std::is_same;
 using std::enable_if;
-
-unsigned constexpr const_str_size(char const *input) {
-  return *input ?  1u + const_str_size(input + 1) : 0;
-}
-
-unsigned constexpr const_hash(char const *input) {
-  return *input ?  static_cast<unsigned int>(*input) + 33 * const_hash(input + 1) : 5381;
-}
-
-class const_string {
-  const char * data_;
-  std::size_t size_;
- public:
-  template<std::size_t N> constexpr const_string(const char(&data)[N]) : data_(data), size_(N-1) {}
-  constexpr const_string(const char * data) : data_(data), size_(const_str_size(data)) {}
-  constexpr const_string(const char * data, std::size_t size) : data_(data), size_(size) {}
-  constexpr char operator[](std::size_t n) const {
-    return n < size_ ? data_[n] : throw std::out_of_range("");
-  }
-  constexpr std::size_t size() const { return size_; }
-  constexpr char const* str() const { return data_; }
-  constexpr operator unsigned() const { return const_hash(data_); }
-};
 
 template <unsigned Id> struct attr;
 template <typename Id, typename ValueType> struct attribute_holder;
@@ -55,18 +33,6 @@ template <typename Id, typename ValueType> struct attribute_holder {
   attribute_holder(ValueType const& value) : value_(value) {}
   attribute_holder(ValueType&& value) : value_(std::move(value)) {}
   ValueType value_;
-};
-
-template <typename T> struct is_attribute_holder {
-  static bool constexpr value = false;
-  constexpr is_attribute_holder() {}
-  inline constexpr operator bool () const { return value; }
-};
-
-template <typename Id, typename ValueType> struct is_attribute_holder<attribute_holder<Id, ValueType>> {
-  static bool constexpr value = true;
-  constexpr is_attribute_holder() {}
-  inline constexpr operator bool () const { return value; }
 };
 
 template <typename ... Attributes> class named_tuple;
@@ -134,12 +100,12 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 // Tuple cast forwards std::tuple and converts named_tuple
 template <typename ... Types>
 inline auto tuple_cast(std::tuple<Types...> const & tuple) ->
-typename enable_if<!all_of<is_attribute_holder, Types...>::value, std::tuple<Types...>>::type const& 
+std::tuple<Types...> const
 { return tuple; }
 
 template <typename ... Types>
 inline auto tuple_cast(std::tuple<Types...>&& tuple) ->
-typename enable_if<!all_of<is_attribute_holder, Types...>::value, std::tuple<Types...>>::type && 
+std::tuple<Types...>&&
 { return std::move(tuple); }
 
 template <typename ... Ids, typename ... Types>

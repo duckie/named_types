@@ -82,7 +82,7 @@ int main() {
   std::tie(name_str, age_value) = tuple_cast(test6);
   std::cout << name_str << " " << age_value << std::endl;
 
-  std::tie(name_str,age_value) = tuple_cast(std::make_tuple(std::string("Marcel"), 12));
+  std::tie(name_str, std::ignore) = tuple_cast(std::make_tuple(std::string("Marcel"), 12));
 
   named_tuple<std::string(name), int(age)> test7 = test6;
   named_tuple<std::string(name), int(age)> test8("Marcel",86);
