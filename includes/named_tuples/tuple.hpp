@@ -87,6 +87,11 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   tuple_type const& as_tuple() const { return values_; }
   tuple_type& as_tuple() { return values_; }
 
+  template <typename ... OhterIds, typename ... OtherTypes> 
+  explicit named_tuple<OtherTypes(OtherIds)...>() {
+    
+  }
+
   // Assignment
   operator tuple_type const& () const { return values_; }
   operator tuple_type& () { return values_; }
@@ -168,6 +173,10 @@ namespace attribute_helper {
 template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
 template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
 }  // namespace attribute_helper
+
+namespace introspection {
+  //template <typename Id> const_string constexpr attr_name() { return ""; }
+}
 
 }  // namespace name_tuple 
 

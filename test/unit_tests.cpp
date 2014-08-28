@@ -23,7 +23,10 @@ namespace {
   struct age;
   struct taille;
   struct liste;
-  struct func;
+  struct func; 
+
+  unsing named_tuple::const_string;
+  template <> name_attr<name> { 
 } 
 
 int main() {
@@ -75,6 +78,7 @@ int main() {
   auto test6 = make_named_tuple(
       _<name>() = std::string("Roger")
       , _<age>() = 47
+      , _<name>() = 48
       );
 
   std::string name_str;
@@ -104,5 +108,8 @@ int main() {
   std::cout << test11.has_member<"nom"_h>() << std::endl;
 
 
+  //auto test5 = make_named_tuple( 
+      //_<"nom"_h>() = 3
+      //);
   return 0;
 }
