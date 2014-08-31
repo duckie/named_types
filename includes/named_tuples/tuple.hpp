@@ -12,7 +12,9 @@ namespace named_tuples {
 using std::is_same;
 using std::enable_if;
 
-template <unsigned Id> struct attr;
+template <unsigned Id> struct hash;
+template <unsigned long long Id, unsigned long long ... Ids> struct str8;
+template <unsigned long long Id, unsigned long long ... Ids> struct str12;
 template <typename Id, typename ValueType> struct attribute_holder;
 
 template <typename Id> struct attribute_init_placeholder {
@@ -22,8 +24,8 @@ template <typename Id> struct attribute_init_placeholder {
 };
 
 template <unsigned Id> struct attribute_init_int_placeholder {
-  template <typename ValueType> attribute_holder< attr<Id>, ValueType> inline operator=(ValueType const& value) const {
-    return attribute_holder< attr<Id>, ValueType>(value);
+  template <typename ValueType> attribute_holder< hash<Id>, ValueType> inline operator=(ValueType const& value) const {
+    return attribute_holder< hash<Id>, ValueType>(value);
   }
 };
 
@@ -51,6 +53,8 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   static constexpr std::size_t size = sizeof ... (Types);
 
   // Test member existance at compile time
+
+  // Type members
   template <typename Id> 
   static inline constexpr auto has_member() -> 
   typename enable_if<(contains<IdList,Id>()), bool>::type 
@@ -61,14 +65,15 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   typename enable_if<!(contains<IdList, Id>()), bool>::type 
   { return false; }
 
+  // Hash members
   template <unsigned Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<(contains<IdList, attr<Id>>()), bool>::type 
+  typename enable_if<(contains<IdList, hash<Id>>()), bool>::type 
   { return true; }
 
   template <unsigned Id> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<!(contains<IdList, attr<Id>>()), bool>::type 
+  typename enable_if<!(contains<IdList, hash<Id>>()), bool>::type 
   { return false; }
 
   // Ctors
@@ -105,13 +110,13 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   // Access by name as a integral (ex: hash)
   template <unsigned Id> 
   inline auto _() const -> 
-  typename enable_if<(contains<IdList, attr<Id>>()), decltype(std::get<index_of<IdList,attr<Id>>::value>(values_))>::type 
-  { return std::get<index_of<IdList,attr<Id>>::value>(values_); }
+  typename enable_if<(contains<IdList, hash<Id>>()), decltype(std::get<index_of<IdList,hash<Id>>::value>(values_))>::type 
+  { return std::get<index_of<IdList,hash<Id>>::value>(values_); }
 
   template <unsigned Id> 
   inline auto _() -> 
-  typename enable_if<(contains<IdList, attr<Id>>()), decltype(std::get<index_of<IdList,attr<Id>>::value>(values_))>::type 
-  { return std::get<index_of<IdList,attr<Id>>::value>(values_); }
+  typename enable_if<(contains<IdList, hash<Id>>()), decltype(std::get<index_of<IdList,hash<Id>>::value>(values_))>::type 
+  { return std::get<index_of<IdList,hash<Id>>::value>(values_); }
 
   // Access by index
   template <unsigned Index> 
@@ -165,9 +170,16 @@ template <typename ... T> inline named_tuple<typename T::value_type(typename T::
 
 // Helpers for make_tuples
 namespace attribute_helper {
+
 template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
 template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
+
+namespace hash {
+unsigned constexpr generate_id(const char* c, size_t s) { return const_string(c, s); }
+}
+
 }  // namespace attribute_helper
+
 
 }  // namespace name_tuple 
 

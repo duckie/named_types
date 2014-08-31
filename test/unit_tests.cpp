@@ -4,18 +4,25 @@
 #include <vector>
 #include <typeinfo>
 #include <tuple>
+#include <array>
 
 
 template <unsigned N> unsigned constexpr add() { return N+1; }
 
+template <const char *> struct S2 {};
+char okay[] = "hello";
+template <size_t N, std::array<int,N> ar> struct S3 {};
+template <int i[2]> struct S4 {};
+
+
 namespace {
 //named_tuples::const_string constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
-unsigned constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
 using named_tuples::named_tuple;
-using named_tuples::attr;
+using named_tuples::hash;
 using named_tuples::tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
+unsigned constexpr operator "" _h(const char* c, size_t s) { return named_tuples::attribute_helper::hash::generate_id(c, s); }
 }
 
 namespace {
@@ -26,7 +33,22 @@ namespace {
   struct func;
 } 
 
+
+
+using namespace named_tuples;
+
+//template <> struct named_attr<"nom"_h> {
+  //static const_string constexpr id = "nom";
+//};
+
 int main() {
+  S2<okay> s2;
+  int constexpr tab[2] = {1,2};
+  //S3<6, okay> s3;
+  //S3<6, "hello"> s3;
+  //S4<tab> s4;
+  
+
   auto test = make_named_tuple( 
       _<name>() = std::string("Roger")
       , _<age>() = 47
@@ -92,16 +114,20 @@ int main() {
   named_tuple<std::string(name), int(age)> test9 = std::make_tuple(std::string("Marcel"),86);
   //std::tuple<std::string, int> test10 = std::make_tuple(std::string("Marcel"),86);
 
-  named_tuple<std::string(attr<"nom"_h>), int(attr<"age"_h>)> test10;
+  named_tuple<std::string(hash<"nom"_h>), int(hash<"age"_h>)> test10;
   test10._<"nom"_h>() = "Lebron";
   std::cout << test10._<"nom"_h>() << std::endl;
 
-  named_tuple<std::string(attr<"nom"_h>), int(attr<"age"_h>)> test11(std::string("Marcel"),86);
+  named_tuple<std::string(hash<"nom"_h>), int(hash<"age"_h>)> test11(std::string("Marcel"),86);
 
   test11 = std::make_tuple("Allo", 15);
   std::cout << test11._<"nom"_h>() << std::endl;
 
   std::cout << test11.has_member<"nom"_h>() << std::endl;
+
+  auto test12 = make_named_tuple(
+      _<const_string("name")>() = 10
+      );
 
 
   return 0;
