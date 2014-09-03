@@ -151,6 +151,15 @@ inline auto tuple_cast(named_tuple<Types(Ids)...> && tuple) ->
 std::tuple<Types ...>&& 
 { return std::move(tuple); }
 
+
+template <typename ... TargetTypes, typename ... SourceTypes> 
+inline auto operator<< (named_tuple<TargetTypes ...>& target, named_tuple<SourceTypes ...> const& source) ->
+named_tuple<TargetTypes ...>&
+{
+  return named_tuple<TargetTypes...>();
+}
+
+
 // Access by index
 template <unsigned Index, typename ... Ids, typename ... Types> 
 inline auto get(named_tuple<Types(Ids)...> const& tuple)  -> 
