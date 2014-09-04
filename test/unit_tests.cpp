@@ -7,14 +7,6 @@
 #include <array>
 
 
-template <unsigned N> unsigned constexpr add() { return N+1; }
-
-template <const char *> struct S2 {};
-char okay[] = "hello";
-template <size_t N, std::array<int,N> ar> struct S3 {};
-template <int i[2]> struct S4 {};
-
-
 namespace {
 //named_tuples::const_string constexpr operator "" _h(const char* c, size_t s) { return named_tuples::const_string(c, s); }
 using named_tuples::named_tuple;
@@ -37,16 +29,7 @@ namespace {
 
 using namespace named_tuples;
 
-//template <> struct named_attr<"nom"_h> {
-  //static const_string constexpr id = "nom";
-//};
-
 int main() {
-  S2<okay> s2;
-  int constexpr tab[2] = {1,2};
-  //S3<6, okay> s3;
-  //S3<6, "hello"> s3;
-  //S4<tab> s4;
   
 
   auto test = make_named_tuple( 
@@ -128,6 +111,20 @@ int main() {
   auto test12 = make_named_tuple(
       _<const_string("name")>() = 10
       );
+
+  std::cout << "Injection test :\n";
+
+  auto test_i1 = make_named_tuple(_<name>() = std::string("Roger"), _<taille>() = 0u);
+  auto test_i2 = make_named_tuple(_<taille>() = 180);
+
+  std::cout << test_i1._<taille>() << std::endl;
+  test_i1 << test_i2;
+  std::cout << test_i1._<taille>() << std::endl;
+
+  test_i1._<taille>() = 90;
+  std::cout << test_i2._<taille>() << std::endl;
+  test_i2 << test_i1;
+  std::cout << test_i2._<taille>() << std::endl;
 
 
   return 0;

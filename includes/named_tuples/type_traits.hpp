@@ -21,9 +21,20 @@ template <typename ... T> struct contains;
 template <typename Head, typename ... Tail, typename Id> struct contains<type_list<Head, Tail...>, Id> {
   inline constexpr operator bool () const { return (std::is_same<Id, Head>() ? true : contains<type_list<Tail...>, Id>()); } 
 };
+// Empty list never contains anything
 template <typename Id> struct contains<type_list<>, Id> {
   inline constexpr operator bool () const { return false; } 
 };
+
+// Commented for now, for the crime not to be used
+//
+//template <typename ... TypeList, typename IdHead, typename ... IdTail> struct contains<type_list<TypeList ...>, IdHead, IdTail ...> {
+  //inline constexpr operator bool () const { return contains<type_list<TypeList...>, IdHead>() && contains<type_list<TypeList...>, IdTail...>(); } 
+//};
+//// Any lists contains the empty set
+//template <typename ... TypeList> struct contains<type_list<TypeList ...>> {
+  //inline constexpr operator bool () const { return true; } 
+//};
 
 // Does a type_list have duplicates
 template <typename ... T> struct has_duplicates;

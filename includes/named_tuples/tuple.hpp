@@ -128,6 +128,30 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   inline auto get() -> 
   typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
   { return std::get<Index>(values_); }
+
+  // Copy other attributes from another tuple
+  //template <typename ... IdsToCopy, typename ... ForeignTypes, typename ... ForeignIds> 
+  //inline void 
+  //copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const&);
+  
+  template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
+  inline auto copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple) ->
+  typename enable_if<(contains<type_list<ForeignIds...>, IdHead>()), void>::type
+  {
+    this->template _<IdHead>() = other_tuple.template _<IdHead>();
+    //this->template copy_attr_from<IdTail..., ForeignTypes..., ForeignIds...>(other_tuple);
+    this->template copy_attr_from<IdTail...>(other_tuple);
+  }
+
+  template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
+  inline auto copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple) ->
+  typename enable_if<!(contains<type_list<ForeignIds...>, IdHead>()), void>::type
+  //{ this->template copy_attr_from<IdTail..., ForeignTypes..., ForeignIds...>(other_tuple); }
+  { this->template copy_attr_from<IdTail...>(other_tuple); }
+
+  template <typename ... ForeignTypes, typename ... ForeignIds>
+  inline void copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple)
+  {}
 };
 
 // Tuple cast forwards std::tuple and converts named_tuple
@@ -151,12 +175,13 @@ inline auto tuple_cast(named_tuple<Types(Ids)...> && tuple) ->
 std::tuple<Types ...>&& 
 { return std::move(tuple); }
 
-
-template <typename ... TargetTypes, typename ... SourceTypes> 
-inline auto operator<< (named_tuple<TargetTypes ...>& target, named_tuple<SourceTypes ...> const& source) ->
-named_tuple<TargetTypes ...>&
+// Tuple injection
+template <typename ... TargetTypes, typename ... TargetIds, typename ... SourceTypes, typename ... SourceIds> 
+inline auto operator<< (named_tuple<TargetTypes(TargetIds) ...>& target, named_tuple<SourceTypes(SourceIds) ...> const& source) ->
+named_tuple<TargetTypes(TargetIds) ...>&
 {
-  return named_tuple<TargetTypes...>();
+  target.template copy_attr_from<TargetIds...>(source);
+  return target;
 }
 
 
