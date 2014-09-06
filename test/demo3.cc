@@ -21,7 +21,7 @@ int main() {
       , _<age>() = 47
       );
 
-  std::tuple<std::string, int> tuple1 = tuple_cast(test);
+  std::tuple<std::string, int> tuple1 = test;
 
   named_tuple<std::string(name), int(age)> test2 = tuple1;
   named_tuple<std::string(name), int(age)> test3("Marcel", 55);

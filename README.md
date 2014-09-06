@@ -112,14 +112,9 @@ auto test = make_named_tuple(
     , _<age>() = 47
     );
 
-std::tuple<std::string, int> tuple1 = tuple_cast(test);
-
-named_tuple<std::string(name), int(age)> test2 = tuple1;
-named_tuple<std::string(name), int(age)> test3("Marcel", 55);
-
+std::tuple<std::string, int> tuple1(test);
 std::string name_val;
 std::tie(name_val, std::ignore) = tuple_cast(test2);
-
 ```
 
 #### Tuple injection
