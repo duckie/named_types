@@ -82,8 +82,8 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
   named_tuple(tuple_type const& values) : values_(values) {};
   named_tuple(tuple_type && values) : values_(std::move(values)) {};
-  named_tuple(named_tuple const& other) : values_(other) {};
-  named_tuple(named_tuple && other) : values_(std::move(other)) {};
+  //named_tuple(named_tuple const& other) : values_(other) {};
+  named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
   named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }

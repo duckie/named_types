@@ -91,6 +91,36 @@ TEST_F(UnitTests, TupleAccess2) {
   ASSERT_EQ(3, test.get<3>()[2]);
 }
 
+TEST_F(UnitTests, TupleCopy1) {
+  //auto test2 = test;
+//
+  //ASSERT_EQ("Roger", test2._<name>());
+  //ASSERT_EQ(47, test2._<age>());
+  //ASSERT_EQ(1.92, test2._<taille>());
+//
+  //ASSERT_EQ(1, test2._<liste>()[0]);
+  //ASSERT_EQ(2, test2._<liste>()[1]);
+  //ASSERT_EQ(3, test2._<liste>()[2]);
+  //ASSERT_EQ(4, test2._<func>()(2));
+}
+
+TEST_F(UnitTests, TupleMove1) {
+  auto test2 = std::move(test);
+  //auto test3 = std::move(test2);
+
+  ASSERT_EQ("Roger", test2._<name>());
+  ASSERT_EQ(47, test2._<age>());
+  ASSERT_EQ(1.92, test2._<taille>());
+
+  ASSERT_EQ(1, test2._<liste>()[0]);
+  ASSERT_EQ(2, test2._<liste>()[1]);
+  ASSERT_EQ(3, test2._<liste>()[2]);
+  ASSERT_EQ(4, test2._<func>()(2));
+
+  // CHeck that test has been moved
+  ASSERT_EQ(0u, test._<name>().size());
+  ASSERT_EQ(0u, test._<liste>().size());
+}
   //test._<name>() = "Test";
 //
   //std::cout << test.get<0>() << std::endl;
