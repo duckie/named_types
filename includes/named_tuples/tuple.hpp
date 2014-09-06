@@ -130,23 +130,17 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   { return std::get<Index>(values_); }
 
   // Copy other attributes from another tuple
-  //template <typename ... IdsToCopy, typename ... ForeignTypes, typename ... ForeignIds> 
-  //inline void 
-  //copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const&);
-  
   template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
   inline auto copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple) ->
   typename enable_if<(contains<type_list<ForeignIds...>, IdHead>()), void>::type
   {
     this->template _<IdHead>() = other_tuple.template _<IdHead>();
-    //this->template copy_attr_from<IdTail..., ForeignTypes..., ForeignIds...>(other_tuple);
     this->template copy_attr_from<IdTail...>(other_tuple);
   }
 
   template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
   inline auto copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple) ->
   typename enable_if<!(contains<type_list<ForeignIds...>, IdHead>()), void>::type
-  //{ this->template copy_attr_from<IdTail..., ForeignTypes..., ForeignIds...>(other_tuple); }
   { this->template copy_attr_from<IdTail...>(other_tuple); }
 
   template <typename ... ForeignTypes, typename ... ForeignIds>
