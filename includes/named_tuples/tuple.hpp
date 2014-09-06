@@ -82,7 +82,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
   named_tuple(tuple_type const& values) : values_(values) {};
   named_tuple(tuple_type && values) : values_(std::move(values)) {};
-  //named_tuple(named_tuple const& other) : values_(other) {};
+  named_tuple(named_tuple const& other) : values_(other) {};
   named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
@@ -156,18 +156,18 @@ std::tuple<Types...> const
 
 template <typename ... Types>
 inline auto tuple_cast(std::tuple<Types...>&& tuple) ->
-std::tuple<Types...>&&
+std::tuple<Types...>
 { return std::move(tuple); }
 
 template <typename ... Ids, typename ... Types>
 inline auto tuple_cast(named_tuple<Types(Ids)...> const& tuple) ->
 std::tuple<Types ...> const& 
-{ return tuple; }
+{ return tuple.as_tuple(); }
 
 template <typename ... Ids, typename ... Types>
 inline auto tuple_cast(named_tuple<Types(Ids)...> && tuple) ->
-std::tuple<Types ...>&& 
-{ return std::move(tuple); }
+std::tuple<Types ...> 
+{ return std::move(tuple.as_tuple()); }
 
 // Tuple injection
 template <typename ... TargetTypes, typename ... TargetIds, typename ... SourceTypes, typename ... SourceIds> 
