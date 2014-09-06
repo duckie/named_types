@@ -1,7 +1,7 @@
 named\_tuple
 ==================
 
-`named_tuple` is a C++11 named tuple implementation. It interacts well with the standard library.
+`named_tuple` is a C++11 named tuple implementation. It interacts well with the standard library. `named_tuple` is a header-only library.
 
 ```c++
 #include <named_tuples/tuple.hpp>
@@ -137,6 +137,44 @@ int main() {
 The aim of a `named_tuple` is to provide compile time access to elements by name, as a classic `struct` would, __and__ compile time access to elements by their index, as a `std::tuple` would.
 
 `named_tuple` has no overhead as long as you enable inlining (most of the time by enabling optimizations). The overhead is still tiny when disabling inlining.
+
+### Features
+
+A `named_tuple` makes code cleaner since it provides more meaningful access for attributes and let code using them more robust when new ones are inserted.
+
+#### `std::tuple` compliancy
+
+A `named_tuple` is using a `std::tuple` as storage type and unique non-static member, making it as efficient as a `std::tuple` (with inlining enabled) and higly compliant with source code using `std::tuple`. Cast facility and implicit conversion is provided.
+
+#### Tuple injection
+
+The fact that attributes are named make some intersection between different tuples possible. Assignment code is unrolled at compile time, there is no runtime reflection involved, thus no `named_tuple` related exceptions. The following example shows how you can inject the common attributes of a tuple into any other one.
+
+```
+auto test_i1 = make_named_tuple(_<name>() = std::string("Roger"), _<taille>() = 0u, _<age>() = 65);
+auto test_i2 = make_named_tuple(_<taille>() = 180);
+
+test_i1 << test_i2;
+assert(180u == test_i1._<taille>());
+
+test_i1._<taille>() = 90;
+test_i2 << test_i1;
+assert(90u == test_i2._<taille>());
+```
+
+### Build
+
+You dont need to build anything to use it, `named_tuple` is header-only.
+
+#### Build and run tests
+
+Tests can be built and ran with CTest.
+
+```
+cmake ${named_tuple_dir}
+make build-test
+ctest
+```
 
 ### References
 

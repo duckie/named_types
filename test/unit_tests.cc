@@ -195,7 +195,7 @@ TEST_F(UnitTests, HasMember2) {
 }
 
 TEST_F(UnitTests, Injection1) {
-  auto test_i1 = make_named_tuple(_<name>() = std::string("Roger"), _<taille>() = 0u);
+  auto test_i1 = make_named_tuple(_<name>() = std::string("Roger"), _<taille>() = 0u, _<age>() = 65);
   auto test_i2 = make_named_tuple(_<taille>() = 180);
 
   EXPECT_EQ(0u, test_i1._<taille>());
