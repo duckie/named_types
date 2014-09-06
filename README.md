@@ -126,7 +126,7 @@ std::tie(name_val, std::ignore) = tuple_cast(test2);
 
 The fact that attributes are named make some intersection between different tuples possible. Assignment code is unrolled at compile time, there is no runtime reflection involved, thus no `named_tuple` related exceptions. The following example shows how you can inject the common attributes of a tuple into any other one.
 
-```
+```c++
 auto test_i1 = make_named_tuple(
     _<name>() = std::string("Roger")
     , _<taille>() = 0u
