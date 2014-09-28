@@ -213,9 +213,17 @@ TEST_F(UnitTests, Injection1) {
 TEST_F(UnitTests, Str8_str_to_nb1) {
   using namespace named_tuples;
   //unsigned long long constexpr test = 8;
-  unsigned long long constexpr test = str_to_str8_part("marcel");
+  unsigned long long constexpr test = str_to_str8_part("aabbcc");
   std::cout << test << std::endl;
   std::cout << str8_rep<test>().str()  << std::endl;
+  std::cout << str8_rep<test>().size()  << std::endl;
+  std::cout << str8_rep<test>()[1]  << std::endl;
+
+  unsigned long long constexpr p1 = str_to_str8_part("rogerabc");
+  unsigned long long constexpr p2 = str_to_str8_part("marcel");
+  using concat_t = typename concat_str8<p1,p2>::str_type;
+
+  std::cout << concat_t().str() << std::endl;
 }
 
 //#endif  // NAMED_TUPLES_CPP14

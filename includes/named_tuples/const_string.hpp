@@ -1,6 +1,7 @@
 #ifndef NAMED_TUPLES_CONST_STRING_HEADER
 #define NAMED_TUPLES_CONST_STRING_HEADER
 #include <cstddef>
+#include "type_traits.hpp"
 
 namespace named_tuples {
 unsigned constexpr const_str_size(char const *input) {
@@ -27,28 +28,48 @@ class const_string {
 };
 
 //#ifdef NAMED_TUPLES_CPP14
-template <unsigned long long Id, unsigned long long ... Ids> struct str8;
 
-template <unsigned long long Value> class str8_rep {
-  const char data_[9u];
+template <char> struct constexpr_char;
 
-
+template <char ... Chars> class constexpr_string {
+  using char_list = type_list<constexpr_char<Chars>..., constexpr_char<'\0'>>;
+  const char data_[sizeof ... (Chars) + 1u];
+  const size_t size_;
  public:
-  constexpr str8_rep() : data_ {
-    static_cast<char>(0xff & Value),
-    static_cast<char>((0xff00 & Value) >> 8llu),
-    static_cast<char>((0xff0000 & Value) >> 16llu),
-    static_cast<char>((0xff000000 & Value) >> 24llu),
-    static_cast<char>((0xff00000000 & Value) >> 32llu),
-    static_cast<char>((0xff0000000000 & Value) >> 40llu),
-    static_cast<char>((0xff000000000000 & Value) >> 48llu),
-    static_cast<char>((0xff00000000000000 & Value) >> 56llu),
-    '\0'
-  }
-  {}
+  constexpr constexpr_string() : data_ {Chars ..., '\0'}, size_(index_of<char_list, constexpr_char<'\0'>>()) {}
   constexpr char const* str() const { return data_; }
+  constexpr size_t size() const { return size_; }
+  constexpr char operator[] (size_t index) const { return data_[index]; }
 };
 
+template <typename ... Types> struct concat;
+template <char ... Chars1, char ... Chars2> struct concat<const constexpr_string<Chars1...>, const constexpr_string<Chars2...>> {
+  using str_type = constexpr_string<Chars1..., Chars2...>;
+};
+
+template <unsigned long long Value> class str8_rep {
+  const constexpr_string<
+      static_cast<char>(0xff & Value),
+      static_cast<char>((0xff00 & Value) >> 8llu),
+      static_cast<char>((0xff0000 & Value) >> 16llu),
+      static_cast<char>((0xff000000 & Value) >> 24llu),
+      static_cast<char>((0xff00000000 & Value) >> 32llu),
+      static_cast<char>((0xff0000000000 & Value) >> 40llu),
+      static_cast<char>((0xff000000000000 & Value) >> 48llu),
+      static_cast<char>((0xff00000000000000 & Value) >> 56llu)
+  > str_impl_;
+
+ public:
+  using str_type = decltype(str_impl_);
+  constexpr str8_rep() {}
+  constexpr char const* str() const { return str_impl_.str(); }
+  constexpr size_t size() const { return str_impl_.size(); }
+  constexpr char operator[] (size_t index) const { return str_impl_[index]; }
+};
+
+template <unsigned long long Value1, unsigned long long Value2> struct concat_str8 {
+  using str_type = typename concat<typename str8_rep<Value1>::str_type, typename str8_rep<Value2>::str_type>::str_type;
+};
 
 unsigned long long constexpr compute_str8_value(const_string const& str, unsigned long long nb_remain) {
   return nb_remain ? ((static_cast<unsigned long long>(str[nb_remain-1]) << (8llu*(nb_remain-1llu))) + compute_str8_value(str, nb_remain - 1ll)) : 0llu;
@@ -57,6 +78,29 @@ unsigned long long constexpr compute_str8_value(const_string const& str, unsigne
 unsigned long long constexpr str_to_str8_part(const_string const& value) {
   return compute_str8_value(value, static_cast<unsigned long long>(value.size()));
 }
+
+//template <unsigned long long> struct str8_part;
+
+//template <unsigned long long ... Values> class str8_multi_rep {
+  //using value_list = type_list< str8_part<Values> ...>;
+  //const char data_[8u*(sizeof ... (Values))+1u];
+  //size_t size_;
+//
+ //public:
+  //constexpr str8_multi_rep() :
+  //data_ {
+    //char[8u]({str8_rep<Values>()[0] ... })[0]
+    //, '\0'
+  //},
+  //size_(sizeof ... (Values))
+  //{}
+//
+  //
+//
+  //constexpr char const* str() const { return data_; }
+  //constexpr size_t size() const { return size_; }
+  //constexpr char operator[] (size_t index) const { return data_[index]; }
+//};
 
 
 template <unsigned long long Id, unsigned long long ... Ids> struct str12;
