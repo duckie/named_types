@@ -13,8 +13,6 @@ using std::is_same;
 using std::enable_if;
 
 template <unsigned Id> struct hash;
-template <unsigned long long Id, unsigned long long ... Ids> struct str8;
-template <unsigned long long Id, unsigned long long ... Ids> struct str12;
 template <typename Id, typename ValueType> struct attribute_holder;
 
 template <typename Id> struct attribute_init_placeholder {

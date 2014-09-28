@@ -207,3 +207,15 @@ TEST_F(UnitTests, Injection1) {
   EXPECT_EQ(90u, test_i2._<taille>());
 }
 
+
+//#ifdef NAMED_TUPLES_CPP14
+
+TEST_F(UnitTests, Str8_str_to_nb1) {
+  using namespace named_tuples;
+  //unsigned long long constexpr test = 8;
+  unsigned long long constexpr test = str_to_str8_part("marcel");
+  std::cout << test << std::endl;
+  std::cout << str8_rep<test>().str()  << std::endl;
+}
+
+//#endif  // NAMED_TUPLES_CPP14

@@ -26,6 +26,43 @@ class const_string {
   constexpr operator unsigned() const { return const_hash(data_); }
 };
 
+//#ifdef NAMED_TUPLES_CPP14
+template <unsigned long long Id, unsigned long long ... Ids> struct str8;
+
+template <unsigned long long Value> class str8_rep {
+  const char data_[9u];
+
+
+ public:
+  constexpr str8_rep() : data_ {
+    static_cast<char>(0xff & Value),
+    static_cast<char>((0xff00 & Value) >> 8llu),
+    static_cast<char>((0xff0000 & Value) >> 16llu),
+    static_cast<char>((0xff000000 & Value) >> 24llu),
+    static_cast<char>((0xff00000000 & Value) >> 32llu),
+    static_cast<char>((0xff0000000000 & Value) >> 40llu),
+    static_cast<char>((0xff000000000000 & Value) >> 48llu),
+    static_cast<char>((0xff00000000000000 & Value) >> 56llu),
+    '\0'
+  }
+  {}
+  constexpr char const* str() const { return data_; }
+};
+
+
+unsigned long long constexpr compute_str8_value(const_string const& str, unsigned long long nb_remain) {
+  return nb_remain ? ((static_cast<unsigned long long>(str[nb_remain-1]) << (8llu*(nb_remain-1llu))) + compute_str8_value(str, nb_remain - 1ll)) : 0llu;
+}
+
+unsigned long long constexpr str_to_str8_part(const_string const& value) {
+  return compute_str8_value(value, static_cast<unsigned long long>(value.size()));
+}
+
+
+template <unsigned long long Id, unsigned long long ... Ids> struct str12;
+
+//#endif  // NAMED_TUPLES_CPP14
+
 }  // namespace named_tuples
 
 #endif  // NAMED_TUPLES_CONST_STRING_HEADER
