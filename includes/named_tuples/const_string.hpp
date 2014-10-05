@@ -7,12 +7,12 @@ namespace named_tuples {
 
 using str_id_type = unsigned long long;
 
-unsigned constexpr const_str_size(char const *input) {
+size_t constexpr const_str_size(char const *input) {
   return *input ?  1u + const_str_size(input + 1) : 0;
 }
 
-unsigned constexpr const_hash(char const *input) {
-  return *input ?  static_cast<unsigned int>(*input) + 33 * const_hash(input + 1) : 5381;
+str_id_type constexpr const_hash(char const *input) {
+  return *input ?  static_cast<str_id_type>(*input) + 33 * const_hash(input + 1) : 5381;
 }
 
 class const_string {
@@ -27,7 +27,7 @@ class const_string {
   }
   constexpr std::size_t size() const { return size_; }
   constexpr char const* str() const { return data_; }
-  constexpr operator unsigned() const { return const_hash(data_); }
+  constexpr operator str_id_type() const { return const_hash(data_); }
 };
 
 //#ifdef NAMED_TUPLES_CPP14
@@ -37,7 +37,6 @@ template <char Value> struct constexpr_char {
 };
 
 template <char ... Chars> class constexpr_string {
-  //using char_list = type_list<Chars ..., '\0'>;
   using char_list = type_list<constexpr_char<Chars> ..., constexpr_char<'\0'>>;
   const char data_[sizeof ... (Chars) + 1u];
   const size_t size_;
@@ -80,42 +79,24 @@ template <char ... T> struct strip_null<const constexpr_string<T ...>> {
   using type = typename strip_null_impl<const constexpr_string<>, T ...>::type;
 };
 
-
+// Traits for concatenating strings
 template <typename ... Strings> struct concat_impl;
-
 template <typename Head, typename ... Tail> struct concat_impl<Head, Tail...> {
   using type = typename concat_impl<Head, typename concat_impl<Tail...>::type>::type;
 };
-
 template <> struct concat_impl<> {
   using type = constexpr_string<>;
 };
-
 template <char ... Chars1, char ... Chars2> struct concat_impl<const constexpr_string<Chars1...>, const constexpr_string<Chars2...>> {
   using type = const constexpr_string<Chars1..., Chars2...>;
 };
 template <char ... Chars1, char ... Chars2> struct concat_impl<constexpr_string<Chars1...>, constexpr_string<Chars2...>> {
   using type = constexpr_string<Chars1..., Chars2...>;
 };
-
 template <typename ... Strings> struct concat {
   using type = typename concat_impl<typename strip_null<Strings>::type...>::type;
 };
 
-//template <typename ... Strings> struct concat {
-  //using str_type = typename concat_impl<Strings ...>::str_type;
-//};
-
-//template <char ... Chars> struct concat<const constexpr_string<Chars...>> {
-  //using str_type = const constexpr_string<Chars...>;
-//}; 
-
-//template <char ... Chars> struct concat<constexpr_string<Chars...>> {
-  //using str_type = constexpr_string<Chars...>;
-//}; 
-//template <> struct concat<> {
-  //using str_type = const constexpr_string<>;
-//};
 
 template <unsigned long long Value> class str8_rep {
   const constexpr_string<
