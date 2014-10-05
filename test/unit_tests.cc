@@ -11,7 +11,7 @@
 namespace {
 using named_tuples::get;
 using named_tuples::named_tuple;
-using named_tuples::hash;
+using named_tuples::id_value;
 using named_tuples::tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
@@ -42,11 +42,11 @@ class UnitTests : public ::testing::Test {
     test = {"Roger", 47, 1.92, {1,2,3}, [](int a) { return a*a; } };
 
   named_tuple<
-    std::string(hash<"name"_h>)
-    , int(hash<"age"_h>)
-    , double(hash<"taille"_h>)
-    , std::vector<int>(hash<"liste"_h>)
-    , std::function<int(int)>(hash<"func"_h>)
+    std::string(id_value<"name"_h>)
+    , int(id_value<"age"_h>)
+    , double(id_value<"taille"_h>)
+    , std::vector<int>(id_value<"liste"_h>)
+    , std::function<int(int)>(id_value<"func"_h>)
     >
     test2 = {"Roger", 47, 1.92, {1,2,3}, [](int a) { return a*a; } };
 };
