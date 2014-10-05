@@ -42,7 +42,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   using IdList = type_list<Ids ...>;
   using Tuple = std::tuple<Types ...>;
   static_assert(sizeof ... (Ids) == sizeof ... (Types), "Template failed to resolve : it must have exactly one Id for each Type.");
-  static_assert(!has_duplicates<IdList>(), "A named tuple cannot have two parameters with the same identifier.");
+  static_assert(!has_duplicates<IdList>::type::value, "A named tuple cannot have two parameters with the same identifier.");
   Tuple values_;
 
  public:
@@ -97,24 +97,24 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   // Access by name as a type
   template <typename Id> 
   inline auto _() const -> 
-  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::value>(values_))>::type 
-  { return std::get<index_of<IdList,Id>::value>(values_); }
+  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
   template <typename Id> 
   inline auto _() -> 
-  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::value>(values_))>::type 
-  { return std::get<index_of<IdList,Id>::value>(values_); }
+  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
   // Access by name as a integral (ex: id_value)
   template <unsigned Id> 
   inline auto _() const -> 
-  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id>>::value>(values_); }
+  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,id_value<Id>>::type::value>(values_); }
 
   template <unsigned Id> 
   inline auto _() -> 
-  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id>>::value>(values_); }
+  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,id_value<Id>>::type::value>(values_); }
 
   // Access by index
   template <unsigned Index> 

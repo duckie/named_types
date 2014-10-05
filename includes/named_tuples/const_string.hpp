@@ -5,7 +5,6 @@
 
 namespace named_tuples {
 
-using str_id_type = unsigned long long;
 using llu = unsigned long long;
 
 size_t constexpr const_str_size(char const *input) {
@@ -40,7 +39,7 @@ template <char ... Chars> class constexpr_string {
   const char data_[sizeof ... (Chars) + 1u];
   const size_t size_;
  public:
-  constexpr constexpr_string() : data_ {Chars..., '\0'}, size_(index_of<char_list, constexpr_char<'\0'>>()) {}
+  constexpr constexpr_string() : data_ {Chars..., '\0'}, size_(index_of<char_list, constexpr_char<'\0'>>::type::value) {}
   constexpr char const* str() const { return data_; }
   constexpr size_t size() const { return size_; }
   constexpr char operator[] (size_t index) const { return data_[index]; }

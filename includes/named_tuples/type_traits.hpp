@@ -8,12 +8,15 @@
 
 namespace named_tuples {
 
+// Those templates are used to spare symbols and code. By using only them to addresse numeric
+// and boolean values, the templates classes computing value do not need to instantiate specific
+// methods and static values to do so
 template<std::size_t value> using const_size = std::integral_constant<std::size_t, value>;
 
 template<bool Value> struct const_bool {
   static constexpr bool value = Value;
-  constexpr operator bool() const noexcept { return value; }
-  constexpr bool operator ()() const noexcept { return value; }
+  inline constexpr operator bool() const noexcept { return Value; }
+  inline constexpr bool operator ()() const noexcept { return Value; }
 };
 
 // Just forward declared, does not need to be instantiated for it is just used for traits
@@ -50,25 +53,22 @@ template <typename Id> struct contains<type_list<>, Id> {
 // Does a type_list have duplicates
 template <typename ... T> struct has_duplicates;
 template <typename Head, typename ... Tail> struct has_duplicates<type_list<Head, Tail...>> {
-  inline constexpr operator bool () const { return (contains<type_list<Tail...>, Head>::type::value || has_duplicates<type_list<Tail...>>()); } 
+  using type = const_bool<(contains<type_list<Tail...>, Head>::type::value || has_duplicates<type_list<Tail...>>::type::value)>;
 };
 template <> struct has_duplicates<type_list<>> {
-  inline constexpr operator bool () const { return false; } 
+  using type = const_bool<false>;
 };
 
 // Index of a type in a list
 template <typename ... T> struct index_of;
 template <typename ... Head, typename Current, typename ... Tail, typename Id> struct index_of<type_list<Head ...>, type_list<Current, Tail...>, Id> {
-  static constexpr std::size_t value = (std::is_same<Id, Current>() ? sizeof ... (Head) : index_of<type_list<Head..., Current>, type_list<Tail...>, Id>()); 
-  inline constexpr operator std::size_t () const { return value; } 
+  using type = const_size<(std::is_same<Id, Current>() ? sizeof ... (Head) : index_of<type_list<Head..., Current>, type_list<Tail...>, Id>::type::value)>;
 };
 template <typename ... Types, typename Id> struct index_of<type_list<Types...>, type_list<>, Id> {
-  static constexpr std::size_t value =  sizeof ... (Types);
-  inline constexpr operator std::size_t () const { return value; }
+  using type = const_size<sizeof ... (Types)>;
 };
 template <typename Id> struct index_of<type_list<>, Id> {
-  static constexpr std::size_t value = 0;
-  inline constexpr operator std::size_t () const { return value; }
+  using type = const_size<0>;
 };
 template <typename ... Types, typename Id> struct index_of<type_list<Types ...>, Id> : index_of<type_list<>, type_list<Types...>, Id> {
   static_assert(contains<type_list<Types...>, Id>::type::value, "The type_list must contain the required type Id to compute the index.");
