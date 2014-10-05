@@ -6,13 +6,14 @@
 namespace named_tuples {
 
 using str_id_type = unsigned long long;
+using llu = unsigned long long;
 
 size_t constexpr const_str_size(char const *input) {
   return *input ?  1u + const_str_size(input + 1) : 0;
 }
 
-str_id_type constexpr const_hash(char const *input) {
-  return *input ?  static_cast<str_id_type>(*input) + 33 * const_hash(input + 1) : 5381;
+llu constexpr const_hash(char const *input) {
+  return *input ?  static_cast<llu>(*input) + 33 * const_hash(input + 1) : 5381;
 }
 
 class const_string {
@@ -27,10 +28,8 @@ class const_string {
   }
   constexpr std::size_t size() const { return size_; }
   constexpr char const* str() const { return data_; }
-  constexpr operator str_id_type() const { return const_hash(data_); }
+  constexpr operator llu() const { return const_hash(data_); }
 };
-
-//#ifdef NAMED_TUPLES_CPP14
 
 template <char Value> struct constexpr_char {
   static constexpr char value = Value;
@@ -98,7 +97,7 @@ template <typename ... Strings> struct concat {
 };
 
 
-template <unsigned long long Value> class str8_rep {
+template <llu Value> class str8_rep {
   const constexpr_string<
       static_cast<char>(0xff & Value),
       static_cast<char>((0xff00 & Value) >> 8llu),
@@ -118,21 +117,19 @@ template <unsigned long long Value> class str8_rep {
   constexpr char operator[] (size_t index) const { return str_impl_[index]; }
 };
 
-template <unsigned long long ... Values> struct concat_str8 {
+template <llu ... Values> struct concat_str8 {
   using str_type = typename concat<typename str8_rep<Values>::str_type ...>::type;
 };
 
-unsigned long long constexpr compute_str8_value(const_string const& str, unsigned long long nb_remain) {
-  return nb_remain ? ((static_cast<unsigned long long>(str[nb_remain-1]) << (8llu*(nb_remain-1llu))) + compute_str8_value(str, nb_remain - 1ll)) : 0llu;
+llu constexpr compute_str8_value(const_string const& str, llu nb_remain) {
+  return nb_remain ? ((static_cast<llu>(str[nb_remain-1]) << (8llu*(nb_remain-1llu))) + compute_str8_value(str, nb_remain - 1ll)) : 0llu;
 }
 
-unsigned long long constexpr str_to_str8_part(const_string const& value) {
-  return compute_str8_value(value, static_cast<unsigned long long>(value.size()));
+llu constexpr str_to_str8_part(const_string const& value) {
+  return compute_str8_value(value, static_cast<llu>(value.size()));
 }
 
-template <unsigned long long Id, unsigned long long ... Ids> struct str12;
-
-//#endif  // NAMED_TUPLES_CPP14
+template <llu Id, llu ... Ids> struct str12;
 
 }  // namespace named_tuples
 
