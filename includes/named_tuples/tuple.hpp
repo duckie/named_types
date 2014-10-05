@@ -21,9 +21,9 @@ template <typename Id> struct attribute_init_placeholder {
   }
 };
 
-template <unsigned Id> struct attribute_init_int_placeholder {
-  template <typename ValueType> attribute_holder< id_value<Id>, ValueType> inline operator=(ValueType const& value) const {
-    return attribute_holder< id_value<Id>, ValueType>(value);
+template <llu Id, llu ... Ids> struct attribute_init_int_placeholder {
+  template <typename ValueType> attribute_holder< id_value<Id,Ids...>, ValueType> inline operator=(ValueType const& value) const {
+    return attribute_holder< id_value<Id,Ids...>, ValueType>(value);
   }
 };
 
@@ -64,14 +64,14 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   { return false; }
 
   // Id value members
-  template <unsigned Id> 
+  template <llu Id, llu ... VIds> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<(contains<IdList, id_value<Id>>::type::value), bool>::type 
+  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), bool>::type 
   { return true; }
 
-  template <unsigned Id> 
+  template <llu Id, llu ... VIds> 
   static inline constexpr auto has_member() -> 
-  typename enable_if<!(contains<IdList, id_value<Id>>::type::value), bool>::type 
+  typename enable_if<!(contains<IdList, id_value<Id,VIds...>>::type::value), bool>::type 
   { return false; }
 
   // Ctors
@@ -106,15 +106,15 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
   // Access by name as a integral (ex: id_value)
-  template <unsigned Id> 
+  template <llu Id, llu ... VIds> 
   inline auto _() const -> 
-  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::type::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id>>::type::value>(values_); }
+  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), decltype(std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
 
-  template <unsigned Id> 
+  template <llu Id, llu ... VIds> 
   inline auto _() -> 
-  typename enable_if<(contains<IdList, id_value<Id>>::type::value), decltype(std::get<index_of<IdList,id_value<Id>>::type::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id>>::type::value>(values_); }
+  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), decltype(std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_))>::type 
+  { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
 
   // Access by index
   template <unsigned Index> 
