@@ -221,7 +221,7 @@ TEST_F(UnitTests, Str8_str_to_nb1) {
 
   unsigned long long constexpr p1 = str_to_str8_part("roger");
   unsigned long long constexpr p2 = str_to_str8_part("marcel");
-  using concat_t = typename concat_str8<p1,p2>::str_type;
+  using concat_t = typename concat_str8<p1,p2,p1>::str_type;
 
   std::cout << concat_t().str() << std::endl;
 }

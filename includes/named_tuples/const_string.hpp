@@ -36,12 +36,13 @@ template <char Value> struct constexpr_char {
   static constexpr char value = Value;
 };
 
-template <typename ... Chars> class constexpr_string {
-  using char_list = type_list<Chars ..., constexpr_char<'\0'>>;
+template <char ... Chars> class constexpr_string {
+  //using char_list = type_list<Chars ..., '\0'>;
+  using char_list = type_list<constexpr_char<Chars> ..., constexpr_char<'\0'>>;
   const char data_[sizeof ... (Chars) + 1u];
   const size_t size_;
  public:
-  constexpr constexpr_string() : data_ {Chars::value ..., '\0'}, size_(index_of<char_list, constexpr_char<'\0'>>()) {}
+  constexpr constexpr_string() : data_ {Chars..., '\0'}, size_(index_of<char_list, constexpr_char<'\0'>>()) {}
   constexpr char const* str() const { return data_; }
   constexpr size_t size() const { return size_; }
   constexpr char operator[] (size_t index) const { return data_[index]; }
@@ -49,38 +50,83 @@ template <typename ... Chars> class constexpr_string {
 
 
 // Trait to cut out null chars at the end
-template <typename ... T> struct strip_null_impl;
-template <typename ... Head, typename Current, typename ... Tail> struct strip_null_impl<constexpr_string<Head ...>, Current, Tail ...>  {
+template <typename String, char ... Chars> struct strip_null_impl;
+// Non-const version
+template <char ... Head, char Current, char ... Tail> struct strip_null_impl<constexpr_string<Head ...>, Current, Tail ...>  {
   using type = typename std::conditional<
-    std::is_same<Current, constexpr_char<'\0'>>::value
+    Current == '\0'
     , typename strip_null_impl<constexpr_string<Head ...>, Tail ...>::type
     , typename strip_null_impl<constexpr_string<Head ..., Current>, Tail ...>::type>::type;
 };
-template <typename ... T> struct strip_null_impl<constexpr_string<T ...>> {
+template <char ... T> struct strip_null_impl<constexpr_string<T ...>> {
   using type = constexpr_string<T ...>;
 };
 
-template <typename ... T> struct strip_null;
-template <typename ... T> struct strip_null<constexpr_string<T ...>> {
+template <typename String> struct strip_null;
+template <char ... T> struct strip_null<constexpr_string<T ...>> {
   using type = typename strip_null_impl<constexpr_string<>, T ...>::type;
 };
-
-
-template <typename ... Types> struct concat;
-template <typename ... Chars1, typename ... Chars2> struct concat<const constexpr_string<Chars1...>, const constexpr_string<Chars2...>> {
-  using str_type = typename strip_null<constexpr_string<Chars1..., Chars2...>>::type;
+// Const version
+template <char ... Head, char Current, char ... Tail> struct strip_null_impl<const constexpr_string<Head ...>, Current, Tail ...>  {
+  using type = typename std::conditional<
+    Current == '\0'
+    , typename strip_null_impl<const constexpr_string<Head ...>, Tail ...>::type
+    , typename strip_null_impl<const constexpr_string<Head ..., Current>, Tail ...>::type>::type;
 };
+template <char ... T> struct strip_null_impl<const constexpr_string<T ...>> {
+  using type = const constexpr_string<T ...>;
+};
+template <char ... T> struct strip_null<const constexpr_string<T ...>> {
+  using type = typename strip_null_impl<const constexpr_string<>, T ...>::type;
+};
+
+
+template <typename ... Strings> struct concat_impl;
+
+template <typename Head, typename ... Tail> struct concat_impl<Head, Tail...> {
+  using type = typename concat_impl<Head, typename concat_impl<Tail...>::type>::type;
+};
+
+template <> struct concat_impl<> {
+  using type = constexpr_string<>;
+};
+
+template <char ... Chars1, char ... Chars2> struct concat_impl<const constexpr_string<Chars1...>, const constexpr_string<Chars2...>> {
+  using type = const constexpr_string<Chars1..., Chars2...>;
+};
+template <char ... Chars1, char ... Chars2> struct concat_impl<constexpr_string<Chars1...>, constexpr_string<Chars2...>> {
+  using type = constexpr_string<Chars1..., Chars2...>;
+};
+
+template <typename ... Strings> struct concat {
+  using type = typename concat_impl<typename strip_null<Strings>::type...>::type;
+};
+
+//template <typename ... Strings> struct concat {
+  //using str_type = typename concat_impl<Strings ...>::str_type;
+//};
+
+//template <char ... Chars> struct concat<const constexpr_string<Chars...>> {
+  //using str_type = const constexpr_string<Chars...>;
+//}; 
+
+//template <char ... Chars> struct concat<constexpr_string<Chars...>> {
+  //using str_type = constexpr_string<Chars...>;
+//}; 
+//template <> struct concat<> {
+  //using str_type = const constexpr_string<>;
+//};
 
 template <unsigned long long Value> class str8_rep {
   const constexpr_string<
-      constexpr_char<static_cast<char>(0xff & Value)>,
-      constexpr_char<static_cast<char>((0xff00 & Value) >> 8llu)>,
-      constexpr_char<static_cast<char>((0xff0000 & Value) >> 16llu)>,
-      constexpr_char<static_cast<char>((0xff000000 & Value) >> 24llu)>,
-      constexpr_char<static_cast<char>((0xff00000000 & Value) >> 32llu)>,
-      constexpr_char<static_cast<char>((0xff0000000000 & Value) >> 40llu)>,
-      constexpr_char<static_cast<char>((0xff000000000000 & Value) >> 48llu)>,
-      constexpr_char<static_cast<char>((0xff00000000000000 & Value) >> 56llu)>
+      static_cast<char>(0xff & Value),
+      static_cast<char>((0xff00 & Value) >> 8llu),
+      static_cast<char>((0xff0000 & Value) >> 16llu),
+      static_cast<char>((0xff000000 & Value) >> 24llu),
+      static_cast<char>((0xff00000000 & Value) >> 32llu),
+      static_cast<char>((0xff0000000000 & Value) >> 40llu),
+      static_cast<char>((0xff000000000000 & Value) >> 48llu),
+      static_cast<char>((0xff00000000000000 & Value) >> 56llu)
   > str_impl_;
 
  public:
@@ -91,8 +137,8 @@ template <unsigned long long Value> class str8_rep {
   constexpr char operator[] (size_t index) const { return str_impl_[index]; }
 };
 
-template <unsigned long long Value1, unsigned long long Value2> struct concat_str8 {
-  using str_type = typename concat<typename str8_rep<Value1>::str_type, typename str8_rep<Value2>::str_type>::str_type;
+template <unsigned long long ... Values> struct concat_str8 {
+  using str_type = typename concat<typename str8_rep<Values>::str_type ...>::type;
 };
 
 unsigned long long constexpr compute_str8_value(const_string const& str, unsigned long long nb_remain) {
