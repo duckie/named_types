@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <named_tuples/tuple.hpp>
+#include <named_tuples/constexpr_string.hpp>
+#include <named_tuples/introspection.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -15,7 +17,8 @@ using named_tuples::id_value;
 using named_tuples::tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
-unsigned constexpr operator "" _h(const char* c, size_t s) { return named_tuples::attribute_helper::hash::generate_id(c, s); }
+unsigned long long constexpr operator "" _h(const char* c, size_t s) { return named_tuples::attribute_helper::hash::generate_id(c, s); }
+unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
 }
 
 namespace {
@@ -207,23 +210,32 @@ TEST_F(UnitTests, Injection1) {
   EXPECT_EQ(90u, test_i2._<taille>());
 }
 
-
-//#ifdef NAMED_TUPLES_CPP14
-
 TEST_F(UnitTests, Str8_str_to_nb1) {
   using namespace named_tuples;
   //unsigned long long constexpr test = 8;
   unsigned long long constexpr test = str_to_str8_part("aabbcc");
-  std::cout << test << std::endl;
-  std::cout << str8_rep<test>().str()  << std::endl;
-  std::cout << str8_rep<test>().size()  << std::endl;
-  std::cout << str8_rep<test>()[1]  << std::endl;
+  //std::cout << test << std::endl;
+  //std::cout << str8_rep<test>().str()  << std::endl;
+  //std::cout << str8_rep<test>().size()  << std::endl;
+  //std::cout << str8_rep<test>()[1]  << std::endl;
 
   unsigned long long constexpr p1 = str_to_str8_part("roger");
   unsigned long long constexpr p2 = str_to_str8_part("marcel");
   using concat_t = typename concat_str8<p1,p2,p1>::str_type;
 
-  std::cout << concat_t().str() << std::endl;
+  //std::cout << concat_t().str() << std::endl;
+  EXPECT_EQ(std::string("rogermarcelroger"), concat_t().str());
+  EXPECT_EQ(16U, concat_t().size());
 }
 
-//#endif  // NAMED_TUPLES_CPP14
+TEST_F(UnitTests, Str8_tupl1) {
+  using namespace named_tuples;
+  auto test = make_named_tuple(
+      _<"name"_s>() = std::string("Roger")
+      , _<"lastname"_s>() = std::string("Lefouard")
+      , _<"nb"_s, "Subscri"_s, "ptions"_s>() = 45u
+      );
+
+  using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
+  std::cout << test._<subscriptions>() << std::endl;
+}

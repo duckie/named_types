@@ -198,7 +198,7 @@ template <typename ... T> inline named_tuple<typename T::value_type(typename T::
 namespace attribute_helper {
 
 template <typename Id> inline attribute_init_placeholder<Id> _() { return attribute_init_placeholder<Id>(); }
-template <unsigned Id> inline attribute_init_int_placeholder<Id> _() { return attribute_init_int_placeholder<Id>(); }
+template <llu Id, llu ... Ids> inline attribute_init_int_placeholder<Id,Ids...> _() { return attribute_init_int_placeholder<Id,Ids...>(); }
 
 namespace hash {
 unsigned constexpr generate_id(const char* c, size_t s) { return const_string(c, s); }
