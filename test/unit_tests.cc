@@ -221,7 +221,7 @@ TEST_F(UnitTests, Str8_str_to_nb1) {
 
   unsigned long long constexpr p1 = str_to_str8_part("roger");
   unsigned long long constexpr p2 = str_to_str8_part("marcel");
-  using concat_t = typename concat_str8<p1,p2,p1>::str_type;
+  using concat_t = typename concat_str8<p1,p2,p1>::type;
 
   //std::cout << concat_t().str() << std::endl;
   EXPECT_EQ(std::string("rogermarcelroger"), concat_t().str());
@@ -233,9 +233,22 @@ TEST_F(UnitTests, Str8_tupl1) {
   auto test = make_named_tuple(
       _<"name"_s>() = std::string("Roger")
       , _<"lastname"_s>() = std::string("Lefouard")
-      , _<"nb"_s, "Subscri"_s, "ptions"_s>() = 45u
+      , _<"nb"_s, "Subscri"_s, "ptions"_s>() = 45lu
       );
 
   using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
   std::cout << test._<subscriptions>() << std::endl;
+
+  using rt = runtime_tuple_str8<decltype(test)>;
+  for(std::string const& attr : rt::attributes) {
+    std::cout << attr << std::endl;
+  }
+
+  rt rt_test(test);
+  std::string rt_str_value = "lastname";
+  std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
+  std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
+  std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
+  std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
+  std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
 }

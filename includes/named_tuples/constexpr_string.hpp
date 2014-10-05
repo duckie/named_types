@@ -59,7 +59,7 @@ template <typename Head, typename ... Tail> struct concat_impl<Head, Tail...> {
   using type = typename concat_impl<Head, typename concat_impl<Tail...>::type>::type;
 };
 template <> struct concat_impl<> {
-  using type = constexpr_string<>;
+  using type = const constexpr_string<>;
 };
 template <char ... Chars1, char ... Chars2> struct concat_impl<const constexpr_string<Chars1...>, const constexpr_string<Chars2...>> {
   using type = const constexpr_string<Chars1..., Chars2...>;
@@ -93,7 +93,7 @@ template <llu Value> class str8_rep {
 };
 
 template <llu ... Values> struct concat_str8 {
-  using str_type = typename concat<typename str8_rep<Values>::str_type ...>::type;
+  using type = typename concat<typename str8_rep<Values>::str_type ...>::type;
 };
 
 llu constexpr compute_str8_value(const_string const& str, llu nb_remain) {

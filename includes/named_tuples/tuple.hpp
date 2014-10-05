@@ -12,7 +12,7 @@ namespace named_tuples {
 using std::is_same;
 using std::enable_if;
 
-template <llu Id, llu ... Ids> struct id_value;
+template <llu ... Ids> struct id_value;
 template <typename Id, typename ValueType> struct attribute_holder;
 
 template <typename Id> struct attribute_init_placeholder {

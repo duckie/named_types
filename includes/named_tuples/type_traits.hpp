@@ -8,16 +8,14 @@
 
 namespace named_tuples {
 
-// Those templates are used to spare symbols and code. By using only them to addresse numeric
+// The two following templates are used to spare symbols and code. By using only them to addresse numeric
 // and boolean values, the templates classes computing value do not need to instantiate specific
-// methods and static values to do so
-template<std::size_t value> using const_size = std::integral_constant<std::size_t, value>;
+// methods and static values to do so. This is especially useful considering those are
+// recursive template algorithms
 
-template<bool Value> struct const_bool {
-  static constexpr bool value = Value;
-  inline constexpr operator bool() const noexcept { return Value; }
-  inline constexpr bool operator ()() const noexcept { return Value; }
-};
+template<std::size_t value> using const_size = std::integral_constant<std::size_t, value>;
+template<bool value> using const_bool = std::integral_constant<bool, value>;
+
 
 // Just forward declared, does not need to be instantiated for it is just used for traits
 template <typename ... T> struct type_list;
