@@ -7,23 +7,34 @@
 // thus the dedicated header
 
 namespace named_tuples {
+
+template<std::size_t value> using const_size = std::integral_constant<std::size_t, value>;
+
+template<bool Value> struct const_bool {
+  static constexpr bool value = Value;
+  constexpr operator bool() const noexcept { return value; }
+  constexpr bool operator ()() const noexcept { return value; }
+};
+
 // Just forward declared, does not need to be instantiated for it is just used for traits
 template <typename ... T> struct type_list;
 
 // Size of a type list
 template <typename ... T> struct size_of;
 template <typename ... Types> struct size_of<type_list<Types...>> {
-  inline constexpr operator std::size_t () const { return sizeof ... (Types); } 
+  using type = const_size<sizeof ... (Types)>;
 };
 
 // Does a type list contains a given type
 template <typename ... T> struct contains;
 template <typename Head, typename ... Tail, typename Id> struct contains<type_list<Head, Tail...>, Id> {
-  inline constexpr operator bool () const { return (std::is_same<Id, Head>() ? true : contains<type_list<Tail...>, Id>()); } 
+  //inline constexpr operator bool () const { return (std::is_same<Id, Head>() ? true : contains<type_list<Tail...>, Id>()); } 
+  using type = const_bool<(std::is_same<Id, Head>() ? true : contains<type_list<Tail...>, Id>::type::value)>;
 };
 // Empty list never contains anything
 template <typename Id> struct contains<type_list<>, Id> {
-  inline constexpr operator bool () const { return false; } 
+  //inline constexpr operator bool () const { return false; } 
+  using type = const_bool<false>;
 };
 
 // Commented for now, for the crime not to be used
@@ -39,7 +50,7 @@ template <typename Id> struct contains<type_list<>, Id> {
 // Does a type_list have duplicates
 template <typename ... T> struct has_duplicates;
 template <typename Head, typename ... Tail> struct has_duplicates<type_list<Head, Tail...>> {
-  inline constexpr operator bool () const { return (contains<type_list<Tail...>, Head>() || has_duplicates<type_list<Tail...>>()); } 
+  inline constexpr operator bool () const { return (contains<type_list<Tail...>, Head>::type::value || has_duplicates<type_list<Tail...>>()); } 
 };
 template <> struct has_duplicates<type_list<>> {
   inline constexpr operator bool () const { return false; } 
@@ -60,7 +71,7 @@ template <typename Id> struct index_of<type_list<>, Id> {
   inline constexpr operator std::size_t () const { return value; }
 };
 template <typename ... Types, typename Id> struct index_of<type_list<Types ...>, Id> : index_of<type_list<>, type_list<Types...>, Id> {
-  static_assert(contains<type_list<Types...>, Id>(), "The type_list must contain the required type Id to compute the index.");
+  static_assert(contains<type_list<Types...>, Id>::type::value, "The type_list must contain the required type Id to compute the index.");
 };
 
 }  // namespace named_tuples

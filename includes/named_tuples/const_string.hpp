@@ -126,7 +126,7 @@ llu constexpr compute_str8_value(const_string const& str, llu nb_remain) {
 }
 
 llu constexpr str_to_str8_part(const_string const& value) {
-  return compute_str8_value(value, static_cast<llu>(value.size()));
+  return value.size() < 9u ? compute_str8_value(value, static_cast<llu>(value.size())) : throw std::out_of_range("A str8 part must contains 8 chars at most");
 }
 
 template <llu Id, llu ... Ids> struct str12;
