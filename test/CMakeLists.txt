@@ -1,3 +1,4 @@
+Find_Package(Threads REQUIRED)
 Find_Package(GTest REQUIRED)
 
 include_directories(
@@ -37,7 +38,7 @@ function(add_nt_test name)
   else()
     add_executable(${name} ${name}.cc)
   endif()
-  target_link_libraries(${name} ${GTEST_LIBRARIES})
+  target_link_libraries(${name} ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
   add_dependencies(build-test ${name})
   add_test(${name} ${name})  
 endfunction()

@@ -229,26 +229,52 @@ TEST_F(UnitTests, Str8_str_to_nb1) {
 }
 
 TEST_F(UnitTests, Str8_tupl1) {
+  //unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+
+  // ...
+
   using namespace named_tuples;
+
+  // Long names must be split into 8-char long chunks at most
+  using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
+
   auto test = make_named_tuple(
       _<"name"_s>() = std::string("Roger")
       , _<"lastname"_s>() = std::string("Lefouard")
-      , _<"nb"_s, "Subscri"_s, "ptions"_s>() = 45lu
+      , _<"longname"_s, "inlined"_s>() = std::string("Hello world")  // Long name can be inlined
+      , _<subscriptions>() = 45lu
       );
 
-  using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
-  std::cout << test._<subscriptions>() << std::endl;
+  runtime_tuple_str8<decltype(test)> runtime_test(test);
 
-  using rt = runtime_tuple_str8<decltype(test)>;
-  for(std::string const& attr : rt::attributes) {
+  // List attributes
+  for(std::string const& attr : decltype(runtime_test)::attributes) {
     std::cout << attr << std::endl;
   }
 
-  rt rt_test(test);
-  std::string rt_str_value = "lastname";
-  std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
-  std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
-  std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
-  std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
-  std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
+  // Access by name
+  runtime_test.get<std::string>("lastname") = "Lefouardet";  // Would throw if not possible
+  unsigned* nbSubs = runtime_test.get_ptr<unsigned>("nbSubscriptions"); // Would return nullptr if not possible
+
+  // Access by index
+  std::string& hello = runtime_test.get<std::string>(3u);
+
+
+  //std::cout << test._<subscriptions>() << std::endl;
+//
+  //using rt = runtime_tuple_str8<decltype(test)>;
+  //for(std::string const& attr : rt::attributes) {
+    //std::cout << attr << std::endl;
+  //}
+//
+  //rt rt_test(test);
+  //std::string rt_str_value = "lastname";
+  //std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
+  //std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
+  //std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
+  //std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
+  //std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
+//
+  //rt_test.get<std::string>("lastname") = "Lefouardet";
+  //std::cout << rt_test.get<std::string>("lastname") << std::endl;
 }
