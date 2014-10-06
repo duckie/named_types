@@ -75,28 +75,28 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   { return false; }
 
   // Ctors
-  named_tuple() {};
-  named_tuple(attribute_holder<Ids,Types>&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
-  named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
-  named_tuple(tuple_type const& values) : values_(values) {};
-  named_tuple(tuple_type && values) : values_(std::move(values)) {};
-  named_tuple(named_tuple const& other) : values_(other) {};
-  named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
+  constexpr named_tuple() {};
+  constexpr named_tuple(attribute_holder<Ids,Types>&& ... args) : values_(std::make_tuple(std::move(args.value_) ...)) {};
+  constexpr named_tuple(Types&& ... values) : values_(std::forward<Types>(values)...) {};
+  constexpr named_tuple(tuple_type const& values) : values_(values) {};
+  constexpr named_tuple(tuple_type && values) : values_(std::move(values)) {};
+  constexpr named_tuple(named_tuple const& other) : values_(other) {};
+  constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
   named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
 
   // Conversion
-  tuple_type const& as_tuple() const { return values_; }
+  constexpr tuple_type const& as_tuple() const { return values_; }
   tuple_type& as_tuple() { return values_; }
 
   // Assignment
-  operator tuple_type const& () const { return values_; }
+  constexpr operator tuple_type const& () const { return values_; }
   operator tuple_type& () { return values_; }
   
   // Access by name as a type
   template <typename Id> 
-  inline auto _() const -> 
+  inline constexpr auto _() const -> 
   typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::type::value>(values_))>::type 
   { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
@@ -107,7 +107,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
   // Access by name as a integral (ex: id_value)
   template <llu Id, llu ... VIds> 
-  inline auto _() const -> 
+  inline constexpr auto _() const -> 
   typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), decltype(std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_))>::type 
   { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
 
@@ -118,7 +118,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
   // Access by index
   template <unsigned Index> 
-  inline auto get() const -> 
+  inline constexpr auto get() const -> 
   typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
   { return std::get<Index>(values_); }
 
@@ -148,7 +148,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
 // Tuple cast forwards std::tuple and converts named_tuple
 template <typename ... Types>
-inline auto tuple_cast(std::tuple<Types...> const & tuple) ->
+inline constexpr auto tuple_cast(std::tuple<Types...> const & tuple) ->
 std::tuple<Types...> const
 { return tuple; }
 
@@ -158,7 +158,7 @@ std::tuple<Types...>
 { return std::move(tuple); }
 
 template <typename ... Ids, typename ... Types>
-inline auto tuple_cast(named_tuple<Types(Ids)...> const& tuple) ->
+inline constexpr auto tuple_cast(named_tuple<Types(Ids)...> const& tuple) ->
 std::tuple<Types ...> const& 
 { return tuple.as_tuple(); }
 
@@ -179,7 +179,7 @@ named_tuple<TargetTypes(TargetIds) ...>&
 
 // Access by index
 template <unsigned Index, typename ... Ids, typename ... Types> 
-inline auto get(named_tuple<Types(Ids)...> const& tuple)  -> 
+inline constexpr auto get(named_tuple<Types(Ids)...> const& tuple)  -> 
 typename enable_if<(Index < named_tuple<Types(Ids)...>::size), decltype(std::get<Index>(tuple_cast(tuple)))>::type 
 { return std::get<Index>(tuple_cast(tuple)); }
 
@@ -205,7 +205,6 @@ unsigned constexpr generate_id(const char* c, size_t s) { return const_string(c,
 }
 
 }  // namespace attribute_helper
-
 
 }  // namespace name_tuple 
 
