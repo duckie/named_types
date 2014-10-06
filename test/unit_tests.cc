@@ -2,6 +2,7 @@
 #include <named_tuples/tuple.hpp>
 #include <named_tuples/constexpr_string.hpp>
 #include <named_tuples/introspection.hpp>
+#include <named_tuples/visitor.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -253,11 +254,11 @@ TEST_F(UnitTests, Str8_tupl1) {
   }
 
   // Access by name
-  runtime_test.get<std::string>("lastname") = "Lefouardet";  // Would throw if not possible
-  unsigned* nbSubs = runtime_test.get_ptr<unsigned>("nbSubscriptions"); // Would return nullptr if not possible
+  //runtime_test.get<std::string>("lastname") = "Lefouardet";  // Would throw if not possible
+  //unsigned* nbSubs = runtime_test.get_ptr<unsigned>("nbSubscriptions"); // Would return nullptr if not possible
 
   // Access by index
-  std::string& hello = runtime_test.get<std::string>(3u);
+  //std::string& hello = runtime_test.get<std::string>(3u);
 
 
   //std::cout << test._<subscriptions>() << std::endl;
@@ -277,4 +278,37 @@ TEST_F(UnitTests, Str8_tupl1) {
 //
   //rt_test.get<std::string>("lastname") = "Lefouardet";
   //std::cout << rt_test.get<std::string>("lastname") << std::endl;
+}
+
+namespace {
+
+struct JsonSerializer {
+  std::ostringstream output;
+
+  template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
+  template <typename Tuple, typename Attr1, typename Attr2> void between(Tuple&,Attr1&,Attr2&) { output << ","; }
+  template <typename Tuple, typename Attr> void end(Tuple&,Attr&) { output << "}"; }
+  template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
+    output << "\"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
+  }
+
+  std::string value() { return output.str(); }
+};
+
+
+}
+
+TEST_F(UnitTests, Visiting_test1) {
+  using namespace named_tuples;
+
+  auto test = make_named_tuple(
+      _<"name"_s>() = std::string("Roger")
+      , _<"lastname"_s>() = std::string("Lefouard")
+      , _<"ageof"_s, "theguy"_s>() = 45
+      , _<"size"_s>() = 1.92f
+      );
+
+  JsonSerializer serializer;
+  tuple_visit<JsonSerializer, decltype(test)>::visit(test, serializer);
+  std::cout << serializer.value() << std::endl;
 }

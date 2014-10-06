@@ -5,8 +5,6 @@
 
 namespace named_tuples {
 
-using llu = unsigned long long;
-
 size_t constexpr const_str_size(char const *input) {
   return *input ?  1u + const_str_size(input + 1) : 0;
 }

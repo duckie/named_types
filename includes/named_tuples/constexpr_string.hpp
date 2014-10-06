@@ -104,6 +104,14 @@ llu constexpr str_to_str8_part(const_string const& value) {
   return value.size() < 9u ? compute_str8_value(value, static_cast<llu>(value.size())) : throw std::out_of_range("A str8 part must contains 8 chars at most");
 }
 
+// Extract const name from str8 attributes
+template<typename T> struct str8_name;
+template<llu ... Ids> struct str8_name<id_value<Ids...>> {
+  static const typename concat_str8<Ids...>::type value;
+};
+
+template<llu ... Ids> const typename concat_str8<Ids...>::type str8_name<id_value<Ids...>>::value;
+
 template <llu Id, llu ... Ids> struct str12;
 
 }  // namespace named_tuples

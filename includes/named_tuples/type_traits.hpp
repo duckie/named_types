@@ -8,6 +8,10 @@
 
 namespace named_tuples {
 
+// TODO: put into types.hpp header
+using llu = unsigned long long;
+template <llu ... Ids> struct id_value;
+
 // The two following templates are used to spare symbols and code. By using only them to addresse numeric
 // and boolean values, the templates classes computing value do not need to instantiate specific
 // methods and static values to do so. This is especially useful considering those are
@@ -71,6 +75,22 @@ template <typename Id> struct index_of<type_list<>, Id> {
 template <typename ... Types, typename Id> struct index_of<type_list<Types ...>, Id> : index_of<type_list<>, type_list<Types...>, Id> {
   static_assert(contains<type_list<Types...>, Id>::type::value, "The type_list must contain the required type Id to compute the index.");
 };
+
+// Extract a type from an index
+template <size_t Index, typename ... T> struct type_at;
+template <size_t Index, typename ... Head, typename Current, typename ... Tail> struct type_at<Index, type_list<Head...>, type_list<Current, Tail...>> {
+  using type = typename std::conditional<(Index == sizeof ... (Head)), Current, typename type_at<Index, type_list<Head..., Current>, type_list<Tail...>>::type>::type;
+};
+template <size_t Index, typename ... Types> struct type_at<Index, type_list<Types...>, type_list<>> {
+  using type = std::nullptr_t;  // Will never be used in fact, just to make condtional works
+};
+template <size_t Index> struct type_at<Index, type_list<>> {
+  using type = std::nullptr_t;  // Will never be used in fact, just to make condtional works
+};
+template <size_t Index, typename ... Types> struct type_at<Index, type_list<Types...>> : type_at<Index, type_list<>, type_list<Types ...>> {
+  static_assert(Index < sizeof ... (Types), "The index is out of range of the type list.");
+};
+
 
 }  // namespace named_tuples
 

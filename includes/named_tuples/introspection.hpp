@@ -10,12 +10,6 @@
 
 namespace named_tuples {
 
-template<typename T> struct str8_name;
-template<llu ... Ids> struct str8_name<id_value<Ids...>> {
-  static const typename concat_str8<Ids...>::type value;
-};
-
-template<llu ... Ids> const typename concat_str8<Ids...>::type str8_name<id_value<Ids...>>::value;
 
 // Shared static data
 template <typename ... T> class runtime_tuple_str8_data;

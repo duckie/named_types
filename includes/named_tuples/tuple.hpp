@@ -12,7 +12,6 @@ namespace named_tuples {
 using std::is_same;
 using std::enable_if;
 
-template <llu ... Ids> struct id_value;
 template <typename Id, typename ValueType> struct attribute_holder;
 
 template <typename Id> struct attribute_init_placeholder {
@@ -205,6 +204,7 @@ unsigned constexpr generate_id(const char* c, size_t s) { return const_string(c,
 }
 
 }  // namespace attribute_helper
+
 
 }  // namespace name_tuple 
 
