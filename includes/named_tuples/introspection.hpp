@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <array>
 #include <string>
+#include <typeinfo>
 #include "tuple.hpp"
 #include "constexpr_string.hpp"
 
@@ -20,11 +21,21 @@ template <typename ... T> class runtime_tuple_str8_data;
 template <typename ... Ids, typename ... Types> struct runtime_tuple_str8_data< named_tuple<Types(Ids)...> > {  
   runtime_tuple_str8_data() = delete;
   static const std::array<std::string const, sizeof ... (Ids)> attributes;
+  static const std::array<std::type_info const &, sizeof ... (Types)> type_infos;
+  static const std::array<std::type_info const &, sizeof ... (Ids)> id_type_infos;
 };
 
 template <typename ... Ids, typename ... Types>
 const std::array<std::string const, sizeof ... (Ids)> 
 runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::attributes = {{ std::string(str8_name<Ids>::value.str()) ...  }};
+
+template <typename ... Ids, typename ... Types>
+const std::array<std::type_info const &, sizeof ... (Types)> 
+runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::type_infos = {{ typeid(Types) ...  }};
+
+template <typename ... Ids, typename ... Types>
+const std::array<std::type_info const &, sizeof ... (Ids)> 
+runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::id_type_infos = {{ typeid(Ids) ...  }};
 
 // Const version
 template <typename ... T> class const_runtime_tuple_str8;
@@ -62,10 +73,27 @@ template <typename ... Ids, typename ... Types> class const_runtime_tuple_str8< 
     throw std::out_of_range("Attribute not found");
   }
 
+ protected:
+  size_t index_of_attr(std::string const& name) {
+    size_t index = 0;
+    for(;index < (sizeof ... (Ids)); ++index) {
+      if (name == attributes[index]) break;
+    }
+    return index;
+  };
+
  public:
   static const std::array<std::string const, sizeof ... (Ids)>& attributes;
+  static const std::array<std::type_info const &, sizeof ... (Types)>& type_infos;
+  static const std::array<std::type_info const &, sizeof ... (Ids)>& id_type_infos;
 
   const_runtime_tuple_str8(this_tuple_type& Value) noexcept : tuple_{Value}, pointers_{ &(Value.template _<Ids>()) ... } {}
+
+  std::type_info const& type_of(size_t index) { return index < sizeof ... (Types) ? type_infos[index] : typeid(nullptr); } 
+  std::type_info const& type_of(std::string const& name) { return type_of(index_of_attr(name)); } 
+
+  std::type_info const& id_type_of(size_t index) { return index < sizeof ... (Ids) ? id_type_infos[index] : typeid(nullptr); } 
+  std::type_info const& id_type_of(std::string const& name) { return id_type_of(index_of_attr(name)); } 
 
   template <typename T> T const * get_ptr(size_t index) const {
     static std::array<bool, sizeof ... (Ids)> attr_is_same {{ std::is_same<Types, T>::value ... }};
@@ -79,11 +107,7 @@ template <typename ... Ids, typename ... Types> class const_runtime_tuple_str8< 
   }
 
   template <typename T> T const * get_ptr(std::string const& name) const {
-    size_t index = 0;
-    for(;index < (sizeof ... (Ids)); ++index) {
-      if (name == attributes[index]) break;
-    }
-    return get_ptr<T>(index);
+    return get_ptr<T>(index_of_attr(name));
   }
 
   template <typename T> T const & get(size_t index) const {
@@ -98,17 +122,21 @@ template <typename ... Ids, typename ... Types> class const_runtime_tuple_str8< 
   }
 
   template <typename T> T const & get(std::string const& name) const {
-    size_t index = 0;
-    for(;index < (sizeof ... (Ids)); ++index) {
-      if (name == attributes[index]) break;
-    }
-    return get<T>(index);
+    return get<T>(index_of_attr(name));
   }
 };
 
 template <typename ... Ids, typename ... Types>
 const std::array<std::string const, sizeof ... (Ids)>& 
 const_runtime_tuple_str8<named_tuple<Types(Ids)...> const>::attributes = runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::attributes;
+
+template <typename ... Ids, typename ... Types>
+const std::array<std::type_info const&, sizeof ... (Types)>& 
+const_runtime_tuple_str8<named_tuple<Types(Ids)...> const>::type_infos = runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::type_infos;
+
+template <typename ... Ids, typename ... Types>
+const std::array<std::type_info const&, sizeof ... (Ids)>& 
+const_runtime_tuple_str8<named_tuple<Types(Ids)...> const>::id_type_infos = runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::id_type_infos;
 
 // Mutable version
 template <typename ... T> class runtime_tuple_str8;
@@ -147,8 +175,6 @@ template <typename ... Ids, typename ... Types> class runtime_tuple_str8< named_
   }
 
  public:
-  static const std::array<std::string const, sizeof ... (Ids)>& attributes;
-
   runtime_tuple_str8(this_tuple_type& Value) noexcept : const_runtime_tuple_str8<named_tuple<Types(Ids)...> const>(Value), tuple_{Value}, pointers_{ &(Value.template _<Ids>()) ... } {}
 
   template <typename T> T* get_ptr(size_t index) {
@@ -163,11 +189,7 @@ template <typename ... Ids, typename ... Types> class runtime_tuple_str8< named_
   }
 
   template <typename T> T* get_ptr(std::string const& name) {
-    size_t index = 0;
-    for(;index < (sizeof ... (Ids)); ++index) {
-      if (name == attributes[index]) break;
-    }
-    return get_ptr<T>(index);
+    return get_ptr<T>(this->index_of_attr(name));
   }
 
   template <typename T> T& get(size_t index) {
@@ -182,17 +204,9 @@ template <typename ... Ids, typename ... Types> class runtime_tuple_str8< named_
   }
 
   template <typename T> T& get(std::string const& name) {
-    size_t index = 0;
-    for(;index < (sizeof ... (Ids)); ++index) {
-      if (name == attributes[index]) break;
-    }
-    return get<T>(index);
+    return get<T>(this->index_of_attr(name));
   }
 };
-
-template <typename ... Ids, typename ... Types>
-const std::array<std::string const, sizeof ... (Ids)>& 
-runtime_tuple_str8<named_tuple<Types(Ids)...>>::attributes = runtime_tuple_str8_data<named_tuple<Types(Ids)...>>::attributes;
 
 
 }  // namespace named_tuples
