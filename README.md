@@ -139,10 +139,11 @@ assert(90u == test_i2._<taille>());
 
 #### Runtime introspection
 
-Runtime introspection can be used to dynamically access members. An `runtime_tuple` object can be built based on a named tuple to access members dynamically either by index or by type. To do so, a way to compute the name back from the identifier must exist. `named_tuples` provides a facility to encapsulate constexpr strings into types, making runtime introspection possible.
+Runtime introspection can be used to dynamically access members. An `runtime_tuple` object can be built based on a named tuple to access members dynamically either by index or by name. To do so, a way to compute the name back from the identifier must exist. `named_tuples` provides a facility to encapsulate constexpr strings into types, making runtime introspection possible.
 
 ```c++
-unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+unsigned long long constexpr operator "" _s(const char* c, size_t s) 
+{ return named_tuples::str_to_str8_part(c); }
 
 // ...
 
@@ -154,7 +155,8 @@ using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
 auto test = make_named_tuple(
     _<"name"_s>() = std::string("Roger")
     , _<"lastname"_s>() = std::string("Lefouard")
-    , _<"longname"_s, "inlined"_s>() = std::string("Hello world")  // Long name can be inlined
+    , _<"longname"_s, "inlined"_s>()  // Long name can be inlined too
+      = std::string("Hello world")  
     , _<subscriptions>() = 45lu
     );
 
