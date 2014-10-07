@@ -261,23 +261,23 @@ TEST_F(UnitTests, Str8_tupl1) {
   //std::string& hello = runtime_test.get<std::string>(3u);
 
 
-  //std::cout << test._<subscriptions>() << std::endl;
-//
-  //using rt = runtime_tuple_str8<decltype(test)>;
-  //for(std::string const& attr : rt::attributes) {
-    //std::cout << attr << std::endl;
-  //}
-//
-  //rt rt_test(test);
-  //std::string rt_str_value = "lastname";
-  //std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
-  //std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
-  //std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
-  //std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
-  //std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
-//
-  //rt_test.get<std::string>("lastname") = "Lefouardet";
-  //std::cout << rt_test.get<std::string>("lastname") << std::endl;
+  std::cout << test._<subscriptions>() << std::endl;
+
+  using rt = runtime_tuple_str8<decltype(test)>;
+  for(std::string const& attr : rt::attributes) {
+    std::cout << attr << std::endl;
+  }
+
+  rt rt_test(test);
+  std::string rt_str_value = "lastname";
+  std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
+  std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
+  std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
+  std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
+  std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
+
+  rt_test.get<std::string>("lastname") = "Lefouardet";
+  std::cout << rt_test.get<std::string>("lastname") << std::endl;
 }
 
 namespace {
@@ -285,9 +285,18 @@ namespace {
 struct JsonSerializer {
   std::ostringstream output;
 
-  template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
-  template <typename Tuple, typename Attr1, typename Attr2> void between(Tuple&,Attr1&,Attr2&) { output << ","; }
-  template <typename Tuple, typename Attr> void end(Tuple&,Attr&) { output << "}"; }
+  //template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
+  //template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
+
+  template <typename Tuple>
+  void begin(Tuple&) { output.str(""); output << "{"; }
+  
+  template <typename Tuple, typename Attr1, typename Attr2> 
+  void between(Tuple&,Attr1&,Attr2&) { output << ","; }
+  
+  template <typename Tuple>
+  void end(Tuple&) { output << "}"; }
+
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
     output << "\"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
   }
@@ -309,6 +318,6 @@ TEST_F(UnitTests, Visiting_test1) {
       );
 
   JsonSerializer serializer;
-  tuple_visit<JsonSerializer, decltype(test)>::visit(test, serializer);
+  visit(test, serializer);
   std::cout << serializer.value() << std::endl;
 }
