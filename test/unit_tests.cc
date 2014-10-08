@@ -285,17 +285,12 @@ namespace {
 struct JsonSerializer {
   std::ostringstream output;
 
-  //template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
-  //template <typename Tuple, typename Attr> void begin(Tuple&,Attr&) { output.str(""); output << "{"; }
 
-  template <typename Tuple>
-  void begin(Tuple&) { output.str(""); output << "{"; }
-  
-  template <typename Tuple, typename Attr1, typename Attr2> 
-  void between(Tuple&,Attr1&,Attr2&) { output << ","; }
-  
-  template <typename Tuple>
-  void end(Tuple&) { output << "}"; }
+  template <typename Tuple> void begin(Tuple&) { output.str(""); output << "{"; } 
+  //template <typename Tuple, typename Attr> void beforeFirst(Tuple&,Attr&) { output << "{"; }
+  template <typename Tuple, typename Attr1, typename Attr2> void between(Tuple&,Attr1&,Attr2&) { output << ","; }
+  //template <typename Tuple, typename Attr> void afterLast(Tuple&,Attr&) { output << "}"; }
+  template <typename Tuple> void end(Tuple&) { output << "}"; }
 
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
     output << "\"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";

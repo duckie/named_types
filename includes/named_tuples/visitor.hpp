@@ -54,6 +54,22 @@ template <typename ... Ids, typename ... Types, typename Visitor> struct tuple_v
 
   template <typename Attr1, typename Attr2, typename ... T> inline static void apply_between(tuple_type&, Attr1&, Attr2&, T& ...) {}
 
+  // Apply beforeFirst if exists
+  template <typename Attr, typename Vis>
+  inline static auto apply_beforeFirst(tuple_type& value, Attr& attr, Vis& visitor) ->
+  typename enable_if<is_same<decltype(declval<Vis>().beforeFirst(value,attr)),void>::value, void>::type
+  { visitor.beforeFirst(value,attr); }
+
+  template <typename Attr, typename ... T> inline static void apply_beforeFirst(tuple_type&, Attr&, T& ...) {}
+
+  // Apply afterLast if exists
+  template <typename Attr, typename Vis>
+  inline static auto apply_afterLast(tuple_type& value, Attr& attr, Vis& visitor) ->
+  typename enable_if<is_same<decltype(declval<Vis>().afterLast(value,attr)),void>::value, void>::type
+  { visitor.afterLast(value,attr); }
+
+  template <typename Attr, typename ... T> inline static void apply_afterLast(tuple_type&, Attr&, T& ...) {}
+
   // Apply apply if exists
   template <typename Attr, typename Vis>
   inline static auto apply_apply(tuple_type& value, Attr& attr, Vis& visitor) ->
@@ -69,8 +85,8 @@ template <typename ... Ids, typename ... Types, typename Visitor> struct tuple_v
     using Id = typename type_at<Current, type_list<Ids...>>::type;
     using Type = typename type_at<Current, type_list<Types...>>::type;
     attribute_reference<Current, Id, Type> ref(value.template _<Id>());
-    //visitor.beforeFirst(value, ref);
-    visitor.apply(value,ref);
+    apply_beforeFirst(value, ref, visitor);
+    apply_apply(value, ref, visitor);
     apply<Current+1>(value, ref, visitor);
   }
 
@@ -90,16 +106,14 @@ template <typename ... Ids, typename ... Types, typename Visitor> struct tuple_v
   inline static auto apply(tuple_type& value, PreviousAttrRef& attr, visitor_type& visitor) -> 
   typename std::enable_if<(sizeof ... (Ids) <= Current),void>::type
   {
-    //visitor.afterLast(value,attr);
+    apply_afterLast(value, attr, visitor); 
   }
  public:
    
   static void visit(tuple_type& value, visitor_type& visitor) {
-    //visitor.begin(value);
     apply_begin(value,visitor);
     apply<0>(value, visitor);
     apply_end(value,visitor);
-    //visitor.end(value);
   }
 };
 
