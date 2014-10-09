@@ -315,4 +315,7 @@ TEST_F(UnitTests, Visiting_test1) {
   JsonSerializer serializer;
   visit(test, serializer);
   std::cout << serializer.value() << std::endl;
+
+  auto empty_test = make_named_tuple();
+
 }

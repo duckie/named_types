@@ -145,6 +145,46 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   {}
 };
 
+// Specialize the empty tuple, mandatory because of ctors
+template <> class named_tuple<>
+{
+  using IdList = type_list<>;
+  using Tuple = std::tuple<>;
+  Tuple values_;
+
+ public:
+  using tuple_type = Tuple;
+
+  static constexpr std::size_t size = 0;
+
+  template <typename Id> static inline constexpr bool has_member() { return false; }
+  template <llu Id, llu ... VIds> static inline constexpr bool has_member() { return false; }
+
+  // Ctors
+  constexpr named_tuple() {};
+  constexpr named_tuple(tuple_type const& values) : values_(values) {};
+  constexpr named_tuple(tuple_type && values) : values_(std::move(values)) {};
+  constexpr named_tuple(named_tuple const& other) : values_(other) {};
+  constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
+
+  named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
+  named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
+
+  // Conversion
+  constexpr tuple_type const& as_tuple() const { return values_; }
+  tuple_type& as_tuple() { return values_; }
+
+  // Assignment
+  constexpr operator tuple_type const& () const { return values_; }
+  operator tuple_type& () { return values_; }
+  
+  // Copy other attributes from another tuple
+  template <typename ... ForeignTypes, typename ... ForeignIds>
+  inline void copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple)
+  {}
+};
+
+
 // Tuple cast forwards std::tuple and converts named_tuple
 template <typename ... Types>
 inline constexpr auto tuple_cast(std::tuple<Types...> const & tuple) ->
