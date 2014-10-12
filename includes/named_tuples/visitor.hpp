@@ -117,6 +117,35 @@ template <typename ... Ids, typename ... Types, typename Visitor> struct tuple_v
   }
 };
 
+// Empty tuple version
+template <typename Visitor> struct tuple_visit<named_tuple<>, Visitor> {
+  using tuple_type = named_tuple<>;
+  using visitor_type = Visitor;
+
+ private:
+  // Apply begin if exists, supports template resolution
+  template <typename Vis>
+  inline static auto apply_begin(tuple_type& value, Vis& visitor) ->
+  typename enable_if<is_same<decltype(declval<Vis>().begin(value)),void>::value, void>::type
+  { visitor.begin(value); }
+
+  template <typename ... T> inline static void apply_begin(tuple_type&, T& ...) {}
+
+  // Apply end if exists
+  template <typename Vis>
+  inline static auto apply_end(tuple_type& value, Vis& visitor) ->
+  typename enable_if<is_same<decltype(declval<Vis>().end(value)),void>::value, void>::type
+  { visitor.end(value); }
+
+  template <typename ... T> inline static void apply_end(tuple_type&, T& ...) {}
+
+ public:
+  static void visit(tuple_type& value, visitor_type& visitor) {
+    apply_begin(value,visitor);
+    apply_end(value,visitor);
+  }
+};
+
 template <typename Tuple, typename Visitor> void visit(Tuple& tuple, Visitor& visitor) {
   tuple_visit<Tuple,Visitor>::visit(tuple,visitor);
 }
