@@ -100,7 +100,17 @@ The aim of a `named_tuple` is to provide compile time access to elements by name
 
 ### Features
 
-A `named_tuple` makes code cleaner since it provides more meaningful access for attributes and let code using them more robust when new ones are inserted.
+#### Code readability
+
+A `named_tuple` makes code cleaner since it provides more meaningful access for attributes and let code using them more robust when attributes are inserted or deleted.
+
+#### Simple declaration
+
+As named tuples are meant to store data, it is important to keep a readable declarative syntax to use them as members or as non-templated function arguments if needed.
+
+```c++
+named_tuple<std::string(name), int(age)> test;
+```
 
 #### Compliancy with `std::tuple`
 
@@ -136,6 +146,86 @@ test_i1._<taille>() = 90;
 test_i2 << test_i1;
 assert(90u == test_i2._<taille>());
 ```
+
+#### Generating visitors
+
+`named_tuples` provides a tool to generate visiting code of any tuple. This can be used to implement generic serialization of any tuple. Let say we have a simple tuple implemented like this:
+
+```c++
+unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+```
+
+```c++
+auto test = make_named_tuple(
+    _<"name"_s>() = std::string("Roger")
+    , _<"lastname"_s>() = std::string("Lefouard")
+    , _<"ageof"_s, "theguy"_s>() = 45
+    , _<"size"_s>() = 1.92f
+    );
+```
+
+A simple visitor to display the content of the tuple may be implemented like this:
+
+```c++
+struct DisplayValues {
+  template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
+    std::cout << named_tuples::str8_name<typename Attr::id_type>::value.str() << ": " << attribute.get() << std::endl;;
+  }
+};
+```
+
+```c++
+DisplayValues displayer;
+visit(test, displayer);
+```
+
+Will result in the following output:
+
+```
+name: Roger
+lastname: Lefouard
+ageoftheguy: 45
+size: 1.92
+```
+
+The visitor interface may be extended, if you wish, with more advanced callbacks. A trivial json serializer could be implemented like this:
+
+```c++
+struct JsonSerializer {
+  std::ostringstream output;
+
+  template <typename Tuple> void begin(Tuple&) { output.str(""); output << "{"; } 
+  template <typename Tuple, typename Attr> void beforeFirst(Tuple&,Attr&) { output << "\n"; }
+  template <typename Tuple, typename Attr1, typename Attr2> void between(Tuple&,Attr1&,Attr2&) { output << ",\n"; }
+  template <typename Tuple, typename Attr> void afterLast(Tuple&,Attr&) { output << "\n"; }
+  template <typename Tuple> void end(Tuple&) { output << "}"; }
+
+  template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
+    output << "  \"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
+  }
+
+  std::string value() { return output.str(); }
+};
+```
+
+```c++
+JsonSerializer serializer;
+visit(test, serializer);
+std::cout << serializer.value() << std::endl;
+```
+
+Would result in the following ouptut:
+
+```
+{
+  "name":"Roger",
+  "lastname":"Lefouard",
+  "ageoftheguy":"45",
+  "size":"1.92"
+}
+```
+
+None of the visitor callbacks are mandatory. A visitor without any callback would do nothing but still be valid.
 
 #### Runtime introspection
 
