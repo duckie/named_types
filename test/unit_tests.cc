@@ -249,9 +249,9 @@ TEST_F(UnitTests, Str8_tupl1) {
   runtime_tuple_str8<decltype(test)> runtime_test(test);
 
   // List attributes
-  for(std::string const& attr : decltype(runtime_test)::attributes) {
-    std::cout << attr << std::endl;
-  }
+  //for(std::string const& attr : decltype(runtime_test)::attributes) {
+    //std::cout << attr << std::endl;
+  //}
 
   // Access by name
   //runtime_test.get<std::string>("lastname") = "Lefouardet";  // Would throw if not possible
@@ -260,31 +260,34 @@ TEST_F(UnitTests, Str8_tupl1) {
   // Access by index
   //std::string& hello = runtime_test.get<std::string>(3u);
 
-
-  std::cout << test._<subscriptions>() << std::endl;
+  //std::cout << test._<subscriptions>() << std::endl;
 
   using rt = runtime_tuple_str8<decltype(test)>;
-  for(std::string const& attr : rt::attributes) {
-    std::cout << attr << std::endl;
-  }
+  //for(std::string const& attr : rt::attributes) {
+    //std::cout << attr << std::endl;
+  //}
 
   rt rt_test(test);
   std::string rt_str_value = "lastname";
-  std::cout << (*rt_test.get_ptr<std::string>(rt_str_value)) << std::endl;
-  std::cout << rt_test.get_ptr<std::string>("apoil") << std::endl;
-  std::cout << rt_test.get_ptr<size_t>("name") << std::endl;
-  std::cout << (*rt_test.get_ptr<size_t>("nbSubscriptions")) << std::endl;
-  std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
+  EXPECT_EQ(std::string("Lefouard"),(*rt_test.get_ptr<std::string>(rt_str_value)));
+  EXPECT_EQ(nullptr,rt_test.get_ptr<std::string>("apoil"));
+  EXPECT_EQ(nullptr,rt_test.get_ptr<size_t>("name"));
+  EXPECT_EQ(45lu,(*rt_test.get_ptr<size_t>("nbSubscriptions")));
+  //std::cout << rt_test.get_ptr<unsigned>("nbSubscriptions") << std::endl;
 
   rt_test.get<std::string>("lastname") = "Lefouardet";
-  std::cout << rt_test.get<std::string>("lastname") << std::endl;
+  EXPECT_EQ(std::string("Lefouardet"),rt_test.get<std::string>("lastname"));
+
+  auto empty_test = make_named_tuple();
+  runtime_tuple_str8<decltype(empty_test)> empty_rt(empty_test);
+  std::string * null_str = empty_rt.get_ptr<std::string>("Hello man");
+  EXPECT_EQ(nullptr, null_str);
 }
 
 namespace {
 
 struct JsonSerializer {
   std::ostringstream output;
-
 
   template <typename Tuple> void begin(Tuple&) { output.str(""); output << "{"; } 
   template <typename Tuple, typename Attr> void beforeFirst(Tuple&,Attr&) { output << "\n"; }
@@ -314,8 +317,9 @@ TEST_F(UnitTests, Visiting_test1) {
 
   JsonSerializer serializer;
   visit(test, serializer);
-  std::cout << serializer.value() << std::endl;
+  EXPECT_EQ(std::string("{\n  \"name\":\"Roger\",\n  \"lastname\":\"Lefouard\",\n  \"ageoftheguy\":\"45\",\n  \"size\":\"1.92\"\n}"), serializer.value());
 
   auto empty_test = make_named_tuple();
-
+  visit(empty_test, serializer);
+  EXPECT_EQ(std::string("{}"), serializer.value());
 }

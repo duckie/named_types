@@ -88,7 +88,7 @@ template <size_t Index> struct type_at<Index, type_list<>> {
   using type = std::nullptr_t;  // Will never be used in fact, just to make condtional works
 };
 template <size_t Index, typename ... Types> struct type_at<Index, type_list<Types...>> : type_at<Index, type_list<>, type_list<Types ...>> {
-  static_assert(Index < sizeof ... (Types), "The index is out of range of the type list.");
+  //static_assert(Index < sizeof ... (Types), "The index is out of range of the type list.");
 };
 
 
