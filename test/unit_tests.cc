@@ -1,10 +1,10 @@
+#include <iostream>
 #include <gtest/gtest.h>
 #include <named_tuples/tuple.hpp>
 #include <named_tuples/constexpr_string.hpp>
 #include <named_tuples/introspection.hpp>
 #include <named_tuples/visitor.hpp>
 #include <string>
-#include <iostream>
 #include <vector>
 #include <typeinfo>
 #include <tuple>
@@ -16,6 +16,7 @@ using named_tuples::get;
 using named_tuples::named_tuple;
 using named_tuples::id_value;
 using named_tuples::tuple_cast;
+using named_tuples::named_tuple_cast;
 using named_tuples::make_named_tuple;
 using named_tuples::attribute_helper::_;
 unsigned long long constexpr operator "" _h(const char* c, size_t s) { return named_tuples::attribute_helper::hash::generate_id(c, s); }
@@ -203,12 +204,17 @@ TEST_F(UnitTests, Injection1) {
   auto test_i2 = make_named_tuple(_<taille>() = 180);
 
   EXPECT_EQ(0u, test_i1._<taille>());
-  test_i1 << test_i2;
+  //test_i1 = named_tuple_cast<decltype(test_i1)>(test_i2);
+  //test_i1 = test_i1;
+  //test_i1 = decltype(test_i1)(test_i2);
+  test_i1 = test_i2;
   EXPECT_EQ(180u, test_i1._<taille>());
-
-  test_i1._<taille>() = 90;
-  test_i2 << test_i1;
-  EXPECT_EQ(90u, test_i2._<taille>());
+  test_i1 = make_named_tuple(_<taille>() = 120);
+  //EXPECT_EQ(120u, test_i1._<taille>());
+//
+  //test_i1._<taille>() = 90;
+  //test_i2 = decltype(test_i2)(test_i1);
+  //EXPECT_EQ(90u, test_i2._<taille>());
 }
 
 TEST_F(UnitTests, Str8_str_to_nb1) {

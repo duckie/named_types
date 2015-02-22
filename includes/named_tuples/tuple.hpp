@@ -7,6 +7,7 @@
 #include <tuple>
 #include "type_traits.hpp"
 #include "const_string.hpp"
+#include <iostream>
 
 namespace named_tuples {
 using std::is_same;
@@ -82,8 +83,34 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   constexpr named_tuple(named_tuple const& other) : values_(other) {};
   constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
+  template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> const& source) {
+    this->template copy_attr_from<Ids...>(source);  
+  }
+
+  template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> && source) {
+    this->template move_attr_from<Ids...>(std::move(source));  
+  }
+
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
   named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
+  named_tuple& operator=(named_tuple const& other) { values_ = other.values_; return *this; }
+  named_tuple& operator=(named_tuple&& other) { values_ = std::move(other.values_); return *this; }
+
+  template <typename ... SourceTypes, typename ... SourceIds> 
+  auto operator=(named_tuple<SourceTypes(SourceIds)...> const& source) ->
+  named_tuple&
+  {
+    this->template copy_attr_from<Ids...>(source);  
+    return *this;
+  }
+
+  template <typename ... SourceTypes, typename ... SourceIds> 
+  auto operator=(named_tuple<SourceTypes(SourceIds)...> && source) ->
+  named_tuple&
+  {
+    this->template move_attr_from<Ids...>(std::move(source));  
+    return *this;
+  }
 
   // Conversion
   constexpr tuple_type const& as_tuple() const { return values_; }
@@ -126,6 +153,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   typename enable_if<(Index < size), decltype(std::get<Index>(values_))>::type 
   { return std::get<Index>(values_); }
 
+ private:
   // Copy other attributes from another tuple
   template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
   inline auto copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple) ->
@@ -142,6 +170,24 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
   template <typename ... ForeignTypes, typename ... ForeignIds>
   inline void copy_attr_from(named_tuple<ForeignTypes(ForeignIds)...> const& other_tuple)
+  {}
+
+  // Move other attributes from another tuple
+  template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
+  inline auto move_attr_from(named_tuple<ForeignTypes(ForeignIds)...> && other_tuple) ->
+  typename enable_if<(contains<type_list<ForeignIds...>, IdHead>::type::value), void>::type
+  {
+    this->template _<IdHead>() = std::move(other_tuple.template _<IdHead>());
+    this->template move_attr_from<IdTail...>(std::move(other_tuple));
+  }
+
+  template <typename IdHead, typename ... IdTail, typename ... ForeignTypes, typename ... ForeignIds>
+  inline auto move_attr_from(named_tuple<ForeignTypes(ForeignIds)...> && other_tuple) ->
+  typename enable_if<!(contains<type_list<ForeignIds...>, IdHead>::type::value), void>::type
+  { this->template move_attr_from<IdTail...>(std::move(other_tuple)); }
+
+  template <typename ... ForeignTypes, typename ... ForeignIds>
+  inline void move_attr_from(named_tuple<ForeignTypes(ForeignIds)...> && other_tuple)
   {}
 };
 
@@ -206,15 +252,15 @@ inline auto tuple_cast(named_tuple<Types(Ids)...> && tuple) ->
 std::tuple<Types ...> 
 { return std::move(tuple.as_tuple()); }
 
-// Tuple injection
+// Explicit cast to other named_tuple
 template <typename ... TargetTypes, typename ... TargetIds, typename ... SourceTypes, typename ... SourceIds> 
-inline auto operator<< (named_tuple<TargetTypes(TargetIds) ...>& target, named_tuple<SourceTypes(SourceIds) ...> const& source) ->
-named_tuple<TargetTypes(TargetIds) ...>&
+inline auto named_tuple_cast (named_tuple<SourceTypes(SourceIds) ...> const& source) ->
+named_tuple<TargetTypes(TargetIds) ...>
 {
+  named_tuple<TargetTypes(TargetIds) ...> target;
   target.template copy_attr_from<TargetIds...>(source);
   return target;
 }
-
 
 // Access by index
 template <unsigned Index, typename ... Ids, typename ... Types> 
@@ -229,9 +275,14 @@ typename enable_if<(Index < named_tuple<Types(Ids)...>::size), decltype(std::get
 
 
 // Make tuple
-template <typename ... T> inline named_tuple<typename T::value_type(typename T::id_type) ...> make_named_tuple(T&& ... args) {
-  return named_tuple<typename T::value_type(typename T::id_type) ... >(std::forward<T>(args)...);
+template <typename ... Types, typename ... Ids> inline named_tuple<Types(Ids)...> make_named_tuple(attribute_holder<Ids,Types>&& ... args) {
+  //using holder_type = attribute_holder<Ids,Types>;
+  return named_tuple<Types(Ids) ... >(std::forward<attribute_holder<Ids,Types>>(args)...);
 }
+
+//template <typename ... T> inline named_tuple<typename T::value_type(typename T::id_type) ...> make_named_tuple(T&& ... args) {
+  //return named_tuple<typename T::value_type(typename T::id_type) ... >(std::forward<T>(args)...);
+//}
 
 // Helpers for make_tuples
 namespace attribute_helper {
