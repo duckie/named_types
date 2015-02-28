@@ -210,8 +210,26 @@ TEST_F(UnitTests, Injection1) {
   test_i1 = test_i2;
   EXPECT_EQ(180u, test_i1._<taille>());
   test_i1 = make_named_tuple(_<taille>() = 120);
-  //EXPECT_EQ(120u, test_i1._<taille>());
+  EXPECT_EQ(120u, test_i1._<taille>());
 //
+  test_i1._<taille>() = 90;
+  test_i2 = decltype(test_i2)(test_i1);
+  EXPECT_EQ(90u, test_i2._<taille>());
+}
+
+TEST_F(UnitTests, Injection2) {
+  auto test_i1 = make_named_tuple(_<name>() = std::string("Roger"), _<taille>() = 0.f, _<age>() = 65);
+  auto test_i2 = make_named_tuple(_<taille>() = 180);
+
+  EXPECT_EQ(0u, test_i1._<taille>());
+  //test_i1 = named_tuple_cast<decltype(test_i1)>(test_i2);
+  //test_i1 = test_i1;
+  //test_i1 = decltype(test_i1)(test_i2);
+  test_i1 = test_i2;
+  EXPECT_EQ(180.f, test_i1._<taille>());
+  //test_i1 = make_named_tuple(_<taille>() = 120);
+  //EXPECT_EQ(120u, test_i1._<taille>());
+////
   //test_i1._<taille>() = 90;
   //test_i2 = decltype(test_i2)(test_i1);
   //EXPECT_EQ(90u, test_i2._<taille>());
