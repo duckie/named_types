@@ -83,13 +83,19 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   constexpr named_tuple(named_tuple const& other) : values_(other) {};
   constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
-  template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> const& source) {
-    this->template copy_attr_from<Ids...>(source);  
+  template <typename ... SourceTypes, typename ... SourceIds> operator named_tuple<SourceTypes(SourceIds)...> () const {
+    named_tuple<SourceTypes(SourceIds)...> result;
+    result = *this;
+    return result;
   }
 
-  template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> && source) {
-    this->template move_attr_from<Ids...>(std::move(source));  
-  }
+  //template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> const& source) {
+    //this->template copy_attr_from<Ids...>(source);  
+  //}
+//
+  //template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> && source) {
+    //this->template move_attr_from<Ids...>(std::move(source));  
+  //}
 
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
   named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
