@@ -127,25 +127,49 @@ std::string name_val;
 std::tie(name_val, std::ignore) = tuple_cast(test2);
 ```
 
-#### Tuple injection
+#### Tuple promotion
 
-The fact that attributes are named make some intersection between different tuples possible. Assignment code is unrolled at compile time, there is no runtime reflection involved, thus no `named_tuple` related exceptions. The following example shows how you can inject the common attributes of a tuple into any other one.
+A given tuple can automatically be promoted to another if each common member is implicitly convertible. 
 
 ```c++
-auto test_i1 = make_named_tuple(
-    _<name>() = std::string("Roger")
-    , _<taille>() = 0u
-    , _<age>() = 65);
+// Templated version is easy to write 
+template <typename T> void configure(T&& values) {
+  // Default values
+  auto conf = make_named_tuple(
+      _<"host"_s>() = std::string("defaulthost")
+      , _<"port"_s>() = 80
+      );  
+  // Inject values
+  conf = values;
+  std::cout 
+    << "Host " << conf._<"host"_s>() 
+    << " on port " << conf._<"port"_s>() << "\n";
+}
 
-auto test_i2 = make_named_tuple(_<taille>() = 180);
+// Non-templated version limits bloating
+void start(named_tuple<
+    std::string(id_value<"host"_s>)
+    , int(id_value<"port"_s>)
+    > const& conf)
+{
+  std::cout 
+    << "Host " << conf._<"host"_s>() 
+    << " on port " << conf._<"port"_s>() << "\n";
+}
 
-test_i1 << test_i2;
-assert(180u == test_i1._<taille>());
+int main() {
+  configure(make_named_tuple(_<"host"_s>() = std::string("mywebsite")));
+  configure(make_named_tuple(_<"port"_s>() = 441u));
 
-test_i1._<taille>() = 90;
-test_i2 << test_i1;
-assert(90u == test_i2._<taille>());
+  start(make_named_tuple(_<"host"_s>() = std::string("mywebsite")));
+  start(make_named_tuple(_<"port"_s>() = 441u));
+
+  return 0;
+}
+
 ```
+
+Otherwise, a `static_cast` may be used. `static_cast` behaves correctly and moves/copies each equivalent member while casting the others.
 
 #### Runtime introspection
 

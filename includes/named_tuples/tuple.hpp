@@ -83,34 +83,30 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   constexpr named_tuple(named_tuple const& other) : values_(other) {};
   constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
-  // Implicit conversion if implicit conversion of each member is possible
-  //template <typename ... SourceTypes, typename ... SourceIds, typename = typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type> 
-  template <typename ... SourceTypes, typename ... SourceIds>
-  constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> const& from) :
+  // Implicit conversion if cast is not required
+  template <typename ... SourceTypes, typename ... SourceIds> 
+  constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> const& from, typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type* = nullptr) :
     values_ { (from.template lazy_access<Ids, Types>()) ... }
   {}
 
-  // Explocit conversion if cast is required
-  //template <typename ... SourceTypes, typename ... SourceIds, typename = typename std::enable_if<!contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type> 
-  //explicit constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> const& from) :
-    //values_ { (from.template lazy_access<Ids, Types>()) ... }
-  //{}
+  template <typename ... SourceTypes, typename ... SourceIds>
+  constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> && from, typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type* = nullptr) :
+    values_ { std::move(from.template lazy_access<Ids, Types>()) ... }
+  {}
 
-  //template <typename ... SourceTypes, typename ... SourceIds, typename = typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type> 
-  //operator named_tuple<SourceTypes(SourceIds)...> () const 
-  //{
-    //named_tuple<SourceTypes(SourceIds)...> result;
-    //result = *this;
-    //return result;
-  //}
+  template <typename ... SourceTypes, typename ... SourceIds> 
+  explicit constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> const& from, typename std::enable_if<!contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type* = nullptr) :
+    values_ { static_cast<Types>(from.template lazy_access<Ids, Types>()) ... }
+  {}
 
-  //template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> const& source) {
-    //this->template copy_attr_from<Ids...>(source);  
-  //}
-//
-  //template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> && source) {
-    //this->template move_attr_from<Ids...>(std::move(source));  
-  //}
+  // In this one, we move if member is of the same type, static_cast otherwise
+  template <typename ... SourceTypes, typename ... SourceIds> 
+  explicit constexpr named_tuple(named_tuple<SourceTypes(SourceIds)...> && from, typename std::enable_if<!contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type* = nullptr) :
+    values_ { 
+      static_cast<typename std::conditional< std::is_same<Types, typename type_at<lazy_index_of<type_list<SourceIds...>,Ids>::type::value, type_list<SourceTypes...>>::type>::value, Types&&, Types>::type>
+      (from.template lazy_access<Ids, Types>()) ... 
+    }
+  {}
 
   named_tuple& operator=(tuple_type const& values) { values_ = values; return *this; }
   named_tuple& operator=(tuple_type&& values) { values_ = std::move(values); return *this; }
@@ -154,24 +150,20 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
 
   // Lazy access returns default value if not found
   
-  // Lazy access by name
+  // Lazy access by type
+  // Used for conversions
   template <typename Id, typename T> 
   inline constexpr auto lazy_access() const -> 
-  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::type::value>(values_))>::type 
+  typename enable_if<(contains<IdList,Id>::type::value), typename type_at<lazy_index_of<IdList,Id>::type::value, type_list<Types...>>::type const&>::type 
   { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
   template <typename Id, typename T> 
-  inline auto access() -> 
-  typename enable_if<(contains<IdList,Id>::type::value), decltype(std::get<index_of<IdList,Id>::type::value>(values_))>::type 
+  inline auto lazy_access() -> 
+  typename enable_if<(contains<IdList,Id>::type::value), typename type_at<lazy_index_of<IdList,Id>::type::value, type_list<Types...>>::type&>::type 
   { return std::get<index_of<IdList,Id>::type::value>(values_); }
 
   template <typename Id, typename T> 
   inline constexpr auto lazy_access() const -> 
-  typename enable_if<(!contains<IdList,Id>::type::value), T>::type 
-  { return T(); }
-
-  template <typename Id, typename T> 
-  inline auto access() -> 
   typename enable_if<(!contains<IdList,Id>::type::value), T>::type 
   { return T(); }
 
@@ -187,25 +179,7 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
 
   // Lazy access by name as a integral (ex: id_value)
-  template <llu Id, llu ... VIds, typename T> 
-  inline constexpr auto lazy_access() const -> 
-  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), decltype(std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
-
-  template <llu Id, llu ... VIds, typename T> 
-  inline auto lazy_access() -> 
-  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), decltype(std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_))>::type 
-  { return std::get<index_of<IdList,id_value<Id,VIds...>>::type::value>(values_); }
-
-  template <llu Id, llu ... VIds, typename T> 
-  inline constexpr auto lazy_access() const -> 
-  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), T>::type 
-  { return T(); }
-
-  template <llu Id, llu ... VIds, typename T> 
-  inline auto lazy_access() -> 
-  typename enable_if<(contains<IdList, id_value<Id,VIds...>>::type::value), T>::type 
-  { return T(); }
+  // NOT IMPLEMENTED
 
   // Access by index
   template <unsigned Index> 

@@ -5,7 +5,12 @@
 #include <iostream>
 #include <sstream>
 
+using named_tuples::id_value;
+using named_tuples::named_tuple;
+using named_tuples::make_named_tuple;
+
 namespace {
+using named_tuples::attribute_helper::_;
 
 unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
 
@@ -31,9 +36,34 @@ struct JsonSerializer {
   std::string value() { return output.str(); }
 };
 
+
+
+// Templated version is easy to write 
+template <typename T> void configure(T&& values) {
+  // Default values
+  auto conf = make_named_tuple(
+      _<"host"_s>() = std::string("defaulthost")
+      , _<"port"_s>() = 80
+      );  
+  // Inject values
+  conf = values;
+  std::cout 
+    << "Host " << conf._<"host"_s>() 
+    << " on port " << conf._<"port"_s>() << "\n";
 }
 
+// Non-templated version limits bloating
+void start(named_tuple<
+    std::string(id_value<"host"_s>)
+    , int(id_value<"port"_s>)
+    > const& conf)
+{
+  std::cout 
+    << "Host " << conf._<"host"_s>() 
+    << " on port " << conf._<"port"_s>() << "\n";
+}
 
+}
 
 
 int main() { 
@@ -54,5 +84,10 @@ int main() {
   visit(test, serializer);
   std::cout << serializer.value() << std::endl;
 
+  configure(make_named_tuple(_<"host"_s>() = std::string("mywebsite")));
+  configure(make_named_tuple(_<"port"_s>() = 441u));
+
+  start(make_named_tuple(_<"host"_s>() = std::string("mywebsite")));
+  start(make_named_tuple(_<"port"_s>() = 441u));
   return 0;
 }
