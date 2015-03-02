@@ -80,16 +80,7 @@ template <typename ... Types, typename Id> struct index_of<type_list<Types ...>,
 
 // Lazy index returns max possible index instead of failing if the type is not there
 template <typename ... T> struct lazy_index_of;
-template <typename ... Head, typename Current, typename ... Tail, typename Id> struct lazy_index_of<type_list<Head ...>, type_list<Current, Tail...>, Id> {
-  using type = const_size<(std::is_same<Id, Current>() ? sizeof ... (Head) : lazy_index_of<type_list<Head..., Current>, type_list<Tail...>, Id>::type::value)>;
-};
-template <typename ... Types, typename Id> struct lazy_index_of<type_list<Types...>, type_list<>, Id> {
-  using type = const_size<sizeof ... (Types)>;
-};
-template <typename Id> struct lazy_index_of<type_list<>, Id> {
-  using type = const_size<0>;
-};
-template <typename ... Types, typename Id> struct lazy_index_of<type_list<Types ...>, Id> : lazy_index_of<type_list<>, type_list<Types...>, Id> {
+template <typename ... Types, typename Id> struct lazy_index_of<type_list<Types ...>, Id> : index_of<type_list<>, type_list<Types...>, Id> {
   // No failure here
 };
 
@@ -108,20 +99,6 @@ template <size_t Index, typename ... Types> struct type_at<Index, type_list<Type
   //static_assert(Index < sizeof ... (Types), "The index is out of range of the type list.");
 };
 
-//// Extract a type from an index, returns void if not found
-//template <size_t Index, typename ... T> struct lazy_type_at;
-//template <size_t Index, typename ... Head, typename Current, typename ... Tail> struct lazy_type_at<Index, type_list<Head...>, type_list<Current, Tail...>> {
-  //using type = typename std::conditional<(Index == sizeof ... (Head)), Current, typename lazy_type_at<Index, type_list<Head..., Current>, type_list<Tail...>>::type>::type;
-//};
-//template <size_t Index, typename ... Types> struct lazy_type_at<Index, type_list<Types...>, type_list<>> {
-  //using type = void;
-//};
-//template <size_t Index> struct lazy_type_at<Index, type_list<>> {
-  //using type = void;
-//};
-//template <size_t Index, typename ... Types> struct lazy_type_at<Index, type_list<Types...>> : lazy_type_at<Index, type_list<>, type_list<Types ...>> {
-  //using type = void;
-//};
 
 template <typename ... T> struct contained_are_convertible;
 template <typename IdHead, typename ...IdSource, typename TypeHead, typename ... TypeSource, typename ... IdDest, typename ... TypeDest> 

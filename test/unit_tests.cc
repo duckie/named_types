@@ -213,8 +213,9 @@ TEST_F(UnitTests, Injection1) {
   EXPECT_EQ(120u, test_i1._<taille>());
 //
   test_i1._<taille>() = 90;
-  test_i2 = decltype(test_i2)(test_i1);
-  EXPECT_EQ(90u, test_i2._<taille>());
+  //test_i2 = )(test_i1);
+  decltype(test_i2) test_i3 = test_i1;
+  EXPECT_EQ(90u, test_i3._<taille>());
 }
 
 TEST_F(UnitTests, Injection2) {
