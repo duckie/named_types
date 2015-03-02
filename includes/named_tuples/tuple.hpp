@@ -83,11 +83,23 @@ template <typename ... Ids, typename ... Types> class named_tuple<Types(Ids)...>
   constexpr named_tuple(named_tuple const& other) : values_(other) {};
   constexpr named_tuple(named_tuple && other) : values_(std::move(other.values_)) {};
 
-  template <typename ... SourceTypes, typename ... SourceIds> operator named_tuple<SourceTypes(SourceIds)...> () const {
+  template <typename ... SourceTypes, typename ... SourceIds, typename = typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type> 
+  //template <typename ... SourceTypes, typename ... SourceIds>
+  operator named_tuple<SourceTypes(SourceIds)...> () const 
+  {
+    static_assert(contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value,"whut");
     named_tuple<SourceTypes(SourceIds)...> result;
     result = *this;
     return result;
   }
+
+  //template <typename ... SourceTypes, typename ... SourceIds, typename = typename std::enable_if<contained_are_convertible<type_list<SourceTypes(SourceIds)...>, type_list<Types(Ids)...>>::type::value, void>::type> 
+  //operator named_tuple<SourceTypes(SourceIds)...> () const 
+  //{
+    //named_tuple<SourceTypes(SourceIds)...> result;
+    //result = *this;
+    //return result;
+  //}
 
   //template <typename ... SourceTypes, typename ... SourceIds> named_tuple(named_tuple<SourceTypes(SourceIds)...> const& source) {
     //this->template copy_attr_from<Ids...>(source);  
