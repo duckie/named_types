@@ -352,3 +352,17 @@ TEST_F(UnitTests, Visiting_test1) {
   visit(empty_test, serializer);
   EXPECT_EQ(std::string("{}"), serializer.value());
 }
+
+namespace {
+ template <typename T> using key = named_tuples::attribute_init_placeholder<T>;
+ constexpr key<name> name; 
+}
+
+
+TEST_F(UnitTests, AttributeKey) {
+  auto t = make_named_tuple(
+    name = std::string("Roger")
+  );
+
+  EXPECT_EQ(std::string("Roger"), name(t));
+}

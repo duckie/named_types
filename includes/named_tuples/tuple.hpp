@@ -16,9 +16,13 @@ using std::enable_if;
 template <typename Id, typename ValueType> struct attribute_holder;
 
 template <typename Id> struct attribute_init_placeholder {
+  constexpr attribute_init_placeholder() {}
+
   template <typename ValueType> attribute_holder< Id, ValueType> inline operator=(ValueType const& value) const {
     return attribute_holder< Id, ValueType>(value);
   }
+
+  template <typename T> auto operator()(T&& value) const -> decltype(value.template _<Id>()) { return value.template _<Id>(); }
 };
 
 template <llu Id, llu ... Ids> struct attribute_init_int_placeholder {
