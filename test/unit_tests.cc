@@ -356,13 +356,16 @@ TEST_F(UnitTests, Visiting_test1) {
 namespace {
  template <typename T> using key = named_tuples::attribute_init_placeholder<T>;
  constexpr key<name> name; 
+ struct nb_tries_t; constexpr key<nb_tries_t> nb_tries; 
 }
 
 
 TEST_F(UnitTests, AttributeKey) {
   auto t = make_named_tuple(
-    name = std::string("Roger")
+    name = std::string("Roger"),
+    nb_tries = 3
   );
 
   EXPECT_EQ(std::string("Roger"), name(t));
+  EXPECT_EQ(3, nb_tries(t));
 }
