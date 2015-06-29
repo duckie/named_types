@@ -10,6 +10,7 @@
 #include <tuple>
 #include <array>
 #include <functional>
+#include <std/experimental/tagged.hpp>
 
 namespace {
 using named_tuples::get;
@@ -368,4 +369,13 @@ TEST_F(UnitTests, AttributeKey) {
 
   EXPECT_EQ(std::string("Roger"), name(t));
   EXPECT_EQ(3, nb_tries(t));
+}
+
+
+TEST_F(UnitTests, TaggedTuple) {
+  struct name : public std::tag::basic_tag {};
+  using T1 = std::tagged_tuple<name(int)>;
+  T1 t {3};
+  EXPECT_EQ(0, t.tag_index<name>());
+  EXPECT_EQ(3, get<t.tag_index<name>()>(t));
 }
