@@ -109,10 +109,21 @@ namespace std {
   };
   
   template <class Tag, class ... Types> 
-  auto get(tagged_tuple<Types...> const& input) -> 
-  decltype(get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input))
+  decltype(auto) get(tagged_tuple<Types...> const& input)
   {
     return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  };
+
+  template <class Tag, class ... Types> 
+  decltype(auto) get(tagged_tuple<Types...>& input)
+  {
+    return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  };
+
+  template <class Tag, class ... Types> 
+  decltype(auto) get(tagged_tuple<Types...>&& input)
+  {
+    return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(std::forward<tagged_tuple<Types...>>(input));
   };
 
   namespace tag { 
