@@ -18,8 +18,6 @@ namespace std {
   struct tuple_element<N, tagged<Base, Tags...>> 
     : tuple_element<N, Base> { };
 
-  
-
   struct __getters { 
    private:
     template <class, class...> friend struct tagged;
@@ -27,9 +25,7 @@ namespace std {
     template <class Type, class Indices, class...Tags>
     struct collect_;
 
-    template <class T, std::size_t I> struct  __tag_indexer {
-      constexpr __tag_indexer() = default;
-    };
+    template <class T, std::size_t I> struct  __tag_indexer {};
     
     template <class Type, std::size_t...Is, class...Tags> 
     struct collect_<Type, index_sequence<Is...>, Tags...> : Tags::template getter<Type, Is>..., __tag_indexer<Tags,Is> ... { 
@@ -38,19 +34,13 @@ namespace std {
       collect_& operator=(const collect_&) = default;
 
       template <class Tag> 
-      static constexpr std::size_t get_tag_index() 
-      { return collect_::__get_tag_index<Tag>(reinterpret_cast<collect_ const&>(void())); }
-
-      template <class Tag> 
-      struct tag_index
-      {
-        static constexpr std::size_t value = collect_::template get_tag_index<Tag>();
-      };
+      struct tag_index : decltype(collect_::template __get_tag_index<Tag>(collect_()))
+      {};
 
      private:
       template <class Tag, std::size_t Index> 
-      static constexpr std::size_t __get_tag_index(__tag_indexer<Tag,Index> const&) 
-      { return Index; }
+      static constexpr integral_constant<size_t,Index> __get_tag_index(__tag_indexer<Tag,Index> const&)
+      { return {}; }
 
       template <class, class...> friend struct tagged;
       ~collect_() = default;
@@ -91,21 +81,6 @@ namespace std {
       static_cast<Base&>(*this) = std::forward<U>(u);
       return *this;
     }
-
-   private:
-    template <typename ... T> struct type_list;
-    template <typename T, typename TypeList> struct index_of;
-    template <typename T, typename ... Types> 
-    struct index_of<T, type_list<T, Types...>> 
-    { static constexpr size_t value = 0; };
-    template <typename T, typename H, typename ... Types> 
-    struct index_of<T, type_list<H, Types...>>
-    { static constexpr size_t value = 1 + index_of<T, type_list<Types...>>::value; };
-
-   public:
-    //template <class Tag> 
-    //static constexpr size_t tag_index() 
-    //{ return index_of<Tag, type_list<Tags...>>::value; }
   };
 
   template <class T> struct __tag_spec { };
@@ -123,15 +98,6 @@ namespace std {
     ////return get<(tagged_tuple<Types...>::template tag_index<Tag>())>(__tup);
   //};
 
-  //struct __tag_indexer {
-    ////template <typename Tag> struct tag_index;,c
-    //template <typename Tag> static const size_t tag_index;
-  //};
-  //template <size_t I> struct __tag_indexer_impl : __tag_indexer {};
-  //template <class Tag, size_t I> struct __tag_indexer_impl<I>::template tag_index<Tag> {};
-
-
-  
   namespace tag { 
 
     // The basic_tag does not offer access by mmeber but can be used in other contexts
@@ -144,30 +110,15 @@ namespace std {
           getter(const getter&) = default;
           getter &operator=(const getter&) = default;
 
-          //constexpr operator __tag_indexer<Tag>() { return __tag_indexer_impl<Tag>(I); }
-          //template <typename T> 
-          //static typename enable_if<is_same<T,Tag>::value,size_t>::type
-          //__tag_index(__tag_overload_helper<Tag>*)
-          //{ return I; }
-          //
-          //template <typename E> static const typename enable_if<is_same<T,E>::value,size_t>::type tag_index = I;
-
           ~getter() = default;
          private:
-          //static constexpr size_t __tag_index(__tag_overload_helper<Tag>) { return I; }
           friend struct __getters;
           friend Derived;
         };
 
-      //template <class Derived, size_t I,typename T, typename Osef> size_t getter<Derived,I,T>::tag_index<Osef> = 0;
-      //template <class Derived, size_t I> struct test {};
-
      private:
       friend struct __getters;
     };
-
-    //template <typename Tag, class Derived, size_t I> struct basic_tag<Tag>::template getter<Derived,I>::template tag_index<Tag> {};
-
 
     struct in {
      private:

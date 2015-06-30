@@ -382,8 +382,7 @@ TEST_F(UnitTests, TaggedTuple) {
   //EXPECT_EQ(0, T1::tag_index<name>());
   //EXPECT_EQ(1, T1::tag_index<size>());
   EXPECT_EQ(1, T1::tag_index<size>::value);
-  //EXPECT_EQ(1, T1::get_tag_index<size>());
-  //EXPECT_EQ(3, std::get<T1::get_tag_index<size>()>(t));
+  EXPECT_EQ(3, std::get<T1::tag_index<size>::value>(t));
 
   //EXPECT_EQ(0, t.tag_index<name>());
   //EXPECT_EQ(std::string("Roger"), std::get<(T1::tag_index<name>())>(t));
