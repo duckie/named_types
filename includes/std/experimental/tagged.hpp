@@ -118,7 +118,7 @@ namespace std {
   namespace tag { 
 
     // The basic_tag does not offer access by mmeber but can be used in other contexts
-    template <typename Tag> struct basic_tag {
+    struct basic_tag {
       // Should be private dut is doent work with clang 3.5
       template <class Derived, size_t I>
         struct getter { 
@@ -130,7 +130,6 @@ namespace std {
 
          private:
           friend struct __getters;
-          friend Derived;
         };
 
      private:

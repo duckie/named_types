@@ -373,8 +373,8 @@ TEST_F(UnitTests, AttributeKey) {
 
 
 TEST_F(UnitTests, TaggedTuple) {
-  struct name : std::tag::basic_tag<name> {};
-  struct size : std::tag::basic_tag<name> {};
+  struct name : std::tag::basic_tag {};
+  struct size : std::tag::basic_tag {};
   using T1 = std::tagged_tuple<name(std::string),size(size_t)>;
   T1 t {"Roger",3};
 
