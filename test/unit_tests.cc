@@ -377,14 +377,12 @@ TEST_F(UnitTests, TaggedTuple) {
   struct size : std::tag::basic_tag<name> {};
   using T1 = std::tagged_tuple<name(std::string),size(size_t)>;
   T1 t {"Roger",3};
-  //using T1 = std::tagged_tuple<name(size_t)>;
-  //T1 t {3};
-  //EXPECT_EQ(0, T1::tag_index<name>());
-  //EXPECT_EQ(1, T1::tag_index<size>());
-  EXPECT_EQ(1, T1::tag_index<size>::value);
-  EXPECT_EQ(3, std::get<T1::tag_index<size>::value>(t));
 
-  //EXPECT_EQ(0, t.tag_index<name>());
-  //EXPECT_EQ(std::string("Roger"), std::get<(T1::tag_index<name>())>(t));
-  //EXPECT_EQ(0u, std::get_at<size>(t));
+  EXPECT_EQ(0, T1::tag_index<name>::value);
+  EXPECT_EQ(std::string("Roger"), get<T1::tag_index<name>::value>(t));
+  EXPECT_EQ(std::string("Roger"), get<name>(t));
+  
+  EXPECT_EQ(1, T1::tag_index<size>::value);
+  EXPECT_EQ(3, get<T1::tag_index<size>::value>(t));
+  EXPECT_EQ(3, get<size>(t));
 }

@@ -25,7 +25,10 @@ namespace std {
     template <class Type, class Indices, class...Tags>
     struct collect_;
 
-    template <class T, std::size_t I> struct  __tag_indexer {};
+    template <class Tag, std::size_t Index> struct  __tag_indexer {
+      using tag_type = Tag;
+      using tag_index = integral_constant<std::size_t, Index>;
+    };
     
     template <class Type, std::size_t...Is, class...Tags> 
     struct collect_<Type, index_sequence<Is...>, Tags...> : Tags::template getter<Type, Is>..., __tag_indexer<Tags,Is> ... { 
@@ -33,14 +36,18 @@ namespace std {
       collect_(const collect_&) = default;
       collect_& operator=(const collect_&) = default;
 
+      //template <class Tag> 
+      //struct tag_indexer : decltype(collect_::template get_tag_indexer<Tag>(collect_()))
+      //{};
+
       template <class Tag> 
-      struct tag_index : decltype(collect_::template __get_tag_index<Tag>(collect_()))
+      struct tag_index : decltype(collect_::template get_tag_indexer<Tag>(collect_()))::tag_index
       {};
 
      private:
       template <class Tag, std::size_t Index> 
-      static constexpr integral_constant<size_t,Index> __get_tag_index(__tag_indexer<Tag,Index> const&)
-      { return {}; }
+      static constexpr __tag_indexer<Tag,Index> get_tag_indexer(__tag_indexer<Tag,Index> const& __in)
+      { return __in; }
 
       template <class, class...> friend struct tagged;
       ~collect_() = default;
@@ -89,14 +96,24 @@ namespace std {
   template <class Spec, class Arg> struct __tag_elem<Spec(Arg)> { using type = Arg; };
   
   template <class F, class S> using tagged_pair = tagged<pair<typename __tag_elem<F>::type, typename __tag_elem<S>::type>, typename __tag_spec<F>::type, typename __tag_spec<S>::type>;
-  template <class...Types> using tagged_tuple = tagged<tuple<typename __tag_elem<Types>::type...>, typename __tag_spec<Types>::type...>;
 
-  //template <class Tag, class... Types> 
-  //Tag* get_at(tagged<tuple<typename __tag_elem<Types>::type...>, typename __tag_spec<Types>::type...>& __tup)
-  //{
-    //return 0;
-    ////return get<(tagged_tuple<Types...>::template tag_index<Tag>())>(__tup);
-  //};
+  template <class...Types> using __tagged_tuple = tagged<tuple<typename __tag_elem<Types>::type...>, typename __tag_spec<Types>::type...>;
+  template <class...Types> struct tagged_tuple : __tagged_tuple<Types...>
+  {
+    using __tagged_tuple<Types...>::__tagged_tuple;
+    tagged_tuple() = default;
+    tagged_tuple(tagged_tuple&&) = default;
+    tagged_tuple(const tagged_tuple&) = default;
+    tagged_tuple &operator=(tagged_tuple&&) = default;
+    tagged_tuple &operator=(const tagged_tuple&) = default;
+  };
+  
+  template <class Tag, class ... Types> 
+  auto get(tagged_tuple<Types...> const& input) -> 
+  decltype(get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input))
+  {
+    return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  };
 
   namespace tag { 
 
@@ -109,8 +126,8 @@ namespace std {
           getter() = default;
           getter(const getter&) = default;
           getter &operator=(const getter&) = default;
-
           ~getter() = default;
+
          private:
           friend struct __getters;
           friend Derived;
