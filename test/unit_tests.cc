@@ -385,4 +385,8 @@ TEST_F(UnitTests, TaggedTuple) {
   EXPECT_EQ(1, T1::tag_index<size>::value);
   EXPECT_EQ(3, get<T1::tag_index<size>::value>(t));
   EXPECT_EQ(3, get<size>(t));
+
+
+  auto t2 = t;
+  EXPECT_EQ(3, get<size>(t2));
 }
