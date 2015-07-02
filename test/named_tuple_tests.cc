@@ -41,9 +41,11 @@ TEST_F(UnitTests, Construction1) {
   EXPECT_EQ(std::string("Roger"), std::get<0>(test));
   EXPECT_EQ(std::string("Roger"), std::get<named_tag<name>>(test));
   EXPECT_EQ(std::string("Roger"), named_tuples::get<name>(test));
+  EXPECT_EQ(std::string("Roger"), named_tuples::get<named_tag<name>>(test));
+  EXPECT_EQ(std::string("Roger"), test.get<name>());
+  EXPECT_EQ(std::string("Roger"), test.get<named_tag<name>>());
   EXPECT_EQ(std::string("Roger"), test[name_key]);
   EXPECT_EQ(std::string("Roger"), name_key(test));
-  EXPECT_EQ(std::string("Roger"), test.get<name>());
 }
 
 
@@ -52,14 +54,14 @@ TEST_F(UnitTests, Literal1) {
   ////using named_tuples::literals::operator _t;
   named_tuple<std::string(decltype("name"_t)), size_t(decltype("taille"_t))> t { "Roger", 4 };
 
-  //decltype("name"_t) name_key;
+  decltype("name"_t) name_key;
 
   EXPECT_EQ(std::string("Roger"), std::get<0>(test));
   EXPECT_EQ(std::string("Roger"), t["name"_t]);
   EXPECT_EQ(std::string("Roger"), "name"_t(t));
   EXPECT_EQ(std::string("Roger"), std::get<decltype("name"_t)>(t));
-  //EXPECT_EQ(std::string("Roger"), named_tuples::get<decltype("name"_t)>(test));
-  //EXPECT_EQ(std::string("Roger"), test.get<decltype("name"_t)>());
+  //EXPECT_EQ(std::string("Roger"), named_tuples::get<decltype("name"_t)>(test));  // fails to compile ?
+  //EXPECT_EQ(std::string("Roger"), test.get<decltype("name"_t)>());  // fails to compile ?
 }
 
 TEST_F(UnitTests, TaggedTuple) {

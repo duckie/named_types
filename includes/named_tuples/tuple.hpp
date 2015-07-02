@@ -37,36 +37,36 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   // Member function get
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type const &
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type const &
   get() const &
-  { return std::get<named_tag<Tag>>(*this); };
+  { return std::get<typename named_tag<Tag>::type>(*this); };
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type &
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type &
   get() &
-  { return std::get<named_tag<Tag>>(*this); };
+  { return std::get<typename named_tag<Tag>::type>(*this); };
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type &&
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type &&
   get() &&
-  { return std::move(std::get<named_tag<Tag>>(static_cast<named_tuple&&>(*this))); };
+  { return std::move(std::get<typename named_tag<Tag>::type>(static_cast<named_tuple&&>(*this))); };
   
   // Member operator []
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type&
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type&
   operator [] (named_tag<Tag> const&) 
-  { return std::get<named_tuple::template tag_index<named_tag<Tag>>::value>(*this); }
+  { return std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(*this); }
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type const &
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type const &
   operator [] (named_tag<Tag> const&) const  
-  { return std::get<named_tuple::template tag_index<named_tag<Tag>>::value>(static_cast<named_tuple const &>(*this)); }
+  { return std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(static_cast<named_tuple const &>(*this)); }
 
   template <class Tag>
-  inline constexpr typename named_tuple::template type_at<named_tag<Tag>>::raw_type &&
+  inline constexpr typename named_tuple::template type_at<typename named_tag<Tag>::type>::raw_type &&
   operator [] (named_tag<Tag> const&) && 
-  { return std::move(std::get<named_tuple::template tag_index<named_tag<Tag>>::value>(static_cast<named_tuple&&>(*this))); }
+  { return std::move(std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(static_cast<named_tuple&&>(*this))); }
 
 };
 
@@ -82,37 +82,37 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
   constexpr named_tag() = default;
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<named_tag>::raw_type const&
+  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type const&
   operator() (named_tuple<Types...> const& input) const 
-  { return std::get<named_tag>(input); }
+  { return std::get<type>(input); }
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<named_tag>::raw_type &
+  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type &
   operator() (named_tuple<Types...> & input) const 
-  { return std::get<named_tag>(input); }
+  { return std::get<type>(input); }
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<named_tag>::raw_type &&
+  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type &&
   operator() (named_tuple<Types...>&& input) const 
-  { return std::move(std::get<named_tag>(std::forward<named_tuple<Types...>>(input))); }
+  { return std::move(std::get<type>(std::forward<named_tuple<Types...>>(input))); }
 };
 
 // Get
 
 template <class Tag, class ... Types> 
-inline constexpr typename named_tuples::named_tuple<Types...>::template type_at<named_tuples::named_tag<Tag>>::raw_type const &
-get(named_tuples::named_tuple<Types...> const& input)
-{ return std::get<named_tuples::named_tag<Tag>>(input); };
+inline constexpr typename named_tuple<Types...>::template type_at<typename named_tag<Tag>::type>::raw_type const &
+get(named_tuple<Types...> const& input)
+{ return std::get<typename named_tag<Tag>::type>(input); };
 
 template <class Tag, class ... Types> 
-inline constexpr typename named_tuples::named_tuple<Types...>::template type_at<named_tuples::named_tag<Tag>>::raw_type &
-get(named_tuples::named_tuple<Types...>& input)
-{ return std::get<named_tuples::named_tag<Tag>>(input); };
+inline constexpr typename named_tuple<Types...>::template type_at<typename named_tag<Tag>::type>::raw_type &
+get(named_tuple<Types...>& input)
+{ return std::get<typename named_tag<Tag>::type>(input); };
 
 template <class Tag, class ... Types> 
-inline constexpr typename named_tuples::named_tuple<Types...>::template type_at<named_tuples::named_tag<Tag>>::raw_type &&
-get(named_tuples::named_tuple<Types...>&& input)
-{ return move(std::get<named_tuples::named_tag<Tag>>(std::forward<named_tuples::named_tuple<Types...>>(input))); };
+inline constexpr typename named_tuple<Types...>::template type_at<typename named_tag<Tag>::type>::raw_type &&
+get(named_tuple<Types...>&& input)
+{ return move(std::get<typename named_tag<Tag>::type>(std::forward<named_tuples::named_tuple<Types...>>(input))); };
 
 
 // String literals, GNU Extension only
