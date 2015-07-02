@@ -5,7 +5,6 @@
 #include <tuple>
 #include <array>
 #include <functional>
-//#include <std/experimental/tagged.hpp>
 #include <named_tuples/tuple.hpp>
 
 using namespace named_tuples;
@@ -51,7 +50,6 @@ TEST_F(UnitTests, Construction1) {
 
 
 TEST_F(UnitTests, Literal1) {
-  ////using named_tuples::literals::operator _t;
   named_tuple<std::string(decltype("name"_t)), size_t(decltype("taille"_t))> t { "Roger", 4 };
 
   decltype("name"_t) name_key;
@@ -60,8 +58,29 @@ TEST_F(UnitTests, Literal1) {
   EXPECT_EQ(std::string("Roger"), t["name"_t]);
   EXPECT_EQ(std::string("Roger"), "name"_t(t));
   EXPECT_EQ(std::string("Roger"), std::get<decltype("name"_t)>(t));
-  //EXPECT_EQ(std::string("Roger"), named_tuples::get<decltype("name"_t)>(test));  // fails to compile ?
-  //EXPECT_EQ(std::string("Roger"), test.get<decltype("name"_t)>());  // fails to compile ?
+  EXPECT_EQ(std::string("Roger"), named_tuples::get<decltype("name"_t)>(t));
+  EXPECT_EQ(std::string("Roger"), t.get<decltype("name"_t)>());
+}
+
+TEST_F(UnitTests, MakeTuple1) {
+  auto t = make_named_tuple( name_key = std::string("Roger") );
+  EXPECT_EQ(std::string("Roger"), t[name_key]);
+}
+
+TEST_F(UnitTests, MakeTuple2) {
+  std::string surname = "Marcel";
+
+  auto t1 = make_named_tuple( 
+    "name"_t = std::string("Roger"),
+    "surname"_t = surname,
+    "size"_t = 3u,
+    "objects"_t = std::vector<int>({1,2,3})
+  );
+
+  EXPECT_EQ(std::string("Roger"), t1["name"_t]);
+  EXPECT_EQ(3u, t1["size"_t]);
+  EXPECT_EQ(3u, t1["objects"_t].size());
+  EXPECT_EQ(std::string("Marcel"), surname);
 }
 
 TEST_F(UnitTests, TaggedTuple) {

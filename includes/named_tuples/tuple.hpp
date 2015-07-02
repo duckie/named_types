@@ -12,8 +12,12 @@
 
 namespace named_tuples {
 
-template <class Tag> struct named_tag;
+template <class Tag, typename Value> class __attribute_const_reference_holder;
+template <class Tag, typename Value> class __attribute_reference_holder;
+template <class Tag, typename Value> class __attribute_value_holder;
 
+template <class Tag> struct named_tag;
+template <class Tag, typename Value> class named_attribute_holder;
 template <class...Types> struct named_tuple;
 
 template <class T> struct __ntuple_tag_spec {};
@@ -95,7 +99,69 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
   inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type &&
   operator() (named_tuple<Types...>&& input) const 
   { return std::move(std::get<type>(std::forward<named_tuple<Types...>>(input))); }
+
+  template <typename T>
+  __attribute_const_reference_holder<type, T>
+  operator=(T const& value)
+  { return __attribute_const_reference_holder<type,T>(value); }
+
+  template <typename T>
+  __attribute_reference_holder<type, T>
+  operator=(T& value)
+  { return __attribute_reference_holder<type,T>(value); }
+
+  template <typename T>
+  __attribute_value_holder<type, T>
+  operator=(T&& value)
+  { return __attribute_value_holder<type,T>(std::move(value)); }
 };
+
+// Make named tuple
+
+template <class Tag, typename Value> class __attribute_const_reference_holder {
+  Value const& value_;
+ public:
+  using tag_type = Tag;
+  using value_type = Value;
+  __attribute_const_reference_holder(Value const& input) : value_(input) {}
+  __attribute_const_reference_holder(__attribute_const_reference_holder const&) = delete;
+  __attribute_const_reference_holder(__attribute_const_reference_holder&&) = default;
+  __attribute_const_reference_holder& operator=(__attribute_const_reference_holder const&) = delete;
+  __attribute_const_reference_holder& operator=(__attribute_const_reference_holder&&) = default;
+  Value const& get() && { return value_; }
+};
+
+template <class Tag, typename Value> class __attribute_reference_holder {
+  Value& value_;
+ public:
+  using tag_type = Tag;
+  using value_type = Value;
+  __attribute_reference_holder(Value& input) : value_(input) {}
+  __attribute_reference_holder(__attribute_reference_holder const&) = delete;
+  __attribute_reference_holder(__attribute_reference_holder&&) = default;
+  __attribute_reference_holder& operator=(__attribute_reference_holder const&) = delete;
+  __attribute_reference_holder& operator=(__attribute_reference_holder&&) = default;
+  Value& get() && { return value_; }
+};
+
+template <class Tag, typename Value> class __attribute_value_holder {
+  Value&& value_;
+ public:
+  using tag_type = Tag;
+  using value_type = Value;
+  __attribute_value_holder (Value&& input) : value_(std::move(input)) {}
+  __attribute_value_holder(__attribute_value_holder const&) = delete;
+  __attribute_value_holder(__attribute_value_holder&&) = default;
+  __attribute_value_holder& operator=(__attribute_value_holder const&) = delete;
+  __attribute_value_holder& operator=(__attribute_value_holder&&) = default;
+  Value&& get() && { return std::move(value_); }
+};
+
+template <typename ... Types> 
+named_tuple<typename Types::value_type(typename Types::tag_type) ...>
+make_named_tuple(Types&& ... args) {
+  return named_tuple<typename Types::value_type(typename Types::tag_type) ...>(std::move(args).get() ...);
+}
 
 // Get
 
