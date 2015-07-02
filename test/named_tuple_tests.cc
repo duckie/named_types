@@ -10,56 +10,47 @@
 
 namespace {
 }
+using namespace named_tuples;
 
 namespace {
-  //struct name;
-  //struct age;
-  //struct taille;
-  //struct liste;
-  //struct func;
-  //struct birthday;  // Not used, for failure tests
+  struct name;
+  struct age;
+  struct taille;
+  struct liste;
+  struct func;
+  struct birthday;  // Not used, for failure tests
 } 
 
-using namespace named_tuples;
 
 class UnitTests : public ::testing::Test {
  protected:
   named_tuple<
-    name(std::string)
-    , age(int)
-    , taille(double)
-    , liste(std::vector<int>)
-    , func(std::function<int(int)>)
+    std::string(name)
+    , int(age)
+    , double(taille)
+    , std::vector<int>(liste)
+    , std::function<int(int)>(func)
     >
-    test = {"Roger", 47, 1.92, {1,2,3}, [](int a) { return a*a; } };
+    test {"Roger", 47, 1.92, {1,2,3}, [](int a) { return a*a; } };
 };
 
-
+static named_tag<name> name_key;
 
 TEST_F(UnitTests, Construction1) {
-  //auto test = make_named_tuple( 
-      //_<name>() = std::string("Roger")
-      //, _<age>() = 47
-      //, _<taille>() = 1.92
-      //, _<liste>() = std::vector<int>({1,2,3})
-      //, _<func>() = [](int a) { return a*a; }
-      //);
-//
-  //EXPECT_EQ("Roger", test._<name>());
-  //EXPECT_EQ(47, test._<age>());
-  //EXPECT_EQ(1.92, test._<taille>());
-//
-  //EXPECT_EQ(1, test._<liste>()[0]);
-  //EXPECT_EQ(2, test._<liste>()[1]);
-  //EXPECT_EQ(3, test._<liste>()[2]);
-  //EXPECT_EQ(4, test._<func>()(2));
+  //EXPECT_EQ(std::string("Roger"), std::get<0>(test));
+  //EXPECT_EQ(std::string("Roger"), std::get<named_tag<name>>(test));
+  //EXPECT_EQ(std::string("Roger"), named_tuples::get<name>(test));
+  //EXPECT_EQ(std::string("Roger"), test[name_key]);
+  //EXPECT_EQ(std::string("Roger"), name_key(test));
+  //EXPECT_EQ(std::string("Roger"), test.get<name>());
 }
 
 TEST_F(UnitTests, TaggedTuple) {
   struct name : std::tag::basic_tag {};
   struct size : std::tag::basic_tag {};
-  using T1 = std::tagged_tuple<name(std::string),size(size_t)>;
-  T1 t {"Roger",3};
+  struct yo : std::tag::basic_tag {};
+  using T1 = std::tagged_tuple<name(std::string),size(size_t),yo(name)>;
+  T1 t {"Roger",3, {}};
 
   EXPECT_EQ(0, T1::tag_index<name>::value);
   EXPECT_EQ(std::string("Roger"), std::get<T1::tag_index<name>::value>(t));
