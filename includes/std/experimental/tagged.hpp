@@ -1,3 +1,21 @@
+//
+// This file is based on the work of Eric Niebler's work for the range library
+//
+// Most of the code has bee copied from https://github.com/ericniebler/stl2.
+//
+// There are no API breakage over Eric's code, but there is a few additions 
+// to add raw templating features, particularly the indexed_tagged template
+// which enables the user to use the mapping between a Tag and a Type where
+// applicable. This is the case for tagged_tuple, tagged_variants. 
+//
+// The indexed_tagged is a key feature to implement the named_tuple of 
+// this project.
+//
+// Other differences include:
+//   - removing C++14 only features, since they are scarce
+//     and can be written quite easily with C+11 code.
+//
+
 #ifndef SDT_EXPERIMENTAL_TAGGED_HEADER
 #define SDT_EXPERIMENTAL_TAGGED_HEADER
 
@@ -5,25 +23,15 @@
 #include <tuple>
 #include <type_traits>
 
-
 namespace std { 
-  template <class Base, class...Tags> 
-  struct tagged;
-  
-  template <class Base, class...Tags>
-  struct tuple_size<tagged<Base, Tags...>>
-    : tuple_size<Base> { };
-  
-  template <size_t N, class Base, class...Tags> 
-  struct tuple_element<N, tagged<Base, Tags...>> 
-    : tuple_element<N, Base> { };
+  template <class Base, class...Tags> struct tagged;
+  template <class Base, class...Tags> struct tuple_size<tagged<Base, Tags...>> : tuple_size<Base> {};
+  template <size_t N, class Base, class...Tags> struct tuple_element<N, tagged<Base, Tags...>> : tuple_element<N, Base> {};
 
   struct __getters { 
    private:
     template <class, class...> friend struct tagged;
-    
-    template <class Type, class Indices, class...Tags>
-    struct collect_;
+    template <class Type, class Indices, class...Tags> struct collect_;
     
     template <class Type, std::size_t...Is, class...Tags> 
     struct collect_<Type, index_sequence<Is...>, Tags...> : Tags::template getter<Type, Is>... { 
@@ -127,6 +135,10 @@ namespace std {
 
   template <class...Types> using __tagged_tuple = indexed_tagged<tuple<typename __tag_elem<Types>::type...>, Types...>;
 
+  /**
+   * Making tagged_tuple a new type is mandatory to make
+   * std::get resolve correclty
+   */
   template <class...Types> struct tagged_tuple : __tagged_tuple<Types...>
   { using __tagged_tuple<Types...>::__tagged_tuple; };
   
@@ -152,7 +164,6 @@ namespace std {
   };
 
   namespace tag { 
-
     // The basic_tag does not offer access by mmeber but can be used in other contexts
     struct basic_tag {
       // Should be private dut is doent work with clang 3.5
@@ -171,31 +182,6 @@ namespace std {
      private:
       friend struct __getters;
     };
-
-    //struct in {
-     //private:
-      //friend struct __getters;
-      //template <class Derived, size_t I>
-        //struct getter { 
-          //getter() = default;
-          //getter(const getter&) = default;
-          //getter &operator=(const getter&) = default;
-          //constexpr decltype(auto) in() & {
-            //return get<I>(static_cast<Derived &>(*this));
-          //}
-//
-          //constexpr decltype(auto) in() && {
-            //return get<I>(static_cast<Derived &&>(*this));
-          //}
-          //
-          //constexpr decltype(auto) in() const & {
-            //return get<I>(static_cast<const Derived &>(*this));
-          //} 
-//
-         //private:
-          //friend struct __getters; ~getter() = default;
-        //};
-    //}; // Other tag speciﬁers deﬁned similarly, see 25.1
   }
 }
 

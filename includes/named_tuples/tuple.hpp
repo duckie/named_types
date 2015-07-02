@@ -8,12 +8,72 @@
 #include "type_traits.hpp"
 #include "const_string.hpp"
 #include <iostream>
+#include <std/experimental/tagged.hpp>
 
 namespace named_tuples {
-using std::is_same;
-using std::enable_if;
 
-template <typename Id, typename ValueType> struct attribute_holder;
+template <class Tag> struct named_tag;
+
+template <class...Types> struct named_tuple;
+
+template <class...Types> 
+struct named_tuple : std::tagged_tuple<Types...>
+{
+  using std::tagged_tuple<Types...>::tagged_tuple;
+  named_tuple() = default;
+  named_tuple(named_tuple&&) = default;
+  named_tuple(const named_tuple&) = default;
+  named_tuple &operator=(named_tuple&&) = default;
+  named_tuple &operator=(const named_tuple&) = default;
+
+  //template <class Tag>
+  //inline typename named_tuple::template type_at<Tag>::raw_type&
+  //operator [] (Tag const&) & 
+  //{ return std::get<Tag>(static_cast<named_tuple&>(*this)); }
+//
+  //template <class Tag>
+  //inline typename named_tuple::template type_at<Tag>::raw_type const &
+  //operator [] (Tag const&) const & 
+  //{ return std::get<Tag>(static_cast<named_tuple const &>(*this)); }
+//
+  //template <class Tag>
+  //inline typename named_tuple::template type_at<Tag>::raw_type &&
+  //operator [] (Tag const&) && 
+  //{ return std::move(std::get<Tag>(static_cast<named_tuple&&>(*this))); }
+};
+
+
+template <class Tag> struct named_tag : std::tag::basic_tag {
+  //template <typename...Types> 
+  //inline typename named_tuple<Types...>::template type_at<Tag>::raw_type const&
+  //operator() (named_tuple<Types...> const& input) const 
+  //{ return std::get<Tag>(input); }
+//
+  //template <typename...Types> 
+  //inline typename named_tuple<Types...>::template type_at<Tag>::raw_type &
+  //operator() (named_tuple<Types...> & input) const 
+  //{ return std::get<Tag>(input); }
+//
+  //template <typename...Types> 
+  //inline typename named_tuple<Types...>::template type_at<Tag>::raw_type &&
+  //operator() (named_tuple<Types...>&& input) const 
+  //{ return std::move(std::get<Tag>(input)); }
+};
+
+
+#endif // NAMED_TUPLES_TUPLE_HEADER
+
+
+#if 0
+template <typename Tag, typename ValueType> struct attribute_holder;
+
+template <typename Id, typename ValueType> struct attribute_holder {
+  using id_type = Id;
+  using value_type = ValueType;
+  attribute_holder(ValueType const& value) : value_(value) {}
+  attribute_holder(ValueType&& value) : value_(std::move(value)) {}
+  ValueType value_;
+};
 
 template <typename Id> struct attribute_init_placeholder {
   constexpr attribute_init_placeholder() {}
@@ -31,13 +91,6 @@ template <llu Id, llu ... Ids> struct attribute_init_int_placeholder {
   }
 };
 
-template <typename Id, typename ValueType> struct attribute_holder {
-  using id_type = Id;
-  using value_type = ValueType;
-  attribute_holder(ValueType const& value) : value_(value) {}
-  attribute_holder(ValueType&& value) : value_(std::move(value)) {}
-  ValueType value_;
-};
 
 template <typename ... Attributes> class named_tuple;
 
