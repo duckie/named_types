@@ -116,9 +116,25 @@ namespace std {
       struct type_at : decltype(collect_::template get_tag_indexer<Tag>(collect_()))
       {};
 
+      template <class Tag>
+      struct permissive_type_at : decltype(collect_::template permissive_get_tag_indexer<Tag>(collect_()))
+      {};
+
+      template <class Tag>
+      struct has_tag : integral_constant<bool, (decltype(collect_::template permissive_get_tag_indexer<Tag>(collect_()))::tag_index::value < sizeof ... (Types))>
+      {};
+
      private:
       template <class Tag, class Arg, std::size_t Index> 
       static constexpr tag_indexer_<Tag,Arg,Index> get_tag_indexer(tag_indexer_<Tag,Arg,Index> const&)
+      { return {}; }
+
+      template <class Tag, class Arg, std::size_t Index> 
+      static constexpr tag_indexer_<Tag,Arg,Index> permissive_get_tag_indexer(tag_indexer_<Tag,Arg,Index> const&)
+      { return {}; }
+
+      template <class Tag> 
+      static constexpr tag_indexer_<Tag,void,sizeof ... (Types)> permissive_get_tag_indexer(...)
       { return {}; }
 
       template <class, class...> friend struct indexed_tagged;

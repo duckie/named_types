@@ -16,9 +16,11 @@ namespace {
   struct name;
   struct age;
   struct taille;
+  struct size;
   struct liste;
   struct func;
   struct birthday;  // Not used, for failure tests
+  struct surname;
 } 
 
 
@@ -47,6 +49,11 @@ TEST_F(UnitTests, Construction1) {
   EXPECT_EQ(std::string("Roger"), name_key(test));
 }
 
+TEST_F(UnitTests, Traits1) {
+  using TupleType = decltype(test);
+  EXPECT_TRUE(TupleType::has_tag<named_tag<name>>::value);
+  EXPECT_FALSE(TupleType::has_tag<named_tag<birthday>>::value);
+}
 
 
 TEST_F(UnitTests, Literal1) {
@@ -81,6 +88,29 @@ TEST_F(UnitTests, MakeTuple2) {
   EXPECT_EQ(3u, t1["size"_t]);
   EXPECT_EQ(3u, t1["objects"_t].size());
   EXPECT_EQ(std::string("Marcel"), surname);
+}
+
+TEST_F(UnitTests, Promotion1) {
+  named_tag<name> name_k;
+  named_tag<size> size_k;
+  named_tag<surname> surname_k;
+  named_tag<birthday> bday_k;
+  
+  auto t1 = make_named_tuple(
+    name_k = std::string("Roger"),
+    surname_k = std::string("LeGros"),
+    size_k = 3u
+  );
+
+  auto t2 = make_named_tuple(
+    name_k = std::string("Marcel"), 
+    size_k = 4u,
+    bday_k = 1e6
+  );
+
+  t1 = t2;
+  EXPECT_EQ(std::string("Marcel"), t1[name_k]);
+  EXPECT_EQ(4u, t1[size_k]);
 }
 
 TEST_F(UnitTests, TaggedTuple) {

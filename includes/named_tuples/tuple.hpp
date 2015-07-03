@@ -12,6 +12,8 @@
 
 namespace named_tuples {
 
+void __variadic_foreach_func_call(...) {};
+
 template <class Tag, typename Value> class __attribute_const_reference_holder;
 template <class Tag, typename Value> class __attribute_reference_holder;
 template <class Tag, typename Value> class __attribute_value_holder;
@@ -28,15 +30,39 @@ template <class Spec, class Arg> struct __ntuple_tag_elem<Arg(Spec)> { using typ
 template <class...Types> 
 struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type) ...>
 {
+  // Type aliases
+
   using tagged_type = std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>;
   using std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>::tagged_tuple;
 
-  //template <typename ... T> named_tuple(T&& ... args) : tagged_type(std::forward<T>(args)...) {}
+  // Constructors
+
   constexpr named_tuple() = default;
   constexpr named_tuple(named_tuple&&) = default;
   constexpr named_tuple(const named_tuple&) = default;
   named_tuple &operator=(named_tuple&&) = default;
   named_tuple &operator=(const named_tuple&) = default;
+
+
+ private:
+  template <typename T> using Named = typename named_tag<T>::type;
+  template <class Tup, typename Tag> using TypeAt = typename Tup::template type_at<Named<Tag>>::raw_type;
+  template <class Tup, typename Tag> using LooseTypeAt = typename Tup::template permissive_type_at<Named<Tag>>::raw_type;
+
+  template <class ForeignTuple, typename Tag> 
+  static typename std::enable_if< ForeignTuple::template has_tag<Named<Tag>>::value && std::is_convertible<LooseTypeAt<ForeignTuple,Tag>, TypeAt<named_tuple,Tag>>::value, TypeAt<named_tuple,Tag> >::type const & 
+  assign_from(ForeignTuple const& from)
+  { return std::get<Named<Tag>>(from); }
+
+  template <class ForeignTuple, typename Tag> 
+  static typename std::enable_if< (!ForeignTuple::template has_tag<Named<Tag>>::value), TypeAt<named_tuple,Tag> >::type
+  assign_from(ForeignTuple const&)
+  { return {}; }
+  
+ public:
+  template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...> const& other) 
+    : tagged_type(assign_from<named_tuple<ForeignTypes...>,typename __ntuple_tag_spec<Types>::type>(other)...) 
+  {}
 
   // Member function get
 
