@@ -12,7 +12,8 @@
 
 namespace named_tuples {
 
-void __variadic_foreach_func_call(...) {};
+//struct __variadic_call_instance {};
+//__variadic_foreach_func_call(...) {};
 
 template <class Tag, typename Value> class __attribute_const_reference_holder;
 template <class Tag, typename Value> class __attribute_reference_holder;
@@ -206,6 +207,12 @@ inline constexpr typename named_tuple<Types...>::template type_at<typename named
 get(named_tuple<Types...>&& input)
 { return move(std::get<typename named_tag<Tag>::type>(std::forward<named_tuples::named_tuple<Types...>>(input))); };
 
+// apply
+
+template <class ... Types, class Func> void apply(named_tuple<Types...> const& in, Func&& f) {
+  using swallow = int[];
+  (void) swallow {int{}, (f(typename __ntuple_tag_spec<Types>::type {},get<typename __ntuple_tag_spec<Types>::type>(in)),int{})...};
+}
 
 // String literals, GNU Extension only
 #ifdef __GNUG__

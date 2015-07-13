@@ -128,7 +128,40 @@ TEST_F(UnitTests, TaggedTuple) {
   EXPECT_EQ(3, std::get<T1::tag_index<size>::value>(t));
   EXPECT_EQ(3, std::get<size>(t));
 
-
   auto t2 = t;
   EXPECT_EQ(3, std::get<size>(t2));
+}
+
+struct serializer_01 {
+  std::ostringstream output;
+
+  template <class Tag, class Type> void operator() (Tag const&, Type const& value) {
+    output << '"' << value << "\";";
+  }
+
+  std::string result() { return output.str(); };
+};
+
+template <class Tuple> std::string func_apply_01 (Tuple const& t) {
+  serializer_01 instance;
+  apply(t, instance);
+  return instance.result();
+}
+
+TEST_F(UnitTests, Apply1) {
+  auto t1 = make_named_tuple( 
+    "name"_t = std::string("Roger"),
+    "surname"_t = std::string("Marcel"),
+    "size"_t = 3u
+  );
+  std::string serialized = func_apply_01(t1);
+  EXPECT_EQ("\"Roger\";\"Marcel\";\"3\";", serialized);
+
+  auto t2 = make_named_tuple();
+  serialized = func_apply_01(t2);
+  EXPECT_EQ("", serialized);
+
+  auto t3 = make_named_tuple("name"_t = std::string("Roger"));
+  serialized = func_apply_01(t3);
+  EXPECT_EQ("\"Roger\";", serialized);
 }
