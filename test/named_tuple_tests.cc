@@ -13,8 +13,15 @@ namespace {
 }
 
 namespace {
-  struct name;
-  struct age;
+  struct name {
+    //static char const* name() { return "name"; }
+  };
+  struct age {
+    //static constexpr char const * classname = "age1";
+    //static constexpr char const * name = "age2";
+    //inline static char const* classname() { return "age3"; }
+    inline static char const* name() { return "age4"; }
+  };
   struct taille;
   struct size;
   struct liste;
@@ -164,4 +171,10 @@ TEST_F(UnitTests, Apply1) {
   auto t3 = make_named_tuple("name"_t = std::string("Roger"));
   serialized = func_apply_01(t3);
   EXPECT_EQ("\"Roger\";", serialized);
+
+  std::cout << __extract_name<name>::value << "\n";
+  std::cout << __extract_name<age>::value << "\n";
+  std::cout << __extract_name<typename decltype("taille"_t)::value_type>::value << "\n";
+
+
 }

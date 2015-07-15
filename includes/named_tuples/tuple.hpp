@@ -12,9 +12,6 @@
 
 namespace named_tuples {
 
-//struct __variadic_call_instance {};
-//__variadic_foreach_func_call(...) {};
-
 template <class Tag, typename Value> class __attribute_const_reference_holder;
 template <class Tag, typename Value> class __attribute_reference_holder;
 template <class Tag, typename Value> class __attribute_value_holder;
@@ -103,13 +100,47 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
 
 // Tag
 
+template<typename T> class __has_user_defined_name {
+  template <typename TT> static auto test(int) -> decltype(TT::classname);
+  template <typename TT> static auto test(int) -> decltype(TT::name);
+  template <typename TT> static auto test(int) -> decltype(TT::classname());
+  template <typename TT> static auto test(int) -> decltype(TT::name());
+  template <typename TT> static auto test(...) -> void;
+ public:
+  static constexpr bool value = std::is_same<decltype(test<T>(0)),char const *>::value;
+};
+
+template<typename T> class __extract_constexpr_name {
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::classname) { return TT::classname; }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::name) { return TT::name; }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::classname()) { return TT::classname(); }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::name()) { return TT::name(); }
+ public:
+  static constexpr char const* value = extract<T>();
+};
+
+template<typename T> class __extract_name {
+  template <typename TT> static inline auto extract(int) -> decltype(TT::classname) { return TT::classname; }
+  template <typename TT> static inline auto extract(int) -> decltype(TT::name) { return TT::name; }
+  template <typename TT> static inline auto extract(int) -> decltype(TT::classname()) { return TT::classname(); }
+  template <typename TT> static inline auto extract(int) -> decltype(TT::name()) { return TT::name(); }
+  template <typename TT> static inline auto extract(...) -> char const * { return typeid(TT).name(); }
+ public:
+  static char const* value;
+};
+
+template<typename T> char const* __extract_name<T>::value = __extract_name<T>::extract<T>(0);
+
 template <class Tag> struct named_tag : std::tag::basic_tag {
  private:
   template <typename T> struct unnested_ { using type = named_tag; };
   template <typename T> struct unnested_<named_tag<T>> { using type = named_tag<T>; };
+  template <typename T> struct unnested_value_ { using type = T; };
+  template <typename T> struct unnested_value_<named_tag<T>> { using type = T; };
 
  public:
   using type = typename unnested_<Tag>::type;
+  using value_type = typename unnested_value_<Tag>::type;
   constexpr named_tag() = default;
 
   template <typename...Types> 
@@ -225,10 +256,26 @@ template <typename T, T ... chars> class string_literal {
   constexpr char const* str() const { return data_; }
   constexpr size_t size() const { return size_; }
   constexpr char operator[] (size_t index) const { return data_[index]; }
-  constexpr operator named_tag<string_literal> () { return {}; }
 };
 
-//template <typename T, T... chars>  constexpr string_literal<T,chars...> operator ""_t () { return {}; }
+template<typename T, T... chars> class __has_user_defined_name<string_literal<T,chars...>> {
+ public:
+  static constexpr bool value = true;
+};
+
+template<typename T, T... chars> class __extract_constexpr_name <string_literal<T,chars...>> {
+  static const string_literal<T,chars...> literal_value;
+ public:
+  static constexpr char const* value = literal_value.str();
+};
+template<typename T, T... chars> const string_literal<T,chars...>__extract_constexpr_name <string_literal<T,chars...>>::literal_value {};
+
+template<typename T, T... chars> class __extract_name <string_literal<T,chars...>> {
+  static const string_literal<T,chars...> literal_value;
+ public:
+  static constexpr char const* value = literal_value.str();
+};
+template<typename T, T... chars> const string_literal<T,chars...>__extract_name <string_literal<T,chars...>>::literal_value {};
 
 #endif  // __GNUG__
 
