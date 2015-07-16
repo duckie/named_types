@@ -1,11 +1,13 @@
-#include <named_tuples/tuple.hpp>
+#include <named_types/named_tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 
 namespace {
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
+using named_types::named_tag;
+using named_types::make_named_tuple;
+template <class T>  named_tag<T> _() { return {}; }
+template <class Tag, class Tuple> auto _(Tuple&& in) -> decltype(_<Tag>()(in)) { return _<Tag>()(in); }
 
 struct name;
 struct age;
@@ -22,19 +24,20 @@ int main() {
       );
 
   std::cout 
-    << test._<name>() << "\n"
-    << test._<age>() << "\n"
-    << test._<taille>() << "\n"
-    << test._<liste>().size() << std::endl;
+    << _<name>(test) << "\n"
+    << _<age>(test) << "\n"
+    << _<taille>(test) << "\n"
+    << _<liste>(test).size() << std::endl;
 
-  test._<name>() = "Marcel";
-  ++test.get<1>();
+  _<name>(test) = "Marcel";
+  ++std::get<1>(test);
+  std::get<named_tag<taille>>(test) = 1.93;
   
   std::cout 
-    << test.get<0>() << "\n"
-    << test.get<1>() << "\n"
-    << test.get<2>() << "\n"
-    << test.get<3>().size() << std::endl;
+    << std::get<0>(test) << "\n"
+    << std::get<1>(test) << "\n"
+    << std::get<2>(test) << "\n"
+    << std::get<3>(test).size() << std::endl;
 
   return 0;
 }
