@@ -105,19 +105,19 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
   // Specific behavior : named_tuple
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type const&
+  inline constexpr decltype(auto)
   operator() (named_tuple<Types...> const& input) const 
   { return std::get<type>(input); }
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type &
+  inline constexpr decltype(auto)
   operator() (named_tuple<Types...> & input) const 
   { return std::get<type>(input); }
 
   template <typename...Types> 
-  inline constexpr typename named_tuple<Types...>::template type_at<type>::raw_type &&
+  inline constexpr decltype(auto)
   operator() (named_tuple<Types...>&& input) const 
-  { return std::move(std::get<type>(std::forward<named_tuple<Types...>>(input))); }
+  { return std::get<type>(std::move(input)); }
 };
 
 // Attribute holders
@@ -160,5 +160,12 @@ template <class Tag, typename Value> class __attribute_value_holder {
   __attribute_value_holder& operator=(__attribute_value_holder&&) = default;
   Value&& get() && { return std::move(value_); }
 };
+
+// get
+
+template <class Tag, class Tagged> 
+decltype(auto)
+get(Tagged&& input) 
+{ return std::get<typename named_tag<Tag>::type>(std::forward<Tagged>(input)); };
 
 }  // namespace named_types

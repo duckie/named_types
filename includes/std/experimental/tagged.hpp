@@ -11,9 +11,6 @@
 // The indexed_tagged is a key feature to implement the named_tuple of 
 // this project.
 //
-// Other differences include:
-//   - removing C++14 only features, since they are scarce
-//     and can be written quite easily with C+11 code.
 //
 
 #ifndef SDT_EXPERIMENTAL_TAGGED_HEADER

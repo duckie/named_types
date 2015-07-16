@@ -1,7 +1,7 @@
 named\_types
 ==================
 
-`named_types` is a C++11/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility. `named_variant` and `named_any` are planned.
+`named_types` is a C++14/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility. `named_variant` and `named_any` are planned.
 
 ## named\_tuple
 

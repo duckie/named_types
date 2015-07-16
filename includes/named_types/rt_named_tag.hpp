@@ -13,16 +13,13 @@ template<typename T> class type_name {
  public:
   static char const* value;
 };
-
 template<typename T> char const* type_name<T>::value = type_name<T>::extract<T>(0);
 
 // Name extractors specified to work with string literals
 #ifdef __GNUG__
 template<typename T, T... chars> class type_name <string_literal<T,chars...>> {
-  static const string_literal<T,chars...> literal_value;
  public:
-  static constexpr char const* value = literal_value.str();
+  static constexpr char const* value = string_literal<T,chars...>::data;
 };
-template<typename T, T... chars> const string_literal<T,chars...> type_name<string_literal<T,chars...>>::literal_value {};
 #endif  // __GNUG__
 }  // namespace named_types
