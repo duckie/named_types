@@ -17,19 +17,20 @@ int main() {
       );
 
   std::cout 
-    << test["nom"_t] << "\n";
-    //<< "age"_t(test) << "\n"
-    //<< test["taille"_t] << "\n"
-    //<< ("liste"_t)>().size() << std::endl;
+    << "nom"_t(test) << "\n"
+    << "age"_t(test) << "\n"
+    << "taille"_t(test) << "\n"
+    << "liste"_t(test).size() << std::endl;
 
-  test.get<decltype("nom"_t)>() = "Marcel";
+  std::get<decltype("nom"_t)>(test) = "Marcel";
   ++std::get<1>(test);
+  "taille"_t(test) = 1.93;
   
-  //std::cout 
-    //<< test.get<0>() << "\n"
-    //<< test.get<1>() << "\n"
-    //<< test.get<2>() << "\n"
-    //<< test.get<3>().size() << std::endl;
+  std::cout 
+    << std::get<0>(test) << "\n"
+    << std::get<1>(test) << "\n"
+    << std::get<2>(test) << "\n"
+    << std::get<3>(test).size() << std::endl;
 
   return 0;
 }
