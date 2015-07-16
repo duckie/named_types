@@ -29,7 +29,7 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   template <class Tup, typename Tag> using LooseTypeAt = typename Tup::template permissive_type_at<Named<Tag>>::raw_type;
 
   template <class ForeignTuple, typename Tag> 
-  static typename std::enable_if< ForeignTuple::template has_tag<Named<Tag>>::value && std::is_convertible<LooseTypeAt<ForeignTuple,Tag>, TypeAt<named_tuple,Tag>>::value, TypeAt<named_tuple,Tag> >::type const & 
+  static typename std::enable_if< ForeignTuple::template has_tag<Named<Tag>>::value && std::is_convertible<LooseTypeAt<ForeignTuple,Tag>, TypeAt<named_tuple,Tag>>::value, TypeAt<named_tuple,Tag> >::type
   assign_from(ForeignTuple const& from)
   { return std::get<Named<Tag>>(from); }
 
