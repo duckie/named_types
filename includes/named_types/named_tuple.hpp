@@ -14,6 +14,10 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   using tagged_type = std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>;
   using std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>::tagged_tuple;
 
+  // Static data
+
+  static constexpr size_t size = sizeof ... (Types);
+
   // Constructors
 
   constexpr named_tuple() = default;
@@ -22,8 +26,8 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   named_tuple &operator=(named_tuple&&) = default;
   named_tuple &operator=(const named_tuple&) = default;
 
-
  private:
+
   template <typename T> using Named = typename named_tag<T>::type;
   template <class Tup, typename Tag> using TypeAt = typename Tup::template type_at<Named<Tag>>::raw_type;
   template <class Tup, typename Tag> using LooseTypeAt = typename Tup::template permissive_type_at<Named<Tag>>::raw_type;

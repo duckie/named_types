@@ -173,9 +173,9 @@ TEST_F(UnitTests, Apply1) {
   serialized = func_apply_01(t3);
   EXPECT_EQ("\"Roger\";", serialized);
 
-  std::cout << __extract_name<name>::value << "\n";
-  std::cout << __extract_name<age>::value << "\n";
-  std::cout << __extract_name<typename decltype("taille"_t)::value_type>::value << "\n";
+  std::cout << type_name<name>::value << "\n";
+  std::cout << type_name<age>::value << "\n";
+  std::cout << type_name<typename decltype("taille"_t)::value_type>::value << "\n";
 
 
 }
