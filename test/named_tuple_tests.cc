@@ -5,7 +5,7 @@
 #include <tuple>
 #include <array>
 #include <functional>
-#include <named_types/tuple.hpp>
+#include <named_types/named_tuple.hpp>
 
 using namespace named_types;
 namespace {

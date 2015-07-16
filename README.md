@@ -4,7 +4,7 @@ named\_tuple
 `named_tuple` is a C++11 named tuple implementation. It interacts well with the standard library. `named_tuple` is a header-only library.
 
 ```c++
-#include <named_types/tuple.hpp>
+#include <named_types/named_tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
@@ -47,7 +47,7 @@ int main() {
 ###  
 
 ```c++
-#include <named_types/tuple.hpp>
+#include <named_types/named_tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
