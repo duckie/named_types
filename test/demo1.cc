@@ -3,34 +3,33 @@
 #include <iostream>
 #include <vector>
 
+using namespace named_types;
 namespace {
-unsigned constexpr operator "" _h(const char* c,size_t) { return named_types::const_hash(c); }
-using named_types::make_named_tuple;
-using named_types::attribute_helper::_;
+  template <typename T, T... chars>  constexpr named_tag<string_literal<T,chars...>> operator ""_t () { return {}; }
 }
 
 int main() {
   auto test = make_named_tuple( 
-      _<"nom"_h>() = std::string("Roger")
-      , _<"age"_h>() = 47
-      , _<"taille"_h>() = 1.92
-      , _<"liste"_h>() = std::vector<int>({1,2,3})
+      "nom"_t = std::string("Roger")
+      , "age"_t = 47
+      , "taille"_t = 1.92
+      , "liste"_t = std::vector<int>({1,2,3})
       );
 
   std::cout 
-    << test._<"nom"_h>() << "\n"
-    << test._<"age"_h>() << "\n"
-    << test._<"taille"_h>() << "\n"
-    << test._<"liste"_h>().size() << std::endl;
+    << test["nom"_t] << "\n";
+    //<< "age"_t(test) << "\n"
+    //<< test["taille"_t] << "\n"
+    //<< ("liste"_t)>().size() << std::endl;
 
-  test._<"nom"_h>() = "Marcel";
-  ++test.get<1>();
+  test.get<decltype("nom"_t)>() = "Marcel";
+  ++std::get<1>(test);
   
-  std::cout 
-    << test.get<0>() << "\n"
-    << test.get<1>() << "\n"
-    << test.get<2>() << "\n"
-    << test.get<3>().size() << std::endl;
+  //std::cout 
+    //<< test.get<0>() << "\n"
+    //<< test.get<1>() << "\n"
+    //<< test.get<2>() << "\n"
+    //<< test.get<3>().size() << std::endl;
 
   return 0;
 }
