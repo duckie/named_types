@@ -17,6 +17,42 @@ template <typename T, T ... chars> class string_literal {
 };
 #endif  // __GNUG__
 
+// Traits for compile time name extraction
+
+template<typename T> class has_user_defined_name {
+  template <typename TT> static auto test(int) -> decltype(TT::classname);
+  template <typename TT> static auto test(int) -> decltype(TT::name);
+  template <typename TT> static auto test(int) -> decltype(TT::classname());
+  template <typename TT> static auto test(int) -> decltype(TT::name());
+  template <typename TT> static auto test(...) -> void;
+ public:
+  static constexpr bool value = std::is_same<decltype(test<T>(0)),char const *>::value;
+};
+
+template<typename T> class constexpr_type_name {
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::classname) { return TT::classname; }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::name) { return TT::name; }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::classname()) { return TT::classname(); }
+  template <typename TT> static inline constexpr auto extract(int) -> decltype(TT::name()) { return TT::name(); }
+ public:
+  static constexpr char const* value = extract<T>();
+};
+
+// Name extractors specified to work with string literals
+#ifdef __GNUG__
+template<typename T, T... chars> class has_user_defined_name<string_literal<T,chars...>> {
+ public:
+  static constexpr bool value = true;
+};
+
+template<typename T, T... chars> class constexpr_type_name <string_literal<T,chars...>> {
+  static const string_literal<T,chars...> literal_value;
+ public:
+  static constexpr char const* value = literal_value.str();
+};
+template<typename T, T... chars> const string_literal<T,chars...> constexpr_type_name<string_literal<T,chars...>>::literal_value {};
+#endif  // __GNUG__
+
 // Private types
 
 template <class Tag, typename Value> class __attribute_const_reference_holder;

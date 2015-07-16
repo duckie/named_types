@@ -25,12 +25,12 @@ template <class Tuple> struct JsonSerializer {
   template <class Tag, class Type> 
   typename std::enable_if<Tuple::template tag_index<Tag>::value < (Tuple::size-1), void>::type
   operator() (Tag const&, Type const& value) 
-  { output << '"' << type_name<typename Tag::value_type>::value << "\":\"" << value << "\","; }
+  { output << '"' << constexpr_type_name<typename Tag::value_type>::value << "\":\"" << value << "\","; }
 
   template <class Tag, class Type> 
   typename std::enable_if<Tuple::template tag_index<Tag>::value == (Tuple::size-1), void>::type
   operator() (Tag const&, Type const& value) 
-  { output << '"' << type_name<typename Tag::value_type>::value << "\":\"" << value << '"'; }
+  { output << '"' << constexpr_type_name<typename Tag::value_type>::value << "\":\"" << value << '"'; }
 };
 
 template <class Tuple> std::string JsonSerialize(Tuple const& t) {
