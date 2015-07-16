@@ -8,7 +8,7 @@
 #include "type_info.hpp"
 #include "constexpr_string.hpp"
 
-namespace named_tuples {
+namespace named_types {
 
 
 // Shared static data
@@ -220,6 +220,6 @@ template <> class runtime_tuple_str8< named_tuple<> > : public const_runtime_tup
   template <typename T> T& get(std::string const& name) { return throw std::out_of_range(""); }
 };
 
-}  // namespace named_tuples
+}  // namespace named_types
 
 #endif  // NAMED_TUPLES_CONST_STRING_HEADER

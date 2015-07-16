@@ -10,7 +10,7 @@
 #include <iostream>
 #include <std/experimental/tagged.hpp>
 
-namespace named_tuples {
+namespace named_types {
 
 template <class Tag, typename Value> class __attribute_const_reference_holder;
 template <class Tag, typename Value> class __attribute_reference_holder;
@@ -236,7 +236,7 @@ get(named_tuple<Types...>& input)
 template <class Tag, class ... Types> 
 inline constexpr typename named_tuple<Types...>::template type_at<typename named_tag<Tag>::type>::raw_type &&
 get(named_tuple<Types...>&& input)
-{ return move(std::get<typename named_tag<Tag>::type>(std::forward<named_tuples::named_tuple<Types...>>(input))); };
+{ return move(std::get<typename named_tag<Tag>::type>(std::forward<named_types::named_tuple<Types...>>(input))); };
 
 // apply
 
@@ -279,7 +279,7 @@ template<typename T, T... chars> const string_literal<T,chars...>__extract_name 
 
 #endif  // __GNUG__
 
-}  // namespace named_tuples
+}  // namespace named_types
 
 namespace std {
 }  // namespace std

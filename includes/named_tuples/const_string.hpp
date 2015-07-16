@@ -3,7 +3,7 @@
 #include <cstddef>
 #include "type_traits.hpp"
 
-namespace named_tuples {
+namespace named_types {
 
 size_t constexpr const_str_size(char const *input) {
   return *input ?  1u + const_str_size(input + 1) : 0;
@@ -28,6 +28,6 @@ class const_string {
   constexpr operator llu() const { return const_hash(data_); }
 };
 
-}  // namespace named_tuples
+}  // namespace named_types
 
 #endif  // NAMED_TUPLES_CONST_STRING_HEADER

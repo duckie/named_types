@@ -1,9 +1,9 @@
 #include <iostream>
 #include <gtest/gtest.h>
-#include <named_tuples/tuple.hpp>
-#include <named_tuples/constexpr_string.hpp>
-#include <named_tuples/introspection.hpp>
-#include <named_tuples/visitor.hpp>
+#include <named_types/tuple.hpp>
+#include <named_types/constexpr_string.hpp>
+#include <named_types/introspection.hpp>
+#include <named_types/visitor.hpp>
 #include <string>
 #include <vector>
 #include <typeinfo>
@@ -13,15 +13,15 @@
 #include <std/experimental/tagged.hpp>
 
 namespace {
-using named_tuples::get;
-using named_tuples::named_tuple;
-using named_tuples::id_value;
-using named_tuples::tuple_cast;
-using named_tuples::named_tuple_cast;
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
-unsigned long long constexpr operator "" _h(const char* c, size_t s) { return named_tuples::attribute_helper::hash::generate_id(c, s); }
-unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+using named_types::get;
+using named_types::named_tuple;
+using named_types::id_value;
+using named_types::tuple_cast;
+using named_types::named_tuple_cast;
+using named_types::make_named_tuple;
+using named_types::attribute_helper::_;
+unsigned long long constexpr operator "" _h(const char* c, size_t s) { return named_types::attribute_helper::hash::generate_id(c, s); }
+unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_types::str_to_str8_part(c); }
 }
 
 namespace {
@@ -33,7 +33,7 @@ namespace {
   struct birthday;  // Not used, for failure tests
 } 
 
-//using namespace named_tuples;
+//using namespace named_types;
 
 class UnitTests : public ::testing::Test {
  protected:
@@ -242,7 +242,7 @@ TEST_F(UnitTests, Injection2) {
 }
 
 TEST_F(UnitTests, Str8_str_to_nb1) {
-  using namespace named_tuples;
+  using namespace named_types;
   //unsigned long long constexpr test = 8;
   unsigned long long constexpr test = str_to_str8_part("aabbcc");
   //std::cout << test << std::endl;
@@ -260,11 +260,11 @@ TEST_F(UnitTests, Str8_str_to_nb1) {
 }
 
 TEST_F(UnitTests, Str8_tupl1) {
-  //unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+  //unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_types::str_to_str8_part(c); }
 
   // ...
 
-  using namespace named_tuples;
+  using namespace named_types;
 
   // Long names must be split into 8-char long chunks at most
   using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
@@ -326,7 +326,7 @@ struct JsonSerializer {
   template <typename Tuple> void end(Tuple&) { output << "}"; }
 
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
-    output << "  \"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
+    output << "  \"" << named_types::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
   }
 
   std::string value() { return output.str(); }
@@ -336,7 +336,7 @@ struct JsonSerializer {
 }
 
 TEST_F(UnitTests, Visiting_test1) {
-  using namespace named_tuples;
+  using namespace named_types;
 
   auto test = make_named_tuple(
       _<"name"_s>() = std::string("Roger")
@@ -355,7 +355,7 @@ TEST_F(UnitTests, Visiting_test1) {
 }
 
 namespace {
- template <typename T> using key = named_tuples::attribute_init_placeholder<T>;
+ template <typename T> using key = named_types::attribute_init_placeholder<T>;
  constexpr key<name> name; 
  struct nb_tries_t; constexpr key<nb_tries_t> nb_tries; 
 }

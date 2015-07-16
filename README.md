@@ -4,17 +4,17 @@ named\_tuple
 `named_tuple` is a C++11 named tuple implementation. It interacts well with the standard library. `named_tuple` is a header-only library.
 
 ```c++
-#include <named_tuples/tuple.hpp>
+#include <named_types/tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 
 namespace {
 unsigned constexpr operator "" _h(const char* c,size_t s) { 
-  return named_tuples::const_string(c,s);
+  return named_types::const_string(c,s);
 }
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
+using named_types::make_named_tuple;
+using named_types::attribute_helper::_;
 }
 
 int main() {
@@ -47,14 +47,14 @@ int main() {
 ###  
 
 ```c++
-#include <named_tuples/tuple.hpp>
+#include <named_types/tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 
 namespace {
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
+using named_types::make_named_tuple;
+using named_types::attribute_helper::_;
 
 struct name;
 struct age;
@@ -173,15 +173,15 @@ Otherwise, a `static_cast` may be used. `static_cast` behaves correctly and move
 
 #### Runtime introspection
 
-Runtime introspection can be used to dynamically access members. An `runtime_tuple` object can be built based on a named tuple to access members dynamically either by index or by name. To do so, a way to compute the name back from the identifier must exist. `named_tuples` provides a facility to encapsulate constexpr strings into types, making runtime introspection possible.
+Runtime introspection can be used to dynamically access members. An `runtime_tuple` object can be built based on a named tuple to access members dynamically either by index or by name. To do so, a way to compute the name back from the identifier must exist. `named_types` provides a facility to encapsulate constexpr strings into types, making runtime introspection possible.
 
 ```c++
 unsigned long long constexpr operator "" _s(const char* c, size_t s) 
-{ return named_tuples::str_to_str8_part(c); }
+{ return named_types::str_to_str8_part(c); }
 
 // ...
 
-using namespace named_tuples;
+using namespace named_types;
 
 // Long names must be split into 8-char long chunks at most
 using subscriptions = id_value<"nb"_s, "Subscri"_s, "ptions"_s>;
@@ -215,11 +215,11 @@ std::string& hello = runtime_test.get<std::string>(3u);
 
 #### Generating visitors
 
-`named_tuples` provides a tool to generate visiting code of any tuple. This can be used to implement generic serialization of any tuple. Let say we have a simple tuple implemented like this:
+`named_types` provides a tool to generate visiting code of any tuple. This can be used to implement generic serialization of any tuple. Let say we have a simple tuple implemented like this:
 
 ```c++
 unsigned long long constexpr operator "" _s(const char* c, size_t s) 
-{ return named_tuples::str_to_str8_part(c); }
+{ return named_types::str_to_str8_part(c); }
 ```
 
 ```c++
@@ -236,7 +236,7 @@ A simple visitor to display the content of the tuple may be implemented like thi
 ```c++
 struct DisplayValues {
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
-    std::cout << named_tuples::str8_name<typename Attr::id_type>::value.str()
+    std::cout << named_types::str8_name<typename Attr::id_type>::value.str()
       << ": " << attribute.get() << std::endl;;
   }
 };
@@ -278,7 +278,7 @@ struct JsonSerializer {
     void end(Tuple&) { output << "}"; }
 
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
-    output << "  \"" << named_tuples::str8_name<typename Attr::id_type>::value.str() 
+    output << "  \"" << named_types::str8_name<typename Attr::id_type>::value.str() 
       << "\":\"" << attribute.get() << "\"";
   }
 

@@ -1,14 +1,14 @@
-#include <named_tuples/tuple.hpp>
+#include <named_types/tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 
 namespace {
-using named_tuples::named_tuple;
-using named_tuples::tuple_cast;
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
-using named_tuples::get;
+using named_types::named_tuple;
+using named_types::tuple_cast;
+using named_types::make_named_tuple;
+using named_types::attribute_helper::_;
+using named_types::get;
 
 struct name;
 struct age;

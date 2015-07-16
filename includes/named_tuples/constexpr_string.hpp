@@ -4,7 +4,7 @@
 #include "const_string.hpp"
 #include "type_traits.hpp"
 
-namespace named_tuples {
+namespace named_types {
 
 template <char Value> struct constexpr_char {
   static constexpr char value = Value;
@@ -114,6 +114,6 @@ template<llu ... Ids> const typename concat_str8<Ids...>::type str8_name<id_valu
 
 template <llu Id, llu ... Ids> struct str12;
 
-}  // namespace named_tuples
+}  // namespace named_types
 
 #endif  // NAMED_TUPLES_CONSTEXPR_STRING_HEADER

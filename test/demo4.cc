@@ -1,22 +1,22 @@
-#include <named_tuples/tuple.hpp>
-#include <named_tuples/constexpr_string.hpp>
-#include <named_tuples/visitor.hpp>
+#include <named_types/tuple.hpp>
+#include <named_types/constexpr_string.hpp>
+#include <named_types/visitor.hpp>
 #include <string>
 #include <iostream>
 #include <sstream>
 
-using named_tuples::id_value;
-using named_tuples::named_tuple;
-using named_tuples::make_named_tuple;
+using named_types::id_value;
+using named_types::named_tuple;
+using named_types::make_named_tuple;
 
 namespace {
-using named_tuples::attribute_helper::_;
+using named_types::attribute_helper::_;
 
-unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_tuples::str_to_str8_part(c); }
+unsigned long long constexpr operator "" _s(const char* c, size_t s) { return named_types::str_to_str8_part(c); }
 
 struct DisplayValues {
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
-    std::cout << named_tuples::str8_name<typename Attr::id_type>::value.str() << ": " << attribute.get() << std::endl;;
+    std::cout << named_types::str8_name<typename Attr::id_type>::value.str() << ": " << attribute.get() << std::endl;;
   }
 };
 
@@ -30,7 +30,7 @@ struct JsonSerializer {
   template <typename Tuple> void end(Tuple&) { output << "}"; }
 
   template <typename Tuple, typename Attr> void apply(Tuple&, Attr& attribute) {
-    output << "  \"" << named_tuples::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
+    output << "  \"" << named_types::str8_name<typename Attr::id_type>::value.str() << "\":\"" << attribute.get() << "\"";
   }
 
   std::string value() { return output.str(); }
@@ -67,8 +67,8 @@ void start(named_tuple<
 
 
 int main() { 
-  using namespace named_tuples;
-  using named_tuples::attribute_helper::_;
+  using namespace named_types;
+  using named_types::attribute_helper::_;
 
   auto test = make_named_tuple(
       _<"name"_s>() = std::string("Roger")

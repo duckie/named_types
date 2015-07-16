@@ -1,12 +1,12 @@
-#include <named_tuples/tuple.hpp>
+#include <named_types/tuple.hpp>
 #include <string>
 #include <iostream>
 #include <vector>
 
 namespace {
-unsigned constexpr operator "" _h(const char* c,size_t) { return named_tuples::const_hash(c); }
-using named_tuples::make_named_tuple;
-using named_tuples::attribute_helper::_;
+unsigned constexpr operator "" _h(const char* c,size_t) { return named_types::const_hash(c); }
+using named_types::make_named_tuple;
+using named_types::attribute_helper::_;
 }
 
 int main() {

@@ -5,9 +5,9 @@
 #include <tuple>
 #include <array>
 #include <functional>
-#include <named_tuples/tuple.hpp>
+#include <named_types/tuple.hpp>
 
-using namespace named_tuples;
+using namespace named_types;
 namespace {
   template <typename T, T... chars>  constexpr named_tag<string_literal<T,chars...>> operator ""_t () { return {}; }
 }
@@ -48,8 +48,8 @@ static named_tag<name> name_key;
 TEST_F(UnitTests, Construction1) {
   EXPECT_EQ(std::string("Roger"), std::get<0>(test));
   EXPECT_EQ(std::string("Roger"), std::get<named_tag<name>>(test));
-  EXPECT_EQ(std::string("Roger"), named_tuples::get<name>(test));
-  EXPECT_EQ(std::string("Roger"), named_tuples::get<named_tag<name>>(test));
+  EXPECT_EQ(std::string("Roger"), named_types::get<name>(test));
+  EXPECT_EQ(std::string("Roger"), named_types::get<named_tag<name>>(test));
   EXPECT_EQ(std::string("Roger"), test.get<name>());
   EXPECT_EQ(std::string("Roger"), test.get<named_tag<name>>());
   EXPECT_EQ(std::string("Roger"), test[name_key]);
@@ -72,7 +72,7 @@ TEST_F(UnitTests, Literal1) {
   EXPECT_EQ(std::string("Roger"), t["name"_t]);
   EXPECT_EQ(std::string("Roger"), "name"_t(t));
   EXPECT_EQ(std::string("Roger"), std::get<decltype("name"_t)>(t));
-  EXPECT_EQ(std::string("Roger"), named_tuples::get<decltype("name"_t)>(t));
+  EXPECT_EQ(std::string("Roger"), named_types::get<decltype("name"_t)>(t));
   EXPECT_EQ(std::string("Roger"), t.get<decltype("name"_t)>());
 }
 

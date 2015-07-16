@@ -5,7 +5,7 @@
 #include <typeinfo>
 #include "tuple.hpp"
 
-namespace named_tuples {
+namespace named_types {
 
 template <typename ... T> class tuple_type_info;
 template <typename ... Ids, typename ... Types> struct tuple_type_info< const named_tuple<Types(Ids)...> > {  

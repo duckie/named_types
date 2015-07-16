@@ -7,7 +7,7 @@
 // This file contains traits agnostic about the named tuple implementation
 // thus the dedicated header
 
-namespace named_tuples {
+namespace named_types {
 
 // TODO: put into types.hpp header
 using llu = unsigned long long;
@@ -110,6 +110,6 @@ template <typename ... IdDest, typename ... TypeDest> struct contained_are_conve
   using type = const_bool<true>;
 };
 
-}  // namespace named_tuples
+}  // namespace named_types
 
 #endif  // NAMED_TUPLES_TYPE_TRAITS_HEADER

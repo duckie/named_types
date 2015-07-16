@@ -4,7 +4,7 @@
 #include <type_traits>
 #include "tuple.hpp"
 
-namespace named_tuples {
+namespace named_types {
 
 using std::declval;
 using std::enable_if;
