@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 #include <named_types/named_tuple.hpp>
-#include <named_types/rt_named_tuple.hpp>
+#include <named_types/rt_named_tag.hpp>
 
 using namespace named_types;
 namespace {
