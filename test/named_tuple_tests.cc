@@ -6,7 +6,7 @@
 #include <array>
 #include <functional>
 #include <named_types/named_tuple.hpp>
-#include <named_types/rt_named_tag.hpp>
+#include <named_types/rt_named_tuple.hpp>
 
 using namespace named_types;
 namespace {
@@ -173,9 +173,44 @@ TEST_F(UnitTests, Apply1) {
   serialized = func_apply_01(t3);
   EXPECT_EQ("\"Roger\";", serialized);
 
-  std::cout << type_name<name>::value << "\n";
-  std::cout << type_name<age>::value << "\n";
-  std::cout << type_name<typename decltype("taille"_t)::value_type>::value << "\n";
+  //std::cout << type_name<name>::value << "\n";
+  //std::cout << type_name<age>::value << "\n";
+  //std::cout << type_name<typename decltype("taille"_t)::value_type>::value << "\n";
+}
+
+TEST_F(UnitTests, RuntimeView1) {
+  auto t1 = make_named_tuple( 
+    "name"_t = std::string("Roger"),
+    "surname"_t = std::string("Marcel"),
+    "size"_t = 3u
+  );
+
+  const_rt_view<base_const_rt_view, decltype(t1)> rt_view_impl(t1);
+  base_const_rt_view& view = rt_view_impl;
 
 
+  std::string const * value = nullptr;
+  //value = 
+
+  EXPECT_EQ(typeid(std::string), view.typeid_at(0));
+  EXPECT_EQ(typeid(void), view.typeid_at(4));
+  EXPECT_EQ(typeid(std::string), view.typeid_at("surname"));
+  EXPECT_EQ(typeid(void), view.typeid_at("toutnu"));
+
+  value = view.retrieve<std::string>(0);
+  EXPECT_NE(nullptr, value);
+  EXPECT_EQ(std::string("Roger"), *value);
+
+  value = view.retrieve<std::string>("surname");
+  EXPECT_NE(nullptr, value);
+  EXPECT_EQ(std::string("Marcel"), *value);
+
+  value = view.retrieve<std::string>("toutnu");
+  EXPECT_EQ(nullptr, value);
+
+  auto value_bad1 = view.retrieve<std::vector<int>>("name");
+  EXPECT_EQ(nullptr, value);
+
+  //for(size_t i = 0; i < 3; ++i) 
+    //std::cout << const_rt_view<base_const_rt_view, decltype(t1)>::attributes[i] << std::endl;
 }

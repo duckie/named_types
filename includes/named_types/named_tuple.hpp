@@ -6,6 +6,11 @@
 
 namespace named_types {
 
+template <class T> struct __ntuple_tag_spec {};
+template <class Spec, class Arg> struct __ntuple_tag_spec<Arg(Spec)> { using type = typename named_tag<Spec>::type; };
+template <class T> struct __ntuple_tag_elem {};
+template <class Spec, class Arg> struct __ntuple_tag_elem<Arg(Spec)> { using type = Arg; };
+
 template <class...Types> 
 struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type) ...>
 {

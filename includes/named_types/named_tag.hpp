@@ -66,10 +66,8 @@ template <class Tag, typename Value> class named_attribute_holder;
 // Specific types : named_tuple
 
 template <class...Types> struct named_tuple;
-template <class T> struct __ntuple_tag_spec {};
-template <class Spec, class Arg> struct __ntuple_tag_spec<Arg(Spec)> { using type = typename named_tag<Spec>::type; };
-template <class T> struct __ntuple_tag_elem {};
-template <class Spec, class Arg> struct __ntuple_tag_elem<Arg(Spec)> { using type = Arg; };
+template <class T> struct __ntuple_tag_spec;
+template <class T> struct __ntuple_tag_elem;
 
 // Tag
 
@@ -88,19 +86,19 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
   // Attribute holder generation
 
   template <typename T>
-  __attribute_const_reference_holder<type, T>
+  __attribute_const_reference_holder<value_type, T>
   operator=(T const& value)
-  { return __attribute_const_reference_holder<type,T>(value); }
+  { return __attribute_const_reference_holder<value_type,T>(value); }
 
   template <typename T>
-  __attribute_reference_holder<type, T>
+  __attribute_reference_holder<value_type, T>
   operator=(T& value)
-  { return __attribute_reference_holder<type,T>(value); }
+  { return __attribute_reference_holder<value_type,T>(value); }
 
   template <typename T>
-  __attribute_value_holder<type, T>
+  __attribute_value_holder<value_type, T>
   operator=(T&& value)
-  { return __attribute_value_holder<type,T>(std::move(value)); }
+  { return __attribute_value_holder<value_type,T>(std::move(value)); }
 
   // Specific behavior : named_tuple
 
