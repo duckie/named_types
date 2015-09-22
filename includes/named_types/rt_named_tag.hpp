@@ -23,10 +23,10 @@ template<typename T, T... chars> class type_name <string_literal<T,chars...>> {
 };
 #endif  // __GNUG__
 
-// Default base class for runtime views, offers NVI
+// Default base class for runtime views
 struct base_const_rt_view {
-  virtual size_t indexçof(std::type_info const& tag_id) const = 0;
-  virtual size_t indexçof(std::string const& name) const = 0;
+  virtual size_t index_of(std::type_info const& tag_id) const = 0;
+  virtual size_t index_of(std::string const& name) const = 0;
   virtual std::type_info const& typeid_at(size_t index) const = 0;
   virtual std::type_info const& typeid_at(std::string const& name) const = 0;
   virtual void const * retrieve_raw(size_t index) const = 0;
@@ -37,7 +37,7 @@ struct base_const_rt_view {
   }
 
   template <typename T> inline T const * retrieve(std::string const& name) {
-    size_t index = indexçof(name);
+    size_t index = index_of(name);
     return retrieve<T>(index);
   }
 };

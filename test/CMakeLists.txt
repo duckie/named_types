@@ -1,3 +1,5 @@
+include(CheckCXXCompilerFlag)
+include(CheckCXXSourceCompiles)
 Find_Package(Threads REQUIRED)
 Find_Package(GTest REQUIRED)
 
@@ -11,16 +13,40 @@ include_directories(
   ${GTEST_INCLUDE_DIRS}
 )
 
-# C++11 is a requirement here
-include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-std=c++1y HAVE_STD_CPP14_FLAG)
-if (HAVE_STD_CPP14_FLAG)
-  message("-- C++14 support found.")
-  add_definitions(-D NAMED_TUPLES_CPP14)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
-else()
-  message(FATAL_ERROR "Your compiler must support at least C++14 to compile ${PROJECT_NAME}.")
+# C++14 is a requirement here
+if (NOT MSVC)
+  check_cxx_compiler_flag(-std=c++1y HAVE_STD_CPP14_FLAG)
+  if (HAVE_STD_CPP14_FLAG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1y")
+  else()
+    message(FATAL_ERROR "Your compiler must support at least C++14 to compile ${PROJECT_NAME}.")
+  endif()
 endif()
+
+# Compilation test for C++14
+check_cxx_source_compiles("#include <utility>\nusing std::integer_sequence;\n int main(){return 0;}" compiles_cpp14)
+if (${compiles_cpp14})
+  message("-- C++14 support found.")
+else()
+  unset(compiles_cpp14 CACHE)
+  message(FATAL_ERROR "Failed to compile a C++14 snippet.")
+endif ()
+
+# Compilation test for string literal operator template
+check_cxx_source_compiles("
+template <class T, T ... chars> struct string_literal {};
+template <typename T, T... chars>  constexpr string_literal<T,chars...> operator \"\"_t () { return {}; }
+int main(){return 0;}" compiles_string_literal_operator_template)
+if (${compiles_string_literal_operator_template})
+  message("-- Support for string literal operator template FOUND.")
+else()
+  unset(compiles_string_literal_operator_template CACHE)
+  message(WARNING 
+    "Support for string literal operator template NOT FOUND\n"
+    "Some are features disabled.\n"
+    "MSVC is known not to support it.\n")
+endif ()
+
 
 add_library(test-main OBJECT test-main.cc)
 add_custom_target(build-test)
@@ -39,8 +65,13 @@ endfunction()
 
 #add_nt_test(unit_tests GT)
 add_nt_test(named_tuple_tests GT)
-add_nt_test(demo1)
 add_nt_test(demo2)
 add_nt_test(demo3)
-add_nt_test(demo4)
+
+# Tests with string literal operator
+if (${compiles_string_literal_operator_template})
+  add_nt_test(named_tuple_tests_cpp1z GT)
+  add_nt_test(demo1)
+  add_nt_test(demo4)
+endif()
 

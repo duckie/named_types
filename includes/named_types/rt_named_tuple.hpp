@@ -21,12 +21,12 @@ template <class Parent, class ... Types> struct const_rt_view<Parent, named_tupl
     pointers_ { &std::get<typename __ntuple_tag_spec<Types>::type>(viewed) ... }
   {}
 
-  virtual size_t indexçof(std::type_info const& tag_id) const {
+  virtual size_t index_of(std::type_info const& tag_id) const {
     auto matching_attribute_iterator = std::find(begin(tag_typeinfos),end(tag_typeinfos),&tag_id);
     return (end(tag_typeinfos) != matching_attribute_iterator ? std::distance(begin(tag_typeinfos),matching_attribute_iterator) : size);
   }
 
-  virtual size_t indexçof(std::string const& name) const {
+  virtual size_t index_of(std::string const& name) const {
     auto matching_attribute_iterator = std::find(begin(attributes),end(attributes),name);
     return (end(attributes) != matching_attribute_iterator ? std::distance(begin(attributes),matching_attribute_iterator) : size);
   }
