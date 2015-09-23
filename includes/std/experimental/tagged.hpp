@@ -17,6 +17,7 @@
 #define SDT_EXPERIMENTAL_TAGGED_HEADER
 
 #include <utility>
+#include <functional>
 #include <tuple>
 #include <type_traits>
 
@@ -93,6 +94,7 @@ namespace std {
     struct collect_;
 
     template <class Tag, class Arg, std::size_t Index> struct  tag_indexer_ {
+	  constexpr tag_indexer_() = default;
       using type = Arg;
       using raw_type = typename remove_cv<typename remove_reference<Arg>::type>::type;
       using tag_type = Tag;
@@ -101,12 +103,12 @@ namespace std {
     
     template <class Type, std::size_t...Is, class...Types> 
     struct collect_<Type, index_sequence<Is...>, Types...> : tag_indexer_<typename __tag_spec<Types>::type, typename __tag_elem<Types>::type,Is> ... { 
-      collect_() = default;
-      collect_(const collect_&) = default;
+      constexpr collect_() = default;
+      constexpr collect_(const collect_&) = default;
       collect_& operator=(const collect_&) = default;
 
       template <class Tag> 
-      struct tag_index : decltype(collect_::template get_tag_indexer<Tag>(collect_()))::tag_index
+      struct tag_index : decltype(collect_::template get_tag_index<Tag>(collect_()))
       {};
 
       template <class Tag> 
@@ -118,10 +120,40 @@ namespace std {
       {};
 
       template <class Tag>
-      struct has_tag : integral_constant<bool, (decltype(collect_::template permissive_get_tag_indexer<Tag>(collect_()))::tag_index::value < sizeof ... (Types))>
+      struct has_tag : integral_constant<bool, std::less<size_t>()(collect_::template permissive_get_tag_index_value<Tag>(collect_()),sizeof ... (Types))>
       {};
 
      private:
+	  template <class Tag, class Arg, std::size_t Index>
+	  static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
+	  {
+	    return{};
+	  }
+
+	  template <class Tag, class Arg, std::size_t Index>
+	  static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index permissive_get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
+	  {
+	    return{};
+	  }
+
+	  template <class Tag>
+	  static constexpr typename tag_indexer_<Tag, void, sizeof ... (Types)>::tag_index permissive_get_tag_index(...)
+	  {
+        return{};
+	  }
+
+	  template <class Tag, class Arg, std::size_t Index>
+	  static constexpr size_t permissive_get_tag_index_value(tag_indexer_<Tag, Arg, Index> const&)
+	  {
+		  return tag_indexer_<Tag, Arg, Index>::tag_index::value;
+	  }
+
+	  template <class Tag>
+	  static constexpr size_t  permissive_get_tag_index_value(...)
+	  {
+		  return -1;
+	  }
+
       template <class Tag, class Arg, std::size_t Index> 
       static constexpr tag_indexer_<Tag,Arg,Index> get_tag_indexer(tag_indexer_<Tag,Arg,Index> const&)
       { return {}; }

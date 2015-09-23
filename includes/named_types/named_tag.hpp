@@ -22,9 +22,12 @@ template <class T, T ... chars> const char string_literal<T,chars...>::data[size
 
 template <class T> class has_user_defined_name {
   template <class TT> static auto test(int) -> decltype(TT::classname);
+  // Unfortunately, MSVC doest not implement expression SFINAE
+#ifdef __GNUG__
   template <class TT> static auto test(int) -> decltype(TT::name);
   template <class TT> static auto test(int) -> decltype(TT::classname());
   template <class TT> static auto test(int) -> decltype(TT::name());
+#endif  // __GNUG__
   template <class TT> static auto test(...) -> void;
  public:
   static constexpr bool value = std::is_same<decltype(test<T>(0)),char const *>::value;
@@ -32,9 +35,12 @@ template <class T> class has_user_defined_name {
 
 template<class T> class constexpr_type_name {
   template <class TT> static inline constexpr auto extract(int) -> decltype(TT::classname) { return TT::classname; }
+  // Unfortunately, MSVC doest not implement expression SFINAE
+#ifdef __GNUG__
   template <class TT> static inline constexpr auto extract(int) -> decltype(TT::name) { return TT::name; }
   template <class TT> static inline constexpr auto extract(int) -> decltype(TT::classname()) { return TT::classname(); }
   template <class TT> static inline constexpr auto extract(int) -> decltype(TT::name()) { return TT::name(); }
+#endif  // __GNUG__
  public:
   static constexpr char const* value = extract<T>();
 };
