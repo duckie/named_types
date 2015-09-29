@@ -103,7 +103,8 @@ namespace std {
     
     template <class Type, std::size_t...Is, class...Types> 
     struct collect_<Type, index_sequence<Is...>, Types...> : tag_indexer_<typename __tag_spec<Types>::type, typename __tag_elem<Types>::type,Is> ... { 
-      constexpr collect_() = default;
+	  constexpr collect_() {};
+	  ~collect_() = default;
       constexpr collect_(const collect_&) = default;
       collect_& operator=(const collect_&) = default;
 
@@ -167,7 +168,7 @@ namespace std {
       { return {}; }
 
       template <class, class...> friend struct indexed_tagged;
-      ~collect_() = default;
+      
     };
     
     template <class Type, class...Types> using collect = collect_<Type, make_index_sequence<sizeof...(Types)>, Types...>; 
