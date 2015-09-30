@@ -16,19 +16,20 @@ struct liste;
 }
 
 int main() { 
+	
   auto test = make_named_tuple( 
       _<name>() = std::string("Roger")
       , _<age>() = 47
       , _<taille>() = 1.92
       , _<liste>() = std::vector<int>({1,2,3})
       );
-
+  
   std::cout 
     << _<name>(test) << "\n"
     << _<age>(test) << "\n"
     << _<taille>(test) << "\n"
     << _<liste>(test).size() << std::endl;
-
+  
   _<name>(test) = "Marcel";
   ++std::get<1>(test);
   std::get<named_tag<taille>>(test) = 1.93;

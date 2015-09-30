@@ -4,6 +4,9 @@
 
 namespace named_types {
 
+template <class T> struct __ntag_notation {};
+template <class Spec, class Arg> struct __ntag_notation<Arg(Spec)> { using type = Spec(Arg); };
+
 // String literals, GNU Extension only
 #ifdef __GNUG__
 template <class T, T ... chars> struct string_literal {
@@ -87,6 +90,7 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
  public:
   using type = typename unnested_<Tag>::type;
   using value_type = typename unnested_value_<Tag>::type;
+  using tag_func_notation = typename __ntag_notation<type(value_type)>::type;
   constexpr named_tag() = default;
 
   // Attribute holder generation
@@ -131,12 +135,13 @@ template <class Tag, typename Value> class __attribute_const_reference_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
+  using tag_func_notation = typename __ntag_notation<typename named_tag<tag_type>::type(value_type)>::type;
   __attribute_const_reference_holder(Value const& input) : value_(input) {}
   __attribute_const_reference_holder(__attribute_const_reference_holder const&) = delete;
   __attribute_const_reference_holder(__attribute_const_reference_holder&&) = default;
   __attribute_const_reference_holder& operator=(__attribute_const_reference_holder const&) = delete;
   __attribute_const_reference_holder& operator=(__attribute_const_reference_holder&&) = default;
-  Value const& get() && { return value_; }
+  Value const& get() { return value_; }
 };
 
 template <class Tag, typename Value> class __attribute_reference_holder {
@@ -144,12 +149,13 @@ template <class Tag, typename Value> class __attribute_reference_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
+  using tag_func_notation = typename __ntag_notation<typename named_tag<tag_type>::type(value_type)>::type;
   __attribute_reference_holder(Value& input) : value_(input) {}
   __attribute_reference_holder(__attribute_reference_holder const&) = delete;
   __attribute_reference_holder(__attribute_reference_holder&&) = default;
   __attribute_reference_holder& operator=(__attribute_reference_holder const&) = delete;
   __attribute_reference_holder& operator=(__attribute_reference_holder&&) = default;
-  Value& get() && { return value_; }
+  Value& get() { return value_; }
 };
 
 template <class Tag, typename Value> class __attribute_value_holder {
@@ -157,13 +163,20 @@ template <class Tag, typename Value> class __attribute_value_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
+  using tag_func_notation = typename __ntag_notation<typename named_tag<tag_type>::type(value_type)>::type;
   __attribute_value_holder (Value&& input) : value_(std::move(input)) {}
   __attribute_value_holder(__attribute_value_holder const&) = delete;
   __attribute_value_holder(__attribute_value_holder&&) = default;
   __attribute_value_holder& operator=(__attribute_value_holder const&) = delete;
   __attribute_value_holder& operator=(__attribute_value_holder&&) = default;
-  Value&& get() && { return std::move(value_); }
+  Value get() { return std::move(value_); }
 };
+
+template <typename AttributeHolder> 
+inline decltype(auto)
+__attribute_holder_get(AttributeHolder&& attribute_holder) {
+	return std::move(attribute_holder).get();
+}
 
 // get
 

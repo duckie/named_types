@@ -27,12 +27,16 @@ namespace std {
   template <size_t N, class Base, class...Tags> struct tuple_element<N, tagged<Base, Tags...>> : tuple_element<N, Base> {};
 
   struct __getters { 
-   private:
+   //private:
     template <class, class...> friend struct tagged;
     template <class Type, class Indices, class...Tags> struct collect_;
+
+	template <class Tag, class Derived, size_t Index> struct tag_getter_{
+		using type = typename Tag::template getter<Derived, Index>;
+	};
     
     template <class Type, std::size_t...Is, class...Tags> 
-    struct collect_<Type, index_sequence<Is...>, Tags...> : Tags::template getter<Type, Is>... { 
+    struct collect_<Type, index_sequence<Is...>, Tags...> : public tag_getter_<Tags,Type, Is>::type ... {
       collect_() = default;
       collect_(const collect_&) = default;
       collect_& operator=(const collect_&) = default;
@@ -87,7 +91,7 @@ namespace std {
   template <class Base, class...Tags> struct indexed_tagged;
 
   struct __indexes { 
-   private:
+   //private:
     template <class, class...> friend struct indexed_tagged;
     
     template <class Type, class Indices, class...Types>
@@ -225,9 +229,10 @@ namespace std {
           friend struct __getters;
         };
 
-     private:
       friend struct __getters;
-    };
+	};
+
+
   }
 }
 

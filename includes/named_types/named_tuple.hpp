@@ -11,14 +11,18 @@ template <class Spec, class Arg> struct __ntuple_tag_spec<Arg(Spec)> { using typ
 template <class T> struct __ntuple_tag_elem {};
 template <class Spec, class Arg> struct __ntuple_tag_elem<Arg(Spec)> { using type = Arg; };
 
+template <class T> struct __ntuple_tag_notation {};
+template <class Spec, class Arg> struct __ntuple_tag_notation<Arg(Spec)> { using type = typename named_tag<Spec>::type(Arg); };
+
 template <class...Types> 
-struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type) ...>
+struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>
+//struct named_tuple : std::tagged_tuple< Types ...
 {
   // Type aliases
 
-  using tagged_type = std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>;
-  using std::tagged_tuple<typename __ntuple_tag_spec<Types>::type (typename __ntuple_tag_elem<Types>::type)...>::tagged_tuple;
-
+  using tagged_type = std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>;
+  using std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>::tagged_tuple;
+  
   // Static data
 
   static constexpr size_t size = sizeof ... (Types);
@@ -67,26 +71,28 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   {}
 
   // Member function get
-
+  
   template <class Tag>
+  //inline constexpr decltype(std::get<typename named_tag<Tag>::type>(declval(named_tuple()))) const
   inline constexpr decltype(auto)
   get() const &
   { return std::get<typename named_tag<Tag>::type>(*this); };
-
+  
   template <class Tag>
-  inline constexpr decltype(auto)
+  //inline decltype(std::get<typename named_tag<Tag>::type>(declval(named_tuple())))
+  inline decltype(auto)
   get() &
   { return std::get<typename named_tag<Tag>::type>(*this); };
-
+  
   template <class Tag>
-  inline constexpr decltype(auto)
+  inline decltype(auto)
   get() &&
   { return std::get<typename named_tag<Tag>::type>(std::move(*this)); };
   
   // Member operator []
 
   template <class Tag>
-  inline constexpr decltype(auto)
+  inline decltype(auto)
   operator [] (named_tag<Tag> const&) & 
   { return std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(*this); }
 
@@ -96,10 +102,10 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
   { return std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(*this); }
 
   template <class Tag>
-  inline constexpr decltype(auto)
+  inline  decltype(auto)
   operator [] (named_tag<Tag> const&) && 
   { return std::get<named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(std::move(*this)); }
-
+  
 };
 
 // make_named_tuple
@@ -107,7 +113,7 @@ struct named_tuple : std::tagged_tuple< typename __ntuple_tag_spec<Types>::type 
 template <typename ... Types> 
 inline constexpr decltype(auto)
 make_named_tuple(Types&& ... args) {
-  return named_tuple<typename Types::value_type(typename Types::tag_type) ...>(std::move(args).get() ...);
+  return named_tuple<typename Types::tag_func_notation ...>(std::move(args).get() ...);
 }
 
 // apply
