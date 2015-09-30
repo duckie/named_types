@@ -60,7 +60,7 @@ TEST_F(UnitTests, MakeTuple1) {
   auto t = make_named_tuple( name_key = std::string("Roger") );
   EXPECT_EQ(std::string("Roger"), t[name_key]);
 }
-/*
+
 TEST_F(UnitTests, Promotion1) {
   named_tag<name> name_k;
   named_tag<size> size_k;
@@ -74,16 +74,16 @@ TEST_F(UnitTests, Promotion1) {
   );
 
   auto t2 = make_named_tuple(
-    name_k = std::string("Marcel"), 
-    size_k = 4u,
-    bday_k = 1e6
+	  size_k = 4u,
+	  name_k = std::string("Marcel"),
+	  bday_k = 1e6
   );
-
+  
   t1 = t2;
   EXPECT_EQ(std::string("Marcel"), t1[name_k]);
   EXPECT_EQ(4u, t1[size_k]);
 }
-*/
+
 TEST_F(UnitTests, TaggedTuple) {
   struct name : std::tag::basic_tag {};
   struct size : std::tag::basic_tag {};
