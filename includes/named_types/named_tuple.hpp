@@ -73,7 +73,7 @@ struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<Typ
   
  public:
   template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...> const& other)
-	  : tagged_tuple(assign_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(other) ...)
+	  : tagged_type(assign_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(other) ...)
   {}
 
   template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...>&& other) 
