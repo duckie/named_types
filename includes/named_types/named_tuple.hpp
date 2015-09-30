@@ -15,13 +15,13 @@ template <class T> struct __ntuple_tag_notation {};
 template <class Spec, class Arg> struct __ntuple_tag_notation<Arg(Spec)> { using type = typename named_tag<Spec>::type(Arg); };
 
 template <class...Types> 
-struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>
+struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<Types>::type  ...>
 //struct named_tuple : std::tagged_tuple< Types ...
 {
   // Type aliases
 
-  using tagged_type = std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>;
-  using std::tagged_tuple<typename __ntuple_tag_notation<typename Types>::type  ...>::tagged_tuple;
+  using tagged_type = std::tagged_tuple<typename __ntuple_tag_notation<Types>::type  ...>;
+  using std::tagged_tuple<typename __ntuple_tag_notation<Types>::type  ...>::tagged_tuple;
   
   // Static data
 
