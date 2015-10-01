@@ -125,7 +125,7 @@ namespace std {
       {};
 
       template <class Tag>
-      struct has_tag : integral_constant<bool, std::less<size_t>()(collect_::template permissive_get_tag_index_value<Tag>(collect_()),sizeof ... (Types))>
+      struct has_tag : integral_constant<bool, (collect_::template permissive_get_tag_index_value<Tag>(collect_()) < sizeof ... (Types))>
       {};
 
      private:

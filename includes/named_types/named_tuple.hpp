@@ -77,7 +77,7 @@ struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<Typ
   {}
 
   template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...>&& other) 
-    : tagged_type(move_from<named_tuple<ForeignTypes...>,typename __ntuple_tag_spec<Types>::type>(std::move(other))...) 
+    : tagged_type(move_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(std::move(other))...) 
   {}
 
   // Member function get
