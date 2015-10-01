@@ -49,36 +49,72 @@ struct named_tuple : public std::tagged_tuple<typename __ntuple_tag_notation<Typ
 
   template <typename Tag, typename Value, class ForeignTuple>
   typename std::enable_if<tag_assignable_from<ForeignTuple, Tag>::value, Value>::type
-  assign_from(ForeignTuple const& from) {
+  inline ctor_assign_from(ForeignTuple const& from) {
 	  return std::get<Named<Tag>>(from);
   }
 
   template <typename Tag, typename Value, class ForeignTuple>
-  typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, Value>::type
+  inline typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, Value>::type
+  ctor_assign_from(ForeignTuple const& from) {
+	  return {};
+  }
+
+  template <typename Tag, typename Value, class ForeignTuple>
+  inline typename std::enable_if<tag_assignable_from<ForeignTuple, Tag>::value, int>::type
+  assign_from(ForeignTuple const& from) {
+	  this->template get<Tag>() = std::get<Named<Tag>>(from);
+	  return {};
+  }
+
+  template <typename Tag, typename Value, class ForeignTuple>
+  inline typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, int>::type
   assign_from(ForeignTuple const& from) {
 	  return {};
   }
 
   template <typename Tag, typename Value, class ForeignTuple>
-  typename std::enable_if<tag_assignable_from<ForeignTuple, Tag>::value, Value>::type
-  move_from(ForeignTuple&& from) {
+  inline typename std::enable_if<tag_assignable_from<ForeignTuple, Tag>::value, Value>::type  
+  ctor_move_from(ForeignTuple&& from) {
     return std::get<Named<Tag>>(std::move(from));
   }
   
   template <typename Tag, typename Value, class ForeignTuple>
-  typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, Value>::type
-	  move_from(ForeignTuple&& from) {
-	  return{};
+  inline typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, Value>::type
+  ctor_move_from(ForeignTuple&& from) {
+	return{};
   }
-  
+
+  template <typename Tag, typename Value, class ForeignTuple>
+  inline typename std::enable_if<tag_assignable_from<ForeignTuple, Tag>::value, int>::type
+  move_from(ForeignTuple&& from) {
+	this->template get<Tag>() = std::get<Named<Tag>>(std::move(from));
+	return {};
+  }
+
+  template <typename Tag, typename Value, class ForeignTuple>
+  inline typename std::enable_if<tag_not_assignable_from<ForeignTuple, Tag>::value, int>::type
+  move_from(ForeignTuple&& from) {
+	return{};
+  }
+
  public:
   template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...> const& other)
-	  : tagged_type(assign_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(other) ...)
+	  : tagged_type(ctor_assign_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(other) ...)
   {}
 
+  template <typename ... ForeignTypes> named_tuple& operator=(named_tuple<ForeignTypes...> const& other) {
+    int dummy[] { assign_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(other) ... };
+	return *this;
+  }
+
   template <typename ... ForeignTypes> named_tuple(named_tuple<ForeignTypes...>&& other) 
-    : tagged_type(move_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(std::move(other))...) 
+    : tagged_type(ctor_move_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(std::move(other))...) 
   {}
+
+  template <typename ... ForeignTypes> named_tuple& operator=(named_tuple<ForeignTypes...>&& other) {
+	  int dummy[]{ move_from<typename __ntuple_tag_spec<Types>::type, typename __ntuple_tag_elem<Types>::type>(std::move(other)) ... };
+	  return *this;
+  }
 
   // Member function get
   

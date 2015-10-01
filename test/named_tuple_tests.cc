@@ -79,9 +79,47 @@ TEST_F(UnitTests, Promotion1) {
 	  bday_k = 1e6
   );
   
-  t1 = t2;
-  EXPECT_EQ(std::string("Marcel"), t1[name_k]);
-  EXPECT_EQ(4u, t1[size_k]);
+  decltype(t1) t3(t2);  // Copy
+  EXPECT_EQ(std::string("Marcel"), t3[name_k]);
+  EXPECT_EQ(4u, t3[size_k]);
+
+  decltype(t1) t4(std::move(t2));  // Move
+  EXPECT_EQ(std::string("Marcel"), t4[name_k]);
+  EXPECT_EQ(std::string(), t2[name_k]);
+  EXPECT_EQ(4u, t4[size_k]);
+}
+
+TEST_F(UnitTests, Injection1) {
+	named_tag<name> name_k;
+	named_tag<size> size_k;
+	named_tag<surname> surname_k;
+	named_tag<birthday> bday_k;
+
+	auto t1 = make_named_tuple(
+		name_k = std::string("Roger"),
+		surname_k = std::string("LeGros"),
+		size_k = 3u
+		);
+
+	auto t2 = make_named_tuple(
+		size_k = 4u,
+		name_k = std::string("Marcel"),
+		bday_k = 1e6
+		);
+
+	t1 = t2;  // Copy
+	EXPECT_EQ(std::string("Marcel"), t1[name_k]);
+	EXPECT_EQ(std::string("LeGros"), t1[surname_k]);
+	EXPECT_EQ(4u, t1[size_k]);
+
+	t1[name_k] = "Robert";
+	
+	t2 = std::move(t1);  // Move
+	EXPECT_EQ(std::string("Robert"), t2[name_k]);
+	EXPECT_EQ(std::string(""), t1[name_k]);
+	EXPECT_EQ(std::string("LeGros"), t1[surname_k]);
+	EXPECT_EQ(4u, t1[size_k]);
+
 }
 
 TEST_F(UnitTests, TaggedTuple) {
