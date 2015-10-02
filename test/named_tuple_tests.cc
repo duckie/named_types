@@ -141,3 +141,7 @@ TEST_F(UnitTests, TaggedTuple) {
   auto t2 = t;
   EXPECT_EQ(3, std::get<size>(t2));
 }
+
+//TEST_F(UnitTests, Experiment1) {
+  //std::cout << string_literal<'a','b','c'>::hash << std::endl;
+//}
