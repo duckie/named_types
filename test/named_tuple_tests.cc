@@ -85,7 +85,7 @@ TEST_F(UnitTests, Promotion1) {
 
   decltype(t1) t4(std::move(t2));  // Move
   EXPECT_EQ(std::string("Marcel"), t4[name_k]);
-  EXPECT_EQ(std::string(), t2[name_k]);
+  EXPECT_NE(std::string("Marcel"), t2[name_k]);
   EXPECT_EQ(4u, t4[size_k]);
 }
 
@@ -113,10 +113,11 @@ TEST_F(UnitTests, Injection1) {
 	EXPECT_EQ(4u, t1[size_k]);
 
 	t1[name_k] = "Robert";
+	EXPECT_EQ(std::string("Robert"), t1[name_k]);
 	
 	t2 = std::move(t1);  // Move
 	EXPECT_EQ(std::string("Robert"), t2[name_k]);
-	EXPECT_EQ(std::string(""), t1[name_k]);
+	EXPECT_NE(std::string("Robert"), t1[name_k]);
 	EXPECT_EQ(std::string("LeGros"), t1[surname_k]);
 	EXPECT_EQ(4u, t1[size_k]);
 
