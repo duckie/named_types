@@ -4,24 +4,18 @@
 
 namespace named_types {
 
-unsigned long long constexpr const_hash(char const *input) {
+template <class Char> unsigned long long constexpr const_hash(Char const *input) {
   return *input ?  static_cast<unsigned long long>(*input) + 33 * const_hash(input + 1) : 5381;
 }
 
-//template <class Char, Char ... args> struct literal_const_hash; 
-//template <class Char, Char ... args> struct literal_const_hash;
-//template <class Char, Char current, Char ... args> struct literal_const_hash {
-  //static constexpr unsigned long long const value = (0 == current ? static_cast<unsigned long long>(current) + 33 * literal_const_hash<Char,args...>::value : 5381);
-//};
-//
-//template <class Char, Char ... args> struct literal_const_hash {
-  //static constexpr unsigned long long const value = 5381;
-//};
+template <class Char, size_t Size> unsigned long long constexpr array_const_hash(Char const (&input)[Size]) {
+  return const_hash<Char>(input);
+}
 
 template <class T, T ... chars> struct string_literal {
   static const char data[sizeof ... (chars) + 1u];
   static const size_t data_size = sizeof ... (chars);
-  //static const unsigned long long hash = literal_const_hash<T,chars ...>::value;
+  static const unsigned long long hash = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
 
   constexpr string_literal() = default;
   constexpr char const* str() const { return data; }
