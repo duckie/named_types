@@ -146,12 +146,16 @@ TEST_F(UnitTests, TaggedTuple) {
 TEST_F(UnitTests, Experiment1) {
   std::cout << string_literal<char,'a','b','c'>::hash_value << std::endl;
   std::cout << std::integral_constant<size_t, const_hash("abc")>::value << std::endl;
-  std::cout << arithmetic::pow<size_t,2,0>() << std::endl;
-  std::cout << arithmetic::pow<size_t,2,1>() << std::endl;
-  std::cout << arithmetic::pow<size_t,2,2>() << std::endl;
+  std::cout << arithmetic::pow<size_t>(2,0) << std::endl;
+  std::cout << arithmetic::pow<size_t>(2,1) << std::endl;
+  std::cout << arithmetic::pow<size_t>(2,2) << std::endl;
   std::cout << arithmetic::max_size_storable<int,char,'a','b'>() << std::endl;
   std::cout << basic_charset_format::max_length_value << std::endl;
   std::cout << basic_lowcase_charset_format::max_length_value << std::endl;
   std::cout << ascii_charset_format::max_length_value << std::endl;
 
+  std::cout << basic_lowcase_charset_format::contains('A') << std::endl;
+  std::cout << basic_charset_format::contains('A') << std::endl;
+  std::cout << basic_charset_format::index_of('a') << std::endl;
+  std::cout << basic_charset_format::encode("coucou") << std::endl;
 }

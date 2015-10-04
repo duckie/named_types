@@ -6,44 +6,69 @@
 namespace named_types {
 
 namespace arithmetic {
-  template <class T,T Value, size_t Pow> 
-  constexpr typename std::enable_if<(0==Pow),T>::type const
-  pow() { return 1; }
 
-  template <class T,T Value, size_t Pow> 
-  constexpr typename std::enable_if<(0<Pow),T>::type const
-  pow() { return Value*pow<T,Value,Pow-1>(); }
-    
-  template <class T, T current, size_t CurrentSize, size_t CharsetSize>
-  constexpr typename 
-  std::enable_if<
-  !(pow<size_t, CharsetSize, CurrentSize+1>() <= (std::numeric_limits<T>::max() - current) 
-   && pow<size_t, CharsetSize, CurrentSize+1>() <= std::numeric_limits<T>::max()
-   && current < (current + pow<size_t, CharsetSize, CurrentSize+1>()))
-  ,size_t>::type const
-  max_size_storable() { return CurrentSize; }
+template <class T> constexpr T pow(T value, size_t power) {
+  return (0u == power) ? static_cast<T>(1) : value*pow(value,power-1);
+}
 
-  template <class T, T current, size_t CurrentSize, size_t CharsetSize>
-  constexpr typename 
-  std::enable_if<
-  (pow<size_t, CharsetSize, CurrentSize+1>() <= (std::numeric_limits<T>::max() - current) 
-   && pow<size_t, CharsetSize, CurrentSize+1>() <= std::numeric_limits<T>::max())
-   && current < (current + pow<size_t, CharsetSize, CurrentSize+1>())
-  ,size_t>::type const
-  max_size_storable() { return max_size_storable<T,current + pow<size_t, CharsetSize, CurrentSize+1>(), CurrentSize+1, CharsetSize>(); }
 
-  template <class T, class Char, Char ... charset> constexpr size_t max_size_storable() {
-    return sizeof ... (charset) <= std::numeric_limits<T>::max() ? max_size_storable<T,0,0,sizeof ... (charset)>() : 0;
-  }
+template <class T, size_t CharsetSize> constexpr size_t max_size_storable(T current, size_t current_size) {
+  return (pow<size_t>(CharsetSize, current_size+1) <= (std::numeric_limits<T>::max() - current) 
+ && pow<size_t>(CharsetSize, current_size+1) <= std::numeric_limits<T>::max()
+ && current < (current + pow<size_t>(CharsetSize, current_size+1))) ?
+ max_size_storable<T,CharsetSize>(current + pow<size_t>(CharsetSize, current_size+1), current_size+1) : current_size;
+}
+
+template <class T, class Char, Char ... charset> constexpr size_t max_size_storable() {
+  return sizeof ... (charset) <= std::numeric_limits<T>::max() ? max_size_storable<T,sizeof ... (charset)>(0,0) : 0;
+}
+
 }  // namespace arithmetic
+
 
 /**
  * This class represents
  */
 template <class Storage, class Char, Char ... charset> struct integral_string_format {
+  template <size_t Size> static constexpr size_t index_of(Char const (&input)[Size], size_t index, Char value) {
+    return (Size <= index) ? Size : ((input[index] == value) ? index : index_of(input,index+1,value));
+  }
+
+  static constexpr size_t index_of(Char value) {
+    return index_of<sizeof ... (charset)>({charset...},0u,value);
+  }
+
+  static constexpr bool contains(Char value) {
+    return index_of(value) < sizeof ... (charset);
+  }
+
+  static constexpr Storage encode_impl(Char const* input, size_t current_index, size_t input_size) {
+    return current_index < input_size ? index_of(input[current_index])*arithmetic::pow(sizeof ... (charset), current_index) + encode_impl(input, current_index+1, input_size) : 0;
+  }
+
+  static constexpr Storage encode(Char const* input, size_t input_size) {
+    return encode_impl(input,0,input_size);
+  }
+
+  template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
+    return encode(input,Size);
+  }
+  
+  //static constexpr Storage encode(Char const* input, size_t size, Storage current_sum, size_t current_index) {
+    //
+  //}
+
+ public:
   using string_literal_type = string_literal<Char, charset ...>;
   static constexpr size_t max_length_value = arithmetic::max_size_storable<Storage,Char, charset ...>();
+
+  template <Storage Value> struct encoded_string_type {
+    using format_type = integral_string_format;
+    using string_literal_type = string_literal<Char, charset ...>;
+  };
 };
+
+
 
 // Providing built-in formats
 using basic_charset_format = integral_string_format<uint64_t, char, '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','_','-'>;
