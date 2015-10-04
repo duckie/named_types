@@ -15,7 +15,7 @@ template <class Char, size_t Size> unsigned long long constexpr array_const_hash
 template <class T, T ... chars> struct string_literal {
   static const char data[sizeof ... (chars) + 1u];
   static const size_t data_size = sizeof ... (chars);
-  static const unsigned long long hash = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
+  static const unsigned long long hash_value = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
 
   constexpr string_literal() = default;
   constexpr char const* str() const { return data; }

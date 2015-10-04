@@ -6,6 +6,7 @@
 #include <array>
 #include <functional>
 #include <named_types/named_tuple.hpp>
+#include <named_types/literals/integral_string_literal.hpp>
 //#include <named_types/rt_named_tuple.hpp>
 
 using namespace named_types;
@@ -142,6 +143,15 @@ TEST_F(UnitTests, TaggedTuple) {
   EXPECT_EQ(3, std::get<size>(t2));
 }
 
-//TEST_F(UnitTests, Experiment1) {
-  //std::cout << string_literal<'a','b','c'>::hash << std::endl;
-//}
+TEST_F(UnitTests, Experiment1) {
+  std::cout << string_literal<char,'a','b','c'>::hash_value << std::endl;
+  std::cout << std::integral_constant<size_t, const_hash("abc")>::value << std::endl;
+  std::cout << arithmetic::pow<size_t,2,0>() << std::endl;
+  std::cout << arithmetic::pow<size_t,2,1>() << std::endl;
+  std::cout << arithmetic::pow<size_t,2,2>() << std::endl;
+  std::cout << arithmetic::max_size_storable<int,char,'a','b'>() << std::endl;
+  std::cout << basic_charset_format::max_length_value << std::endl;
+  std::cout << basic_lowcase_charset_format::max_length_value << std::endl;
+  std::cout << ascii_charset_format::max_length_value << std::endl;
+
+}
