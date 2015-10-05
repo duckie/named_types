@@ -46,7 +46,7 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
   }
 
 
-# ifdef __GNUG__
+# ifndef _MSC_VER
   template <size_t Size> static constexpr size_t index_of(Char const (&input)[Size], size_t index, Char value) {
     return (Size <= index) ? Size : ((input[index] == value) ? index : index_of(input,index+1,value));
   }
@@ -63,7 +63,7 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
 
   // Returns the index of the given char into the charset
   static constexpr size_t index_of(Char value) {
-#   ifdef __GNUG__
+#   ifndef _MSC_VER
     return index_of<sizeof ... (charset)>({charset...},0u,value);
 #   else
     // MSVC does not support arrays in constexpr
@@ -88,7 +88,7 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
     return decode_size_impl(input,0);
   }
 
-# ifdef __GNUG__
+# ifndef _MSC_VER
   template <size_t Size> static constexpr Char char_at_impl(Char const (&input)[Size], size_t index) {
     return index < Size ? input[index] : 0u;
   }
@@ -105,7 +105,7 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
 
   // Returns the char at position "index" in the charset
   static constexpr Char char_at(size_t index) {
-#   ifdef __GNUG__
+#   ifndef _MSC_VER
     return char_at_impl<sizeof ... (charset)>({charset...},index);
 #   else
     // MSVC does not support arrays in constexpr
@@ -131,16 +131,16 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
  public:
   using string_literal_type = string_literal<Char, charset ...>;
 
-# ifndef __GNUG__
+# ifdef _MSC_VER
 # pragma warning(disable:4307)
 # endif 
   static constexpr size_t max_length_value = max_size_storable();
-# ifndef __GNUG__
+# ifdef _MSC_VER
 # pragma warning(default:4307)
 # endif 
 
   // Encodes a string
-# ifdef __GNUG__
+# ifndef _MSC_VER
   template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
     return encode(input,Size-1); // Be careful to exclude '\0'
   }

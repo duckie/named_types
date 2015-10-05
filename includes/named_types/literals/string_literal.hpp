@@ -12,7 +12,7 @@ template <class Char> unsigned long long constexpr const_hash(Char const *input)
   return *input ?  static_cast<unsigned long long>(*input) + 33llu * const_hash(input + 1llu) : 5381llu;
 }
 
-#ifdef __GNUG__
+#ifndef _MSC_VER
 template <class Char, size_t Size> unsigned long long constexpr array_const_hash(Char const (&input)[Size]) {
   return const_hash<Char>(input);
 }
@@ -30,7 +30,7 @@ template <class Head, class ... Tail> unsigned long long constexpr array_const_h
 template <class T, T ... chars> struct string_literal {
   static const char data[sizeof ... (chars) + 1u];
   static const size_t data_size = sizeof ... (chars);
-# ifdef __GNUG__
+# ifndef _MSC_VER
   static const unsigned long long hash_value = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
 # else
 # pragma warning(disable:4307)
