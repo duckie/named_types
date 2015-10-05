@@ -157,5 +157,16 @@ TEST_F(UnitTests, Experiment1) {
   std::cout << basic_lowcase_charset_format::contains('A') << std::endl;
   std::cout << basic_charset_format::contains('A') << std::endl;
   std::cout << basic_charset_format::index_of('a') << std::endl;
-  std::cout << basic_charset_format::encode("coucou") << std::endl;
+
+  constexpr uint64_t const str_test1 = std::integral_constant<uint64_t,basic_charset_format::encode("coucou")>::value;
+  //std::cout << basic_charset_format::decode(str_test1,0) << std::endl;
+  //std::cout << basic_charset_format::decode(str_test1,1) << std::endl;
+  //std::cout << basic_charset_format::decode(str_test1,2) << std::endl;
+  //std::cout << basic_charset_format::decode(str_test1,3) << std::endl;
+  //std::cout << basic_charset_format::decode(str_test1,4) << std::endl;
+  //std::cout << basic_charset_format::decode(str_test1,5) << std::endl;
+
+  std::cout << str_test1 << std::endl;
+  std::cout << basic_charset_format::decode<str_test1>::type::data << std::endl;
+  
 }

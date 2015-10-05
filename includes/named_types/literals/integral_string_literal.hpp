@@ -12,6 +12,7 @@ template <class T> constexpr T pow(T value, size_t power) {
 }
 
 
+// These functions are used to compute how many chars can be encoded in the given situation
 template <class T, size_t CharsetSize> constexpr size_t max_size_storable(T current, size_t current_size) {
   return (pow<size_t>(CharsetSize, current_size+1) <= (std::numeric_limits<T>::max() - current) 
  && pow<size_t>(CharsetSize, current_size+1) <= std::numeric_limits<T>::max()
@@ -30,6 +31,15 @@ template <class T, class Char, Char ... charset> constexpr size_t max_size_stora
  * This class represents
  */
 template <class Storage, class Char, Char ... charset> struct integral_string_format {
+
+  static constexpr Storage max_value_for_size_impl(Storage current, size_t index, size_t size) {
+    return size <= index ? current : max_value_for_size_impl(current + arithmetic::pow(sizeof ... (charset),index+1),index+1,size); 
+  }
+
+  static constexpr Storage max_value_for_size(size_t size) {
+    return max_value_for_size_impl(0u,0u,size);
+  }
+
   template <size_t Size> static constexpr size_t index_of(Char const (&input)[Size], size_t index, Char value) {
     return (Size <= index) ? Size : ((input[index] == value) ? index : index_of(input,index+1,value));
   }
@@ -43,20 +53,49 @@ template <class Storage, class Char, Char ... charset> struct integral_string_fo
   }
 
   static constexpr Storage encode_impl(Char const* input, size_t current_index, size_t input_size) {
-    return current_index < input_size ? index_of(input[current_index])*arithmetic::pow(sizeof ... (charset), current_index) + encode_impl(input, current_index+1, input_size) : 0;
+    return current_index < input_size ? (index_of(input[current_index]))*arithmetic::pow(sizeof ... (charset), current_index) + encode_impl(input, current_index+1, input_size) : 0;
   }
 
   static constexpr Storage encode(Char const* input, size_t input_size) {
-    return encode_impl(input,0,input_size);
+    return 0u == input_size ? 0u : encode_impl(input,0,input_size)+1;
   }
 
   template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
-    return encode(input,Size);
+    return encode(input,Size-1); // Be careful to exclude '\0'
+  }
+
+  static constexpr size_t decode_size_impl(Storage input, size_t index) {
+    return input <= max_value_for_size(index) ? index : decode_size_impl(input, index+1);
+  }
+
+  static constexpr size_t decode_size(Storage input) {
+    return decode_size_impl(input,0);
+  }
+
+  template <size_t Size> static constexpr Char char_at_impl(Char const (&input)[Size], size_t index) {
+    return index < Size ? input[index] : 0u;
   }
   
-  //static constexpr Storage encode(Char const* input, size_t size, Storage current_sum, size_t current_index) {
-    //
-  //}
+  static constexpr Char char_at(size_t index) {
+    return char_at_impl<sizeof ... (charset)>({charset...},index);
+  }
+
+  static constexpr size_t decode_char_index_at(Storage input, size_t index) {
+    return 0u < input ? ((input-1u) / arithmetic::pow(sizeof ... (charset),index)) % sizeof ... (charset): sizeof ... (charset);
+  }
+
+  static constexpr Char decode_char_at(Storage input, size_t index) {
+    return char_at(decode_char_index_at(input,index));
+  }
+
+  template <class IntegerSequence, Storage value> struct decode_impl;
+  template <Storage value, size_t ... indexes> struct decode_impl<std::integer_sequence<size_t,indexes...>,value> {
+    using type = string_literal<Char, decode_char_at(value,indexes)...>;
+  };
+
+  template <Storage value> struct decode {
+    using type = typename decode_impl<std::make_integer_sequence<size_t, decode_size(value)>, value>::type;
+  };
 
  public:
   using string_literal_type = string_literal<Char, charset ...>;
