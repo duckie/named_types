@@ -4,8 +4,12 @@
 
 namespace named_types {
 
+template <class Char> unsigned long long constexpr const_size(Char const *input) {
+  return *input ? 1llu + const_size(input+1llu) : 0llu;
+}
+
 template <class Char> unsigned long long constexpr const_hash(Char const *input) {
-  return *input ?  static_cast<unsigned long long>(*input) + 33 * const_hash(input + 1) : 5381;
+  return *input ?  static_cast<unsigned long long>(*input) + 33llu * const_hash(input + 1llu) : 5381llu;
 }
 
 #ifdef __GNUG__

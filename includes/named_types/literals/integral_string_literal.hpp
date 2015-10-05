@@ -40,13 +40,30 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
     return max_value_for_size_impl(0u,0u,size);
   }
 
+
+# ifdef __GNUG__
   template <size_t Size> static constexpr size_t index_of(Char const (&input)[Size], size_t index, Char value) {
     return (Size <= index) ? Size : ((input[index] == value) ? index : index_of(input,index+1,value));
   }
+# else
+  // MSVC does not support arrays in constexpr
+  static constexpr size_t index_of(Char value, size_t index, size_t size) {
+    return size;
+  }
+
+  template <class Head, class ... Tail> static constexpr size_t index_of(Char value, size_t index, size_t size, Head current,  Tail ... tail) {
+    return (index < size && value == current) ? index : index_of(value,index+1,size, tail...);
+  }
+# endif
 
   // Returns the index of the given char into the charset
   static constexpr size_t index_of(Char value) {
+#   ifdef __GNUG__
     return index_of<sizeof ... (charset)>({charset...},0u,value);
+#   else
+    // MSVC does not support arrays in constexpr
+    return index_of(value, 0u, sizeof ... (charset), charset ...);
+#   endif
   }
 
   // Return true if the given char is included in the charset
@@ -66,13 +83,29 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
     return decode_size_impl(input,0);
   }
 
+# ifdef __GNUG__
   template <size_t Size> static constexpr Char char_at_impl(Char const (&input)[Size], size_t index) {
     return index < Size ? input[index] : 0u;
   }
+# else
+  // MSVC does not support arrays in constexpr
+  static constexpr Char char_at_impl(size_t current_index, size_t index) {
+    return 0u;
+  }
+
+  template <class Head, class ... Tail> static constexpr Char char_at_impl(size_t current_index, size_t index, Head current,  Tail ... tail) {
+    return current_index == index ? current : char_at_impl(current_index+1u, index, tail...);
+  }
+# endif
 
   // Returns the char at position "index" in the charset
   static constexpr Char char_at(size_t index) {
+#   ifdef __GNUG__
     return char_at_impl<sizeof ... (charset)>({charset...},index);
+#   else
+    // MSVC does not support arrays in constexpr
+    return char_at_impl(0u, index, charset...);
+#   endif
   }
 
   // Returns the charset index of the char encoded at pose "index" in the input encoded string
@@ -106,6 +139,9 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
     return 0u == input_size ? 0u : encode_impl(input,0,input_size)+1;
   }
 
+  static constexpr Storage encode(Char const* input) {
+    return encode(input, const_size(input));
+  }
 
   // Decode an encoded string
   template <Storage value> struct decode {
