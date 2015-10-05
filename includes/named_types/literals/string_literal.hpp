@@ -8,14 +8,29 @@ template <class Char> unsigned long long constexpr const_hash(Char const *input)
   return *input ?  static_cast<unsigned long long>(*input) + 33 * const_hash(input + 1) : 5381;
 }
 
+#ifdef __GNUG__
 template <class Char, size_t Size> unsigned long long constexpr array_const_hash(Char const (&input)[Size]) {
   return const_hash<Char>(input);
 }
+#else
+// MSVC does not support arrays in constexpr
+unsigned long long constexpr array_const_hash() {
+  return 5381llu;
+}
+
+template <class Head, class ... Tail> unsigned long long constexpr array_const_hash(Head current,  Tail ... tail) {
+  return 0u == current ? static_cast<unsigned long long>(current) + 33llu * array_const_hash(tail...) : 5381llu;
+}
+#endif
 
 template <class T, T ... chars> struct string_literal {
   static const char data[sizeof ... (chars) + 1u];
   static const size_t data_size = sizeof ... (chars);
+# ifdef __GNUG__
   static const unsigned long long hash_value = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
+# else
+  static const unsigned long long hash_value = array_const_hash(chars...);
+# endif
 
   constexpr string_literal() = default;
   constexpr char const* str() const { return data; }
