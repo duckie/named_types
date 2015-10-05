@@ -143,27 +143,33 @@ TEST_F(UnitTests, TaggedTuple) {
   EXPECT_EQ(3, std::get<size>(t2));
 }
 
-TEST_F(UnitTests, Experiment1) {
-  std::cout << string_literal<char,'a','b','c'>::hash_value << std::endl;
-  std::cout << std::integral_constant<size_t, const_hash("abc")>::value << std::endl;
-  std::cout << arithmetic::pow<size_t>(2,0) << std::endl;
-  std::cout << arithmetic::pow<size_t>(2,1) << std::endl;
-  std::cout << arithmetic::pow<size_t>(2,2) << std::endl;
-  std::cout << integral_string_format<int,char,'a','b'>::max_length_value << std::endl;
-  std::cout << basic_charset_format::max_length_value << std::endl;
-  std::cout << basic_lowcase_charset_format::max_length_value << std::endl;
-  std::cout << ascii_charset_format::max_length_value << std::endl;
+TEST_F(UnitTests, ConstexprStrings1) {
+  EXPECT_EQ(193488139, (std::integral_constant<size_t,string_literal<char,'a','b','c'>::hash_value>::value));
+  EXPECT_EQ(193488139, (std::integral_constant<size_t, const_hash("abc")>::value));
+  EXPECT_EQ(1u, (std::integral_constant<size_t,arithmetic::pow<size_t>(2,0)>::value));
+  EXPECT_EQ(2u, (std::integral_constant<size_t,arithmetic::pow<size_t>(2,1)>::value));
+  EXPECT_EQ(4u, (std::integral_constant<size_t,arithmetic::pow<size_t>(2,2)>::value));
+
+  EXPECT_EQ(30u, (std::integral_constant<size_t,integral_string_format<int,char,'a','b'>::max_length_value>::value));
+  EXPECT_EQ(12u, (std::integral_constant<size_t,basic_lowcase_charset_format::max_length_value>::value));
+  EXPECT_EQ(10u, (std::integral_constant<size_t,basic_charset_format::max_length_value>::value));
+  EXPECT_EQ(8u, (std::integral_constant<size_t,ascii_charset_format::max_length_value>::value));
 
 
   constexpr uint64_t const str_test1 = std::integral_constant<uint64_t,basic_charset_format::encode("coucou")>::value;
-  //std::cout << basic_charset_format::decode(str_test1,0) << std::endl;
-  //std::cout << basic_charset_format::decode(str_test1,1) << std::endl;
-  //std::cout << basic_charset_format::decode(str_test1,2) << std::endl;
-  //std::cout << basic_charset_format::decode(str_test1,3) << std::endl;
-  //std::cout << basic_charset_format::decode(str_test1,4) << std::endl;
-  //std::cout << basic_charset_format::decode(str_test1,5) << std::endl;
-
-  std::cout << str_test1 << std::endl;
-  std::cout << basic_charset_format::decode<str_test1>::type::data << std::endl;
+  //std::cout << basic_charset_format::decode<str_test1>::type().str() << std::endl;
+  EXPECT_EQ(6u, (std::integral_constant<size_t,basic_charset_format::decode<str_test1>::type().size()>::value));
+  EXPECT_EQ(std::string("coucou"), std::string(basic_charset_format::decode<str_test1>::type().str()));
   
+  constexpr uint64_t const str_test2 = std::integral_constant<uint64_t,basic_lowcase_charset_format::encode("aaaaaaaaaaaa")>::value;
+  EXPECT_EQ(12u, (std::integral_constant<size_t,basic_lowcase_charset_format::decode<str_test2>::type().size()>::value));
+  EXPECT_EQ(std::string("aaaaaaaaaaaa"), std::string(basic_lowcase_charset_format::decode<str_test2>::type().str()));
+
+  constexpr uint64_t const str_test3 = std::integral_constant<uint64_t,basic_lowcase_charset_format::encode("------------")>::value;
+  EXPECT_EQ(12u, (std::integral_constant<size_t,basic_lowcase_charset_format::decode<str_test3>::type().size()>::value));
+  EXPECT_EQ(std::string("------------"), std::string(basic_lowcase_charset_format::decode<str_test3>::type().str()));
+
+  constexpr uint64_t const str_test4 = std::integral_constant<uint64_t,basic_lowcase_charset_format::encode("")>::value;
+  EXPECT_EQ(0u, (std::integral_constant<size_t,basic_lowcase_charset_format::decode<str_test4>::type().size()>::value));
+  EXPECT_EQ(std::string(""), std::string(basic_lowcase_charset_format::decode<str_test4>::type().str()));
 }
