@@ -172,4 +172,6 @@ TEST_F(UnitTests, ConstexprStrings1) {
   constexpr uint64_t const str_test4 = std::integral_constant<uint64_t,basic_lowcase_charset_format::encode("")>::value;
   EXPECT_EQ(0u, (std::integral_constant<size_t,basic_lowcase_charset_format::decode<str_test4>::type().size()>::value));
   EXPECT_EQ(std::string(""), std::string(basic_lowcase_charset_format::decode<str_test4>::type().str()));
+
+  EXPECT_EQ(std::string("abcdefg"),std::string(concatenate<string_literal<char,'a','b','c'>, string_literal<char,'d','e'>, string_literal<char,'f','g'>>::type().str()));
 }

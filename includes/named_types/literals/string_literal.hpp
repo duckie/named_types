@@ -39,4 +39,18 @@ template <class T, T ... chars> struct string_literal {
 };
 
 template <class T, T ... chars> const char string_literal<T,chars...>::data[sizeof ... (chars) + 1u] = {chars..., '\0'};
+
+template <class ... T> struct concatenate;
+template <class Head, class MiddleLeft, class MiddleRight, class ... Tail> struct concatenate<Head, MiddleLeft, MiddleRight, Tail...> {
+  using type = typename concatenate<Head, typename concatenate<MiddleLeft,MiddleRight,Tail...>::type>::type;
+};
+
+template <class Char, Char ... charset1, Char ... charset2> struct concatenate<string_literal<Char,charset1...>,string_literal<Char,charset2...>> {
+  using type = string_literal<Char, charset1..., charset2...>;
+};
+
+template <class Char, Char ... charset1> struct concatenate<string_literal<Char,charset1...>> {
+  using type = string_literal<Char, charset1...>;
+};
+
 }  // namespace string_literal

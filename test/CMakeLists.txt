@@ -67,6 +67,8 @@ endfunction()
 add_nt_test(named_tuple_tests GT)
 add_nt_test(demo2)
 add_nt_test(demo3)
+add_nt_test(demo5)
+add_nt_test(demo6)
 
 # Tests with string literal operator
 if (${compiles_string_literal_operator_template})

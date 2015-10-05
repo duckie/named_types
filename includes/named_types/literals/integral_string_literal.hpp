@@ -1,6 +1,7 @@
 #pragma once
 #include "string_literal.hpp"
 #include <type_traits>
+#include <limits>
 #include <cstdint>
 
 namespace named_types {
@@ -57,10 +58,6 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
     return current_index < input_size ? (index_of(input[current_index]))*arithmetic::pow(sizeof ... (charset), current_index) + encode_impl(input, current_index+1, input_size) : 0;
   }
 
-  static constexpr Storage encode(Char const* input, size_t input_size) {
-    return 0u == input_size ? 0u : encode_impl(input,0,input_size)+1;
-  }
-
   static constexpr size_t decode_size_impl(Storage input, size_t index) {
     return input <= max_value_for_size(index) ? index : decode_size_impl(input, index+1);
   }
@@ -103,9 +100,12 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
   template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
     return encode(input,Size-1); // Be careful to exclude '\0'
   }
-# else
-  // MSVC does not support constexpr arrays
 # endif
+
+  static constexpr Storage encode(Char const* input, size_t input_size) {
+    return 0u == input_size ? 0u : encode_impl(input,0,input_size)+1;
+  }
+
 
   // Decode an encoded string
   template <Storage value> struct decode {
