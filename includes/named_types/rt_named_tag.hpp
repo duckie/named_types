@@ -6,10 +6,12 @@ namespace named_types {
 // Named extraction for runtime default naming
 template<typename T> class type_name {
   template <typename TT> static inline auto extract(int) -> decltype(TT::classname) { return TT::classname; }
+#ifdef __GNUG__
   template <typename TT> static inline auto extract(int) -> decltype(TT::name) { return TT::name; }
   template <typename TT> static inline auto extract(int) -> decltype(TT::classname()) { return TT::classname(); }
   template <typename TT> static inline auto extract(int) -> decltype(TT::name()) { return TT::name(); }
   template <typename TT> static inline auto extract(...) -> char const * { return typeid(TT).name(); }
+#endif  // __GNUG__
  public:
   static char const* value;
 };

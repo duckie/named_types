@@ -18,11 +18,16 @@ template <class T> constexpr T pow(T value, size_t power) {
  */
 template <class Storage, class Char, Char ... charset> class integral_string_format {
   // Compute size storable - recursive part
+
   static constexpr size_t max_size_storable(Storage current, size_t current_size) {
-    return (arithmetic::pow<size_t>(sizeof ... (charset), current_size+1) <= (std::numeric_limits<Storage>::max() - current) 
-   && arithmetic::pow<size_t>(sizeof ... (charset), current_size+1) <= std::numeric_limits<Storage>::max()
-   && current < (current + arithmetic::pow<size_t>(sizeof ... (charset), current_size+1))) ?
-   max_size_storable(current + arithmetic::pow<size_t>(sizeof ... (charset), current_size+1), current_size+1) : current_size;
+	  return
+		static_cast<Storage>(arithmetic::pow<size_t>(sizeof ... (charset), current_size+1)) <= (std::numeric_limits<Storage>::max() - current)
+        && static_cast<Storage>(arithmetic::pow<size_t>(sizeof ... (charset), current_size+1)) <= std::numeric_limits<Storage>::max()
+        && current < (current + static_cast<Storage>(arithmetic::pow<size_t>(sizeof ... (charset), current_size+1)))
+		?
+        max_size_storable(current + static_cast<Storage>(arithmetic::pow<size_t>(sizeof ... (charset), current_size+1)), current_size+1)
+		:
+		current_size;
   }
 
   // Compute size storable - init part
@@ -125,8 +130,14 @@ template <class Storage, class Char, Char ... charset> class integral_string_for
 
  public:
   using string_literal_type = string_literal<Char, charset ...>;
+
+# ifndef __GNUG__
+# pragma warning(disable:4307)
+# endif 
   static constexpr size_t max_length_value = max_size_storable();
-  
+# ifndef __GNUG__
+# pragma warning(default:4307)
+# endif 
 
   // Encodes a string
 # ifdef __GNUG__

@@ -23,7 +23,7 @@ unsigned long long constexpr array_const_hash() {
 }
 
 template <class Head, class ... Tail> unsigned long long constexpr array_const_hash(Head current,  Tail ... tail) {
-  return 0u == current ? static_cast<unsigned long long>(current) + 33llu * array_const_hash(tail...) : 5381llu;
+  return 0u != current ? static_cast<unsigned long long>(current) + 33llu * array_const_hash(tail...) : 5381llu;
 }
 #endif
 
@@ -33,7 +33,9 @@ template <class T, T ... chars> struct string_literal {
 # ifdef __GNUG__
   static const unsigned long long hash_value = array_const_hash<T, sizeof ... (chars) + 1>({chars..., '\0'});
 # else
-  static const unsigned long long hash_value = array_const_hash(chars...);
+# pragma warning(disable:4307)
+  static const unsigned long long hash_value = array_const_hash(chars..., '\0');
+# pragma warning(default:4307)
 # endif
 
   constexpr string_literal() = default;
