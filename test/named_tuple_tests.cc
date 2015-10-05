@@ -149,14 +149,11 @@ TEST_F(UnitTests, Experiment1) {
   std::cout << arithmetic::pow<size_t>(2,0) << std::endl;
   std::cout << arithmetic::pow<size_t>(2,1) << std::endl;
   std::cout << arithmetic::pow<size_t>(2,2) << std::endl;
-  std::cout << arithmetic::max_size_storable<int,char,'a','b'>() << std::endl;
+  std::cout << integral_string_format<int,char,'a','b'>::max_length_value << std::endl;
   std::cout << basic_charset_format::max_length_value << std::endl;
   std::cout << basic_lowcase_charset_format::max_length_value << std::endl;
   std::cout << ascii_charset_format::max_length_value << std::endl;
 
-  std::cout << basic_lowcase_charset_format::contains('A') << std::endl;
-  std::cout << basic_charset_format::contains('A') << std::endl;
-  std::cout << basic_charset_format::index_of('a') << std::endl;
 
   constexpr uint64_t const str_test1 = std::integral_constant<uint64_t,basic_charset_format::encode("coucou")>::value;
   //std::cout << basic_charset_format::decode(str_test1,0) << std::endl;

@@ -6,36 +6,35 @@
 namespace named_types {
 
 namespace arithmetic {
-
 template <class T> constexpr T pow(T value, size_t power) {
   return (0u == power) ? static_cast<T>(1) : value*pow(value,power-1);
 }
-
-
-// These functions are used to compute how many chars can be encoded in the given situation
-template <class T, size_t CharsetSize> constexpr size_t max_size_storable(T current, size_t current_size) {
-  return (pow<size_t>(CharsetSize, current_size+1) <= (std::numeric_limits<T>::max() - current) 
- && pow<size_t>(CharsetSize, current_size+1) <= std::numeric_limits<T>::max()
- && current < (current + pow<size_t>(CharsetSize, current_size+1))) ?
- max_size_storable<T,CharsetSize>(current + pow<size_t>(CharsetSize, current_size+1), current_size+1) : current_size;
-}
-
-template <class T, class Char, Char ... charset> constexpr size_t max_size_storable() {
-  return sizeof ... (charset) <= std::numeric_limits<T>::max() ? max_size_storable<T,sizeof ... (charset)>(0,0) : 0;
-}
-
 }  // namespace arithmetic
 
 
 /**
  * This class represents
  */
-template <class Storage, class Char, Char ... charset> struct integral_string_format {
+template <class Storage, class Char, Char ... charset> class integral_string_format {
+  // Compute size storable - recursive part
+  static constexpr size_t max_size_storable(Storage current, size_t current_size) {
+    return (arithmetic::pow<size_t>(sizeof ... (charset), current_size+1) <= (std::numeric_limits<Storage>::max() - current) 
+   && arithmetic::pow<size_t>(sizeof ... (charset), current_size+1) <= std::numeric_limits<Storage>::max()
+   && current < (current + arithmetic::pow<size_t>(sizeof ... (charset), current_size+1))) ?
+   max_size_storable(current + arithmetic::pow<size_t>(sizeof ... (charset), current_size+1), current_size+1) : current_size;
+  }
 
+  // Compute size storable - init part
+  static constexpr size_t max_size_storable() {
+    return sizeof ... (charset) <= std::numeric_limits<Storage>::max() ? max_size_storable(0,0) : 0;
+  }
+
+  // Compute maximum value for a string for length "size" - recursive part
   static constexpr Storage max_value_for_size_impl(Storage current, size_t index, size_t size) {
     return size <= index ? current : max_value_for_size_impl(current + arithmetic::pow(sizeof ... (charset),index+1),index+1,size); 
   }
 
+  // Compute maximum value for a string for length "size" - init part
   static constexpr Storage max_value_for_size(size_t size) {
     return max_value_for_size_impl(0u,0u,size);
   }
@@ -44,10 +43,12 @@ template <class Storage, class Char, Char ... charset> struct integral_string_fo
     return (Size <= index) ? Size : ((input[index] == value) ? index : index_of(input,index+1,value));
   }
 
+  // Returns the index of the given char into the charset
   static constexpr size_t index_of(Char value) {
     return index_of<sizeof ... (charset)>({charset...},0u,value);
   }
 
+  // Return true if the given char is included in the charset
   static constexpr bool contains(Char value) {
     return index_of(value) < sizeof ... (charset);
   }
@@ -58,10 +59,6 @@ template <class Storage, class Char, Char ... charset> struct integral_string_fo
 
   static constexpr Storage encode(Char const* input, size_t input_size) {
     return 0u == input_size ? 0u : encode_impl(input,0,input_size)+1;
-  }
-
-  template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
-    return encode(input,Size-1); // Be careful to exclude '\0'
   }
 
   static constexpr size_t decode_size_impl(Storage input, size_t index) {
@@ -75,44 +72,51 @@ template <class Storage, class Char, Char ... charset> struct integral_string_fo
   template <size_t Size> static constexpr Char char_at_impl(Char const (&input)[Size], size_t index) {
     return index < Size ? input[index] : 0u;
   }
-  
+
+  // Returns the char at position "index" in the charset
   static constexpr Char char_at(size_t index) {
     return char_at_impl<sizeof ... (charset)>({charset...},index);
   }
 
+  // Returns the charset index of the char encoded at pose "index" in the input encoded string
   static constexpr size_t decode_char_index_at(Storage input, size_t index) {
     return 0u < input ? ((input-1u) / arithmetic::pow(sizeof ... (charset),index)) % sizeof ... (charset): sizeof ... (charset);
   }
 
+  // Returns the char encoded at position "index" in the input encoded string
   static constexpr Char decode_char_at(Storage input, size_t index) {
     return char_at(decode_char_index_at(input,index));
   }
-
+  
   template <class IntegerSequence, Storage value> struct decode_impl;
   template <Storage value, size_t ... indexes> struct decode_impl<std::integer_sequence<size_t,indexes...>,value> {
     using type = string_literal<Char, decode_char_at(value,indexes)...>;
   };
 
+ public:
+  using string_literal_type = string_literal<Char, charset ...>;
+  static constexpr size_t max_length_value = max_size_storable();
+  
+
+  // Encodes a string
+# ifdef __GNUG__
+  template <size_t Size> static constexpr Storage encode(Char const (&input)[Size]) {
+    return encode(input,Size-1); // Be careful to exclude '\0'
+  }
+# else
+  // MSVC does not support constexpr arrays
+# endif
+
+  // Decode an encoded string
   template <Storage value> struct decode {
     using type = typename decode_impl<std::make_integer_sequence<size_t, decode_size(value)>, value>::type;
   };
-
- public:
-  using string_literal_type = string_literal<Char, charset ...>;
-  static constexpr size_t max_length_value = arithmetic::max_size_storable<Storage,Char, charset ...>();
-
-  template <Storage Value> struct encoded_string_type {
-    using format_type = integral_string_format;
-    using string_literal_type = string_literal<Char, charset ...>;
-  };
 };
 
-
-
-// Providing built-in formats
-using basic_charset_format = integral_string_format<uint64_t, char, '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','_','-'>;
-using basic_lowcase_charset_format = integral_string_format<uint64_t, char, '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','_','-'>;
-using ascii_charset_format = integral_string_format<uint64_t, char
+// Providing built-in charsets
+template <class Storage> using basic_charset = integral_string_format<Storage, char, '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','_','-'>;
+template <class Storage> using basic_lowcase_charset = integral_string_format<Storage, char, '0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','_','-'>;
+template <class Storage> using ascii_charset = integral_string_format<Storage, char
     ,'\x01','\x02','\x03','\x04','\x05','\x06','\x07','\x08','\x09','\x0a','\x0b','\x0c','\x0d','\x0e','\x0f' // '\x00' is excluded because useless
     ,'\x10','\x11','\x12','\x13','\x14','\x15','\x16','\x17','\x18','\x19','\x1a','\x1b','\x1c','\x1d','\x1e','\x1f'
     ,'\x20','\x21','\x22','\x23','\x24','\x25','\x26','\x27','\x28','\x29','\x2a','\x2b','\x2c','\x2d','\x2e','\x2f'
@@ -131,5 +135,9 @@ using ascii_charset_format = integral_string_format<uint64_t, char
     ,'\xf0','\xf1','\xf2','\xf3','\xf4','\xf5','\xf6','\xf7','\xf8','\xf9','\xfa','\xfb','\xfc','\xfd','\xfe','\xff'
     >;
 
+// Providing standard compliant formats
+using basic_charset_format = basic_charset<uint64_t>;
+using basic_lowcase_charset_format = basic_lowcase_charset<uint64_t>;
+using ascii_charset_format = ascii_charset<uint64_t>;
 
 };  // namespace named_types
