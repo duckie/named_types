@@ -32,8 +32,11 @@ template<class T> class constexpr_type_name {
   template <class TT> static inline constexpr auto extract(int) -> decltype(TT::name()) { return TT::name(); }
 #endif  // _MSC_VER
  public:
-  static constexpr char const* value = extract<T>();
+  static char const* value;
+  static constexpr char const* str() { return extract<T>(); };
 };
+
+template<class T> char const* constexpr_type_name<T>::value = constexpr_type_name<T>::extract<T>();
 
 //// Name extractors specified to work with string literals
 template<class T, T... chars> class has_user_defined_name<string_literal<T,chars...>> {
@@ -43,8 +46,11 @@ template<class T, T... chars> class has_user_defined_name<string_literal<T,chars
 
 template<class T, T... chars> class constexpr_type_name <string_literal<T,chars...>> {
  public:
-  static constexpr char const* value = string_literal<T,chars...>::data;
+  static char const* value;
+  static constexpr char const* str() { return string_literal<T, chars...>().str(); };
 };
+
+template<class T, T... chars> char const* constexpr_type_name <string_literal<T, chars...>>::value = string_literal<T, chars...>::data;
 
 // Private types
 

@@ -6,9 +6,11 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <map>
 
 namespace {
 using named_types::named_tag;
+using named_types::named_tuple;
 using named_types::make_named_tuple;
 using named_types::constexpr_type_name;
 using named_types::concatenate;
@@ -18,55 +20,78 @@ size_t constexpr operator "" _s(const char* c, size_t s) { return named_types::b
 template <size_t EncStr> using decodestr = typename named_types::basic_lowcase_charset_format::decode<EncStr>::type;
 
 // A more simple version could be written without concatenation of chunks
-template <size_t EncStr, size_t ... EncStrTail> 
-constexpr named_tag<typename concatenate<decodestr<EncStr>, decodestr<EncStrTail>...>::type> 
-at() { return {}; }
+// MSVC doest not support variadic chunks well
 
-template <size_t EncStr, size_t ... EncStrTail, class Value> constexpr decltype(auto) at_(Value&& in)  { return at<EncStr, EncStrTail...>()=(std::forward<Value>(in)); }
-template <size_t EncStr, size_t ... EncStrTail, class Tuple> constexpr decltype(auto) at(Tuple&& in) { return at<EncStr, EncStrTail...>()(std::forward<Tuple>(in)); }
+// Alias is used for declaration
+template <size_t EncStr1, size_t EncStr2 = 0u, size_t EncStr3 = 0u> using attr = named_tag<typename concatenate<decodestr<EncStr1>, decodestr<EncStr2>, decodestr<EncStr3>>::type>;
 
-template <class Tuple> struct JsonSerializer {
-  std::ostringstream output;
+// First function creates tags
+template <size_t EncStr1, size_t EncStr2 = 0u, size_t EncStr3 = 0u> constexpr attr<EncStr1, EncStr2, EncStr3> at() { return {}; }
 
-  template <class Tag, class Type> 
-  typename std::enable_if<Tuple::template tag_index<Tag>::value < (Tuple::size-1), void>::type
-  operator() (Tag const&, Type const& value) 
-  { output << '"' << constexpr_type_name<typename Tag::value_type>::value << "\":\"" << value << "\","; }
+// Second fonction creates accessors : precedence in the template list prevents from using default values or variadic fuckers
+template <size_t EncStr1, size_t EncStr2, size_t EncStr3, class Tuple> constexpr decltype(auto) at(Tuple&& in) { return at<EncStr1,EncStr2,EncStr3>()(std::forward<Tuple>(in)); }
+template <size_t EncStr1, size_t EncStr2, class Tuple> constexpr decltype(auto) at(Tuple&& in) { return at<EncStr1, EncStr2, 0>()(std::forward<Tuple>(in)); }
+template <size_t EncStr1, class Tuple> constexpr decltype(auto) at(Tuple&& in) { return at<EncStr1, 0, 0>()(std::forward<Tuple>(in)); }
 
-  template <class Tag, class Type> 
-  typename std::enable_if<Tuple::template tag_index<Tag>::value == (Tuple::size-1), void>::type
-  operator() (Tag const&, Type const& value) 
-  { output << '"' << constexpr_type_name<typename Tag::value_type>::value << "\":\"" << value << '"'; }
+// Json simple serializer
+template <class Tuple> class JsonSerializer {
+  std::ostringstream & output_;
+ public:
+  JsonSerializer(std::ostringstream & output) : output_(output) {}
+
+  template <class ... Types> void stream_push(named_tuple<Types...> const& value) { 
+	  JsonSerializer<named_tuple<Types...>>(output_).stream(value);
+  }
+  template <class Type> void stream_push(std::vector<Type> const& v) {
+	  output_ << '[';
+	  for (auto it = begin(v); it != end(v); ++it) {
+		if (begin(v) != it)
+	      output_ << ',';
+	    stream_push(*it);
+      }
+	  output_ << ']';
+  }
+  void stream_push(std::string const& value) { output_ << '"' << value << '"'; }
+  void stream_push(int value) { output_ << value; }
+  void stream_push(size_t value) { output_ << value; }
+  void stream_push(double value) { output_ << value; }
+  void stream_push(bool value) { output_ << value; }
+
+  template <class Tag, class Type> void operator() (Tag const&, Type const& value) { 
+	output_
+      << ((0 < Tuple::template tag_index<Tag>::value) ? "," : "")
+	  << '"' << constexpr_type_name<typename Tag::value_type>::value
+	  << "\":";
+	stream_push(value);
+  }
+
+  void stream(Tuple const& t) {
+	output_ << std::boolalpha << '{';
+	apply(t, *this);
+	output_ << '}';
+  }
 };
 
 template <class Tuple> std::string JsonSerialize(Tuple const& t) {
-  JsonSerializer<Tuple> instance;
-  instance.output << '{';
-  apply(t, instance);
-  instance.output << '}';
-  return instance.output.str();
+  std::ostringstream output;
+  JsonSerializer<Tuple>(output).stream(t);
+  return output.str();
 }
 
 }
 
 int main() { 
-  // Init with functional notation
-  auto test = make_named_tuple( 
-      at_<"name"_s> (std::string("Roger"))
-      , at_<"age"_s> (47)
-      , at_<"size"_s> (1.92)
-      , at_<"atmost12char"_s, "inonechunk"_s> (std::string("or you will have a bad time"))
+  // Init with json like notation
+	using Child = named_tuple<std::string(attr<"name"_s>), size_t(attr<"age"_s>)>;
+	auto test = make_named_tuple(
+		at<"name"_s>() = std::string("Marcel")
+		, at<"age"_s>() = 57
+		, at<"size"_s>() = 1.92
+		, at<"children"_s>() = std::vector<Child> { Child {"Martine", 3u} , Child {"Marceau",8u}}
+		, at<"atmost12char"_s,"perchunk"_s>() = true
       );
 
   std::cout << JsonSerialize(test) << std::endl;
-
-  // Init with json like notation
-  auto test2 = make_named_tuple( 
-      at<"name"_s>() = std::string("Marcel")
-      , at<"age"_s>() = (57)
-      );
-
-  std::cout << JsonSerialize(test2) << std::endl;
 
   return 0;
 }
