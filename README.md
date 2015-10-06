@@ -166,40 +166,49 @@ int main() {
 `named_tuple` members can be looped over at compile time.
 
 ```c++
-template <typename T, T... chars>  constexpr named_tag<string_literal<T,chars...>> 
-operator ""_t () { return {}; }
+size_t constexpr operator "" _s(const char* c, size_t s) 
+{ return basic_lowcase_charset_format::encode(c,s); }
 
-template <class Tuple> struct JsonSerializer {
-  std::ostringstream output;
+template <size_t EncStr> constexpr named_tag<typename basic_lowcase_charset_format::decode<EncStr>::type> 
+at() { return {}; }
+
+template <size_t EncStr, class Tuple> constexpr decltype(auto) at(Tuple&& in) 
+{ return at<EncStr>()(std::forward<Tuple>(in)); }
+
+template <class Tuple> class Serializer {
+  std::ostringstream& output_;
+ public:
+  Serializer(std::ostringstream& output) : output_(output) {}
 
   template <class Tag, class Type> 
-  typename std::enable_if<Tuple::template tag_index<Tag>::value < (Tuple::size-1), void>::type
-  operator() (Tag const&, Type const& value) 
-  { output << '"' << type_name<typename Tag::value_type>::value << "\":\"" << value << "\","; }
+  void operator() (Tag const&, Type const& value) { 
+    output_ 
+      << ((0 < Tuple::template tag_index<Tag>::value)?",":"")
+      << '"' << typename Tag::value_type().str() << "\":\"" << value << "\"";
+  }
 
-  template <class Tag, class Type> 
-  typename std::enable_if<Tuple::template tag_index<Tag>::value == (Tuple::size-1), void>::type
-  operator() (Tag const&, Type const& value) 
-  { output << '"' << type_name<typename Tag::value_type>::value << "\":\"" << value << '"'; }
+  void stream(Tuple const& t) {
+    output_ << '{';
+    apply(t,*this);
+    output_ << '}';
+  }
 };
 
-template <class Tuple> std::string JsonSerialize(Tuple const& t) {
-  JsonSerializer<Tuple> instance;
-  instance.output << '{';
-  apply(t, instance);
-  instance.output << '}';
-  return instance.output.str();
+template <class Tuple> std::string Serialize(Tuple const& t) {
+  std::ostringstream output;
+  Serializer<Tuple>(output).stream(t);
+  return output.str();
 }
 
 int main() { 
   auto test = make_named_tuple(
-      "name"_t = std::string("Roger")
-      , "lastname"_t = std::string("Lefouard")
-      , "ageoftheguy"_t = 45
-      , "size"_t = 1.92f
+      at<"name"_s>() = std::string("Roger")
+      , at<"lastname"_s>() = std::string("Lefouard")
+      , at<"age"_s>() = 45
+      , at<"size"_s>() = 1.92f
       );
 
-  std::cout << JsonSerialize(test) << std::endl;
+  std::cout << Serialize(test) << std::endl;
   return 0;
 }
 ```
