@@ -150,7 +150,7 @@ TEST_F(UnitTests, ConstexprStrings1) {
   EXPECT_EQ(2u, (std::integral_constant<size_t,arithmetic::pow<size_t>(2,1)>::value));
   EXPECT_EQ(4u, (std::integral_constant<size_t,arithmetic::pow<size_t>(2,2)>::value));
 
-  EXPECT_EQ(30u, (std::integral_constant<size_t,integral_string_format<int,char,'a','b'>::max_length_value>::value));
+  EXPECT_EQ(31u, (std::integral_constant<size_t,integral_string_format<uint32_t,char,'a','b'>::max_length_value>::value));
   EXPECT_EQ(12u, (std::integral_constant<size_t,basic_lowcase_charset_format::max_length_value>::value));
   EXPECT_EQ(10u, (std::integral_constant<size_t,basic_charset_format::max_length_value>::value));
   EXPECT_EQ(8u, (std::integral_constant<size_t,ascii_charset_format::max_length_value>::value));

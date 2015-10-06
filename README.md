@@ -1,7 +1,7 @@
 named\_types
 ==================
 
-`named_types` is a C++14/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility. `named_variant` and `named_any` are planned.
+`named_types` is a C++14/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility and tools to manipulate compile-time strings. `named_variant` and `named_any` are planned.
 
 `named_types` can be compiled with:
 
@@ -213,9 +213,72 @@ int main() {
 }
 ```
 
-### Build
+## Compile time strings
 
-You dont need to build anything to use it, `named_tuple` is header-only.
+All over the examples, a use is made of a very simple templated string.
+
+```c++
+template <class Char, Char ...> string_literal;
+```
+
+This types is able to generate the corresponding ``char const*``, its size, a hash code and to concatenate with its peers.
+
+### String literals with literal operator template
+
+This is the easiest and cleanest way to use them, unfortunately, it is not standard C++ and is not compliant with *Visual Studio*. It can be used in *Clang* and *GCC* as a GNU extension.
+
+```c++
+template <typename T, T... chars>  constexpr named_tag<string_literal<T,chars...>> 
+operator ""_t () { return {}; }
+```
+
+### String literals encoded on unsigned integers
+
+The ``named_types`` project provides a facility to encode strings on unsigned integers. For instance, a 64 bits unsigned integer can store up to 8 characters. By narrowing the charset, you can store more. ``named_types`` can encode any charset (up to 255 chars with *Visual Studio*, due to a constexpr limitation) on any unsigned integer. For instance, any string made of *[0-9][a-b]-_* can be stored up to 12 characters on a 64 bits unsigned integer. If you add capital letters to it, it falls down to 10 characters. If you really need to use longer strings with this tool, they must be concatenated.
+
+
+```c++
+uint64_t constexpr operator "" _s(const char* c, size_t s) 
+{ return basic_lowcase_charset_format::encode(c,s); }
+
+template <uint64_t EncStr> constexpr char const* decode() {
+  return typename basic_lowcase_charset_format::decode<EncStr>::type().str();
+}
+// ...
+std::cout << decode<"atmost12char"_s>() << std::endl;
+```
+
+```c++
+uint64_t constexpr operator "" _s(const char* c, size_t s) 
+{ return basic_charset_format::encode(c,s); }
+
+template <uint64_t EncStr> constexpr char const* decode() {
+  return typename basic_charset_format::decode<EncStr>::type().str();
+}
+// ...
+std::cout << decode<"Max10Chars"_s>() << std::endl;
+```
+
+```c++
+uint64_t constexpr operator "" _s(const char* c, size_t s) 
+{ return ascii_charset_format::encode(c,s); }
+
+template <uint64_t EncStr> constexpr char const* decode() {
+  return typename ascii_charset_format::decode<EncStr>::type().str();
+}
+// ...
+std::cout << decode<"8chars:("_s>() << std::endl;
+```
+You can use a charset of your own:
+
+```c++
+// Size of the longest string made of 'a' and 'b' storable on a uint32_t
+std::cout << integral_string_format<uint32_t,char,'a','b'>::max_length_value << std:endl;
+```
+
+## Build
+
+You dont need to build anything to use it, ``named_tuple`` is header-only.
 
 #### Build and run tests
 
@@ -227,7 +290,7 @@ make build-test
 ctest
 ```
 
-### References
+## References
 
 `named_tuple` is not the only project with such goals in mind. You migh consider the following resources:
 
