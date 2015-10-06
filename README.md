@@ -3,7 +3,15 @@ named\_types
 
 `named_types` is a C++14/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility. `named_variant` and `named_any` are planned.
 
+`named_types` can be compiled with:
+
+ - *GCC* `4.9.2` or higher
+ - *Clang* `3.5` or higher
+ - *Visual Studio* `14.0.23107.0 D14REL` or higher
+
 ## named\_tuple
+
+#### With literal operator template for strings ([N3599](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3599.html)), `GCC` and `Clang` only
 
 ```c++
 #include <named_types/named_tuple.hpp>
@@ -33,67 +41,52 @@ int main() {
   std::get<decltype("nom"_t)>(test) = "Marcel";
   ++std::get<1>(test);
   "taille"_t(test) = 1.93;
-  
-  std::cout 
-    << std::get<0>(test) << "\n"
-    << std::get<1>(test) << "\n"
-    << std::get<2>(test) << "\n"
-    << std::get<3>(test).size() << std::endl;
 
   return 0;
 }
 ```
 
-###  
+####Standard `C++14`
 
 ```c++
 #include <named_types/named_tuple.hpp>
+#include <type_traits>
 #include <string>
 #include <iostream>
 #include <vector>
 
+using namespace named_types;
 namespace {
-using named_types::named_tag;
-using named_types::make_named_tuple;
-template <class T>  named_tag<T> _() { return {}; }
-template <class Tag, class Tuple> auto _(Tuple&& in) -> decltype(_<Tag>()(in)) { return _<Tag>()(in); }
+size_t constexpr operator "" _h(const char* c, size_t s) { return const_hash(c); }
 
-struct name;
-struct age;
-struct taille;
-struct liste;
+template <size_t HashCode> 
+constexpr named_tag<std::integral_constant<size_t,HashCode>> at() { return {}; }
+
+template <size_t HashCode, class Tuple> constexpr decltype(auto)
+at(Tuple&& in) { return at<HashCode>()(std::forward<Tuple>(in)); }
 }
 
-int main() { 
-  auto test = make_named_tuple( 
-      _<name>() = std::string("Roger")
-      , _<age>() = 47
-      , _<taille>() = 1.92
-      , _<liste>() = std::vector<int>({1,2,3})
+int main() {
+  auto test = make_named_tuple(
+      at<"name"_h>() = std::string("Roger")
+      , at<"age"_h>() = 47
+      , at<"size"_h>() = 1.92
+      , at<"list"_h>() = std::vector<int> {1,2,3}
       );
 
-  std::cout 
-    << _<name>(test) << "\n"
-    << _<age>(test) << "\n"
-    << _<taille>(test) << "\n"
-    << _<liste>(test).size() << std::endl;
+  std::cout
+    << at<"name"_h>(test) << "\n"
+    << at<"age"_h>(test)  << "\n"
+    << at<"size"_h>(test) << "\n"
+    << at<"list"_h>(test).size()
+    << std::endl;
 
-  _<name>(test) = "Marcel";
+  std::get<decltype(at<"name"_h>())>(test) = "Marcel";
   ++std::get<1>(test);
-  std::get<named_tag<taille>>(test) = 1.93;
-  
-  std::cout 
-    << std::get<0>(test) << "\n"
-    << std::get<1>(test) << "\n"
-    << std::get<2>(test) << "\n"
-    << std::get<3>(test).size() << std::endl;
-
+  at<"size"_h>(test) = 1.93;
   return 0;
 }
 ```
-
-###  
-
 
 ### Introduction
 
@@ -134,9 +127,22 @@ std::tie(name_val, std::ignore) = test2;
 #### Tuple promotion
 
 A given tuple can automatically be promoted to another if each common member is implicitly convertible. 
-
 ```c++
-// Templated version allows default values
+void start(named_tuple<std::string(host), int(port)> const& conf) {
+  std::cout << "Host " << _<host>(conf) << " on port " << _<port>(conf) << "\n";
+}
+
+int main() { 
+  start(make_named_tuple(_<host>() = std::string("mywebsite")));
+  start(make_named_tuple(_<port>() = 441u));
+  return 0;
+}
+```
+
+#### Tuple injection
+
+Promotion has a drawback : the values not extracted from the promoted tuple takes their default values. It is either impossible (no default constructor for instance) or unwanted. You can affect any named tuple to any other named tuple : common members will be copied or moved, uncommon members will be left untouched.
+```c++
 template <typename T> void configure(T&& values) {
   // Default values
   auto conf = make_named_tuple(
@@ -144,23 +150,15 @@ template <typename T> void configure(T&& values) {
       , _<port>() = 80
       );  
   // Inject values
-  conf = values;
-  std::cout << "Host " << _<host>(conf) << " on port " << _<port>(conf) << "\n";
-}
-
-// Non-templated version limits bloating
-void start(named_tuple<std::string(host), int(port)> const& conf) {
+  conf = std::forward<T>(values);
   std::cout << "Host " << _<host>(conf) << " on port " << _<port>(conf) << "\n";
 }
 
 int main() { 
   configure(make_named_tuple(_<host>() = std::string("mywebsite")));
   configure(make_named_tuple(_<port>() = 441u));
-  start(make_named_tuple(_<host>() = std::string("mywebsite")));
-  start(make_named_tuple(_<port>() = 441u));
   return 0;
 }
-
 ```
 
 #### Compile time introspection
