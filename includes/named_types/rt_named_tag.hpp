@@ -34,19 +34,42 @@ struct base_const_rt_view {
   virtual void const * retrieve_raw(size_t index) const = 0;
   virtual void const * retrieve_raw(std::string const& name) const = 0;
 
-  template <typename T> inline T const * retrieve(size_t index) {
+  template <typename T> inline T const * retrieve(size_t index) const {
     return (typeid(T) == typeid_at(index) ? reinterpret_cast<T const*>(retrieve_raw(index)) : nullptr);
   }
 
-  template <typename T> inline T const * retrieve(std::string const& name) {
+  template <typename T> inline T const * retrieve(std::string const& name) const {
     size_t index = index_of(name);
     return retrieve<T>(index);
   }
 };
-template <class Parent, class Tagged> struct const_rt_view;
+template <class Parent, class Tagged> struct const_rt_view_impl;
 
-struct base_rt_view {};
-template <class Parent, class Tagged> struct rt_view;
+struct base_rt_view : public base_const_rt_view {
+  virtual void* retrieve_raw(size_t index) = 0;
+  virtual void* retrieve_raw(std::string const& name) = 0;
 
+  template <typename T> inline T* retrieve(size_t index) {
+    return (typeid(T) == typeid_at(index) ? reinterpret_cast<T const*>(retrieve_raw(index)) : nullptr);
+  }
+
+  template <typename T> inline T* retrieve(std::string const& name) {
+    size_t index = index_of(name);
+    return retrieve<T>(index);
+  }
+};
+template <class Parent, class Tagged> struct rt_view_impl;
+
+//template <class T> using rt_view_reference = std::cond 
+template <class T> decltype(auto) make_rt_view(T const& arg) {
+  return const_rt_view_impl<base_const_rt_view,T>(arg);
+}
+
+template <class T> decltype(auto) make_rt_view(T& arg) {
+  return rt_view_impl<base_rt_view,T>(arg);
+}
+
+template <class T> using const_rt_view = const_rt_view_impl<base_const_rt_view,T>;
+template <class T> using rt_view = rt_view_impl<base_rt_view,T>;
 
 }  // namespace named_types

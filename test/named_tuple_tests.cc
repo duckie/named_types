@@ -7,7 +7,8 @@
 #include <functional>
 #include <named_types/named_tuple.hpp>
 #include <named_types/literals/integral_string_literal.hpp>
-//#include <named_types/rt_named_tuple.hpp>
+#include <named_types/rt_named_tuple.hpp>
+#include <named_types/extensions/factory.hpp>
 
 using namespace named_types;
 
@@ -174,4 +175,55 @@ TEST_F(UnitTests, ConstexprStrings1) {
   EXPECT_EQ(std::string(""), std::string(basic_lowcase_charset_format::decode<str_test4>::type().str()));
 
   EXPECT_EQ(std::string("abcdefg"),std::string(concatenate<string_literal<char,'a','b','c'>, string_literal<char,'d','e'>, string_literal<char,'f','g'>>::type().str()));
+}
+
+size_t constexpr operator "" _s(const char* c, size_t s) { return named_types::basic_lowcase_charset_format::encode(c,s); }
+template <size_t EncStr> using attr = named_tag<typename named_types::basic_lowcase_charset_format::decode<EncStr>::type>;
+
+TEST_F(UnitTests, RuntimeView1) {
+	attr<"name"_s> name_k;
+	attr<"size"_s> size_k;
+	attr<"surname"_s> surname_k;
+	attr<"birthday"_s> bday_k;
+
+	auto t1 = make_named_tuple(
+		name_k = std::string("Roger"),
+		surname_k = std::string("LeGros"),
+		size_k = 3u
+		);
+
+  decltype(t1) const & t1_const = t1;
+
+  auto const_view1 = make_rt_view(t1_const);
+  std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
+}
+
+struct Message {
+  virtual void print() const = 0;
+};
+struct MessageOk : public Message {
+  void print() const override { 
+    std::cout << "OK" << std::endl;
+  }
+};
+struct MessageError : public Message {
+  void print() const override { 
+    std::cout << "ERROR" << std::endl;
+  }
+};
+
+TEST_F(UnitTests, Factory1) {
+  extensions::factory<Message(), MessageOk(attr<"ok"_s>), MessageError(attr<"error"_s>)> my_factory;
+
+  //std::cout << 
+  Message* message = my_factory.create("ok");
+  if (message) 
+    message->print();
+  else
+    std::cout << "FUCK" << std::endl;
+
+  message = my_factory.create("error");
+  if (message) 
+    message->print();
+
 }

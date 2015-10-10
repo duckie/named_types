@@ -8,9 +8,8 @@
 
 using namespace named_types;
 namespace {
-size_t constexpr operator "" _s(const char* c, size_t s) { return basic_lowcase_charset_format::encode(c,s); }
-//template <size_t HashCode> constexpr named_tag<std::integral_constant<size_t,HashCode>> at() { return {}; }
-//template <size_t HashCode, class Tuple> constexpr decltype(auto) at(Tuple&& in) { return at<HashCode>()(std::forward<Tuple>(in)); }
+size_t constexpr operator "" _s(const char* c, size_t s) { return named_types::basic_lowcase_charset_format::encode(c,s); }
+template <size_t EncStr> using attr = named_tag<typename named_types::basic_lowcase_charset_format::decode<EncStr>::type>;
 
 template <class T> builder {
   template <class ... U> T* operator () (U&& ... args) {
