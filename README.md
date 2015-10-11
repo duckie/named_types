@@ -7,7 +7,7 @@ named\_types
 
  - *GCC* `4.9.2` or higher
  - *Clang* `3.5` or higher
- - *Visual Studio* `14.0.23107.0 D14REL` or higher
+ - *Visual C++* `14.0.23107.0 D14REL` or higher
 
 ## named\_tuple
 
@@ -286,8 +286,8 @@ Tests can be built and ran with CTest.
 
 ```
 cmake ${named_tuple_dir}
-make build-test
-ctest
+make 
+make test
 ```
 
 ## References

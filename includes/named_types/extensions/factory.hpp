@@ -12,10 +12,9 @@ template <class T, class Base, class ... Args> std::function<Base*(Args...)> mak
 }  // namespace __factory_impl
 
 
-//template <class BaseClass, class ... T> class factory;
 template <class BaseClass, class ... T> class factory {
   // Identity template : useless in theory but needed for MSVC to support the functional syntax
-  template <typename T> struct id { using type = T; };
+  template <typename Type> struct id { using type = Type; };
 public:
   template <class ... BuildArgs> BaseClass* create(std::string const& name, BuildArgs&& ... args) {
 	using builder_tuple_type = named_tuple<typename id<std::function<BaseClass*(BuildArgs...)>(typename __ntuple_tag_spec<T>::type)>::type...>;
