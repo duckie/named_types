@@ -198,32 +198,3 @@ TEST_F(UnitTests, RuntimeView1) {
   std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
 }
 
-struct Message {
-  virtual void print() const = 0;
-};
-struct MessageOk : public Message {
-  void print() const override { 
-    std::cout << "OK" << std::endl;
-  }
-};
-struct MessageError : public Message {
-  void print() const override { 
-    std::cout << "ERROR" << std::endl;
-  }
-};
-
-TEST_F(UnitTests, Factory1) {
-  extensions::factory<Message(), MessageOk(attr<"ok"_s>), MessageError(attr<"error"_s>)> my_factory;
-
-  //std::cout << 
-  Message* message = my_factory.create("ok");
-  if (message) 
-    message->print();
-  else
-    std::cout << "FUCK" << std::endl;
-
-  message = my_factory.create("error");
-  if (message) 
-    message->print();
-
-}

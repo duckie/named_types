@@ -65,6 +65,7 @@ endfunction()
 
 #add_nt_test(unit_tests GT)
 add_nt_test(named_tuple_tests GT)
+add_nt_test(named_tuple_extensions_tests GT)
 add_nt_test(demo2)
 add_nt_test(demo3)
 add_nt_test(demo5)

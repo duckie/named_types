@@ -120,7 +120,7 @@ TEST_F(UnitTests, RuntimeView1) {
     "size"_t = 3u
   );
 
-  const_rt_view<base_const_rt_view, decltype(t1)> rt_view_impl(t1);
+  const_rt_view<decltype(t1)> rt_view_impl(t1);
   base_const_rt_view& view = rt_view_impl;
 
 
