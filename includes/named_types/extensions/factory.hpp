@@ -12,20 +12,19 @@ template <class T, class Base, class ... Args> std::function<Base*(Args...)> mak
 }  // namespace __factory_impl
 
 
-template <class BaseClass, class ... T> class factory;
-template <class BaseClass, class ... Types, class ... Tags> class factory<BaseClass, Types(Tags)...> {
- public:
+//template <class BaseClass, class ... T> class factory;
+template <class BaseClass, class ... T> class factory {
+  // Identity template : useless in theory but needed for MSVC to support the functional syntax
+  template <typename T> struct id { using type = T; };
+public:
   template <class ... BuildArgs> BaseClass* create(std::string const& name, BuildArgs&& ... args) {
-    using builder_tuple_type = named_tuple<std::function<BaseClass*(BuildArgs...)>(Tags)...>;
-    static builder_tuple_type const builders_ { __factory_impl::make_builder<Types,BaseClass,BuildArgs...>() ... };
+	using builder_tuple_type = named_tuple<typename id<std::function<BaseClass*(BuildArgs...)>(typename __ntuple_tag_spec<T>::type)>::type...>;
+    static builder_tuple_type const builders_ { __factory_impl::make_builder<typename __ntuple_tag_elem<T>::type,BaseClass,BuildArgs...>() ... };
     static const_rt_view<builder_tuple_type> const rt_view_(builders_);
     auto builder = rt_view_.template retrieve<std::function<BaseClass*(BuildArgs...)>>(name);
     return builder ? (*builder)(std::forward<BuildArgs>(args)...) : nullptr;
   }
   
 };
-
-
-
-}  // namespace extension
+}  // namespace extensions
 }  // namespace named_types

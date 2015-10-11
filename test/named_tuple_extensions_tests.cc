@@ -59,16 +59,16 @@ struct Message {
 struct MessageOk : Message {
   using Message::Message;
   std::string print() const override { 
-    std::ostringstream result("OK ");
-    result << name_;
+    std::ostringstream result;
+    result << "OK " << name_;
     return result.str();
   }
 };
 struct MessageError : Message {
   using Message::Message;
   std::string print() const override { 
-    std::ostringstream result("ERROR ");
-    result << name_;
+    std::ostringstream result;
+    result << "ERROR " << name_;
     return result.str();
   }
 };
@@ -76,14 +76,14 @@ struct MessageError : Message {
 TEST_F(UnitTests, Factory1) {
   extensions::factory<Message, MessageOk(attr<"ok"_s>), MessageError(attr<"error"_s>)> my_factory;
 
-  //std::cout << 
   std::unique_ptr<Message> message(my_factory.create("ok","yeah"));
   ASSERT_TRUE(static_cast<bool>(message));
   EXPECT_TRUE(message->by_move_);
+  EXPECT_EQ("OK yeah", message->print());
 
   std::string nope("nope");
   message.reset(my_factory.create("error",nope));
   ASSERT_TRUE(static_cast<bool>(message));
   EXPECT_FALSE(message->by_move_);
-
+  EXPECT_EQ("ERROR nope", message->print());
 }

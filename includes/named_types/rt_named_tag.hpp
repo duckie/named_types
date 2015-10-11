@@ -21,8 +21,9 @@ template<typename T> char const* type_name<T>::value = type_name<T>::extract<T>(
 //#ifndef _MSC_VER
 template<typename T, T... chars> class type_name <string_literal<T,chars...>> {
  public:
-  static constexpr char const* value = string_literal<T,chars...>::data;
+  static char const* value;
 };
+template<typename T, T... chars> char const* type_name<string_literal<T, chars...>>::value = string_literal<T, chars...>::data;
 //#endif  // _MSC_VER
 
 // Default base class for runtime views
