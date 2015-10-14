@@ -129,35 +129,25 @@ namespace std {
       {};
 
      private:
-	  template <class Tag, class Arg, std::size_t Index>
-	  static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
-	  {
-	    return{};
-	  }
+      template <class Tag, class Arg, std::size_t Index>
+      static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
+      { return{}; }
 
-	  template <class Tag, class Arg, std::size_t Index>
-	  static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index permissive_get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
-	  {
-	    return{};
-	  }
+      template <class Tag, class Arg, std::size_t Index>
+      static constexpr typename tag_indexer_<Tag, Arg, Index>::tag_index permissive_get_tag_index(tag_indexer_<Tag, Arg, Index> const&)
+      { return{}; }
 
-	  template <class Tag>
-	  static constexpr typename tag_indexer_<Tag, void, sizeof ... (Types)>::tag_index permissive_get_tag_index(...)
-	  {
-        return{};
-	  }
+      template <class Tag>
+      static constexpr typename tag_indexer_<Tag, void, sizeof ... (Types)>::tag_index permissive_get_tag_index(...)
+      { return{}; }
 
-	  template <class Tag, class Arg, std::size_t Index>
-	  static constexpr size_t permissive_get_tag_index_value(tag_indexer_<Tag, Arg, Index> const&)
-	  {
-		  return tag_indexer_<Tag, Arg, Index>::tag_index::value;
-	  }
+      template <class Tag, class Arg, std::size_t Index>
+      static constexpr size_t permissive_get_tag_index_value(tag_indexer_<Tag, Arg, Index> const&)
+      { return tag_indexer_<Tag, Arg, Index>::tag_index::value; }
 
-	  template <class Tag>
-	  static constexpr size_t  permissive_get_tag_index_value(...)
-	  {
-		  return -1;
-	  }
+      template <class Tag>
+      static constexpr size_t  permissive_get_tag_index_value(...)
+      { return -1; }
 
       template <class Tag, class Arg, std::size_t Index> 
       static constexpr tag_indexer_<Tag,Arg,Index> get_tag_indexer(tag_indexer_<Tag,Arg,Index> const&)
