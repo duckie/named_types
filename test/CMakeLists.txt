@@ -1,7 +1,8 @@
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
 Find_Package(Threads REQUIRED)
-Find_Package(GTest REQUIRED)
+Find_Package(GTest)
+Find_Package(rapidjson)
 
 include_directories(
   ${PROJECT_SOURCE_DIR}/includes/
@@ -48,19 +49,27 @@ else()
 endif ()
 
 
-add_library(test-main OBJECT test-main.cc)
 add_custom_target(build-test)
 
 # "nt" stands for "named tuple"
+if (${GTEST_FOUND})
+  add_library(test-main OBJECT test-main.cc)
+endif()
+
 function(add_nt_test name)
   if("${ARGV1}" STREQUAL "GT")
-    add_executable(${name} ${name}.cc $<TARGET_OBJECTS:test-main> ${HEADER_FILES})
+    if (GTEST_FOUND)
+      add_executable(${name} ${name}.cc $<TARGET_OBJECTS:test-main> ${HEADER_FILES})
+      target_link_libraries(${name} ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
+      add_dependencies(build-test ${name})
+      add_test(${name} ${name})  
+    endif()
   else()
     add_executable(${name} ${name}.cc ${HEADER_FILES})
+    target_link_libraries(${name} ${CMAKE_THREAD_LIBS_INIT})
+    add_dependencies(build-test ${name})
+    add_test(${name} ${name})  
   endif()
-  target_link_libraries(${name} ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-  add_dependencies(build-test ${name})
-  add_test(${name} ${name})  
 endfunction()
 
 #add_nt_test(unit_tests GT)
