@@ -10,8 +10,10 @@
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
+#include <named_types/extensions/parsers_tools.hpp>
 
 using namespace named_types;
+using namespace named_types::extensions;
 
 namespace {
   struct name {
@@ -86,4 +88,10 @@ TEST_F(UnitTests, Factory1) {
   ASSERT_TRUE(static_cast<bool>(message));
   EXPECT_FALSE(message->by_move_);
   EXPECT_EQ("ERROR nope", message->print());
+}
+
+TEST_F(UnitTests, ParsersTools1) {
+  EXPECT_TRUE(is_nullable<int*>::value);
+  EXPECT_TRUE(is_nullable<std::unique_ptr<int>>::value);
+  EXPECT_FALSE(is_nullable<int>::value);
 }
