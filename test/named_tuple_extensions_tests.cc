@@ -101,7 +101,7 @@ TEST_F(UnitTests, ParsersTools1) {
   EXPECT_TRUE(is_std_basic_string<std::string>::value);
   EXPECT_TRUE(is_std_basic_string<std::wstring>::value);
 
-  EXPECT_EQ("3",(convert<int,std::string>(3)));
-  EXPECT_EQ(1u, (convert<double,size_t>(1.f)));
-  EXPECT_EQ(23, (convert<std::string,int>("23")));
+  EXPECT_EQ("3",(lexical_cast<std::string>(3)));
+  EXPECT_EQ(1u, (lexical_cast<size_t>(1.f)));
+  EXPECT_EQ(23, (lexical_cast<int>(std::string("23"))));
 }
