@@ -10,7 +10,7 @@
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
-#include <named_types/extensions/parsers_tools.hpp>
+#include <named_types/extensions/parsing_tools.hpp>
 
 using namespace named_types;
 using namespace named_types::extensions;
@@ -91,7 +91,17 @@ TEST_F(UnitTests, Factory1) {
 }
 
 TEST_F(UnitTests, ParsersTools1) {
+  using namespace named_types::extensions::parsing;
+
   EXPECT_TRUE(is_nullable<int*>::value);
   EXPECT_TRUE(is_nullable<std::unique_ptr<int>>::value);
   EXPECT_FALSE(is_nullable<int>::value);
+
+  EXPECT_FALSE(is_std_basic_string<int>::value);
+  EXPECT_TRUE(is_std_basic_string<std::string>::value);
+  EXPECT_TRUE(is_std_basic_string<std::wstring>::value);
+
+  EXPECT_EQ("3",(convert<int,std::string>(3)));
+  EXPECT_EQ(1u, (convert<double,size_t>(1.f)));
+  EXPECT_EQ(23, (convert<std::string,int>("23")));
 }
