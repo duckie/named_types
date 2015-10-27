@@ -11,6 +11,7 @@
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
 #include <named_types/extensions/parsing_tools.hpp>
+#include <named_types/extensions/rapidjson.hpp>
 
 using namespace named_types;
 using namespace named_types::extensions;

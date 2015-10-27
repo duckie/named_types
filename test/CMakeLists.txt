@@ -12,6 +12,7 @@ include_directories(
   ${PROJECT_BINARY_DIR}/src/
   ${PROJECT_BINARY_DIR}/test/
   ${GTEST_INCLUDE_DIRS}
+  ${RAPIDJSON_INCLUDE_DIRS}
 )
 
 # C++14 is a requirement here
