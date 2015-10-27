@@ -107,3 +107,10 @@ TEST_F(UnitTests, ParsersTools1) {
   EXPECT_EQ(23, (lexical_cast<int>(std::string("23"))));
   EXPECT_EQ(23, (lexical_cast<int>("23")));
 }
+
+TEST_F(UnitTests, RapidJson1) {
+  using namespace named_types::extensions::parsing;
+  using namespace named_types::extensions::rapidjson;
+
+
+}

@@ -3,6 +3,8 @@
 #include "../rt_named_tuple.hpp"
 #include <type_traits>
 #include <cstdint>
+#include <vector>
+#include <map>
 
 namespace named_types {
 namespace extensions {
@@ -45,6 +47,20 @@ template <class CharT, size_t Length> struct is_raw_string<CharT[Length]> {
 template <class CharT> struct is_raw_string<CharT*> {
   static constexpr bool const value = is_char<CharT>::value;
 };
+
+
+template <class T> struct is_sequence_container {
+  static constexpr bool const value = false;
+};
+
+template <class T, class Allocator> struct is_sequence_container<std::vector<T,Allocator>> {
+  static constexpr bool const value = true;
+};
+
+//template <class T, class Allocator> struct is_sequence_container<std::vector<T,Allocator>> {
+  //static constexpr bool const value = true;
+//};
+
 
 template <class To, class From> typename std::enable_if<std::is_arithmetic<From>::value && is_std_basic_string<To>::value,To>::type lexical_cast(From const& value) {
   std::basic_ostringstream<typename To::value_type, typename To::traits_type, typename To::allocator_type> output;
