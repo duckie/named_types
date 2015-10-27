@@ -104,4 +104,5 @@ TEST_F(UnitTests, ParsersTools1) {
   EXPECT_EQ("3",(lexical_cast<std::string>(3)));
   EXPECT_EQ(1u, (lexical_cast<size_t>(1.f)));
   EXPECT_EQ(23, (lexical_cast<int>(std::string("23"))));
+  EXPECT_EQ(23, (lexical_cast<int>("23")));
 }
