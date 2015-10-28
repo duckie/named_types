@@ -109,8 +109,26 @@ TEST_F(UnitTests, ParsersTools1) {
 }
 
 TEST_F(UnitTests, RapidJson1) {
-  using namespace named_types::extensions::parsing;
-  using namespace named_types::extensions::rapidjson;
+  //using namespace named_types::extensions::parsing;
+  using named_types::extensions::rapidjson::make_reader_handler;
 
 
+  using Tuple = named_tuple<
+    std::string(attr<"name"_s>)
+    , int(attr<"age"_s>)
+    , double(attr<"size"_s>)
+    , std::vector<int>(attr<"list"_s>)
+    , std::function<int(int)>(attr<"func"_s>)
+    >;
+
+
+  std::string input = R"json({"age":57,"name":"Marcelo","size":1.8})json";
+  Tuple output { "Roger", 52, 1.9, {}, nullptr };
+  auto handler = make_reader_handler(output);
+
+  ::rapidjson::Reader reader;
+  ::rapidjson::StringStream ss(input.c_str());
+  EXPECT_TRUE(reader.Parse(ss, handler));
+  EXPECT_EQ("Marcelo",get<attr<"name"_s>>(output));
+  EXPECT_EQ(57,get<attr<"age"_s>>(output));
 }

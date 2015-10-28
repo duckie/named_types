@@ -61,6 +61,14 @@ template <class T, class Allocator> struct is_sequence_container<std::vector<T,A
   //static constexpr bool const value = true;
 //};
 
+template <class Source, class Target> struct is_convertible {
+  static constexpr bool const value =
+    (std::is_arithmetic<Source>::value && is_std_basic_string<Target>::value)
+    || (std::is_arithmetic<Source>::value && std::is_arithmetic<Target>::value)
+    || (is_std_basic_string<Source>::value && std::is_arithmetic<Target>::value)
+    || (is_raw_string<Source>::value && std::is_arithmetic<Target>::value)
+    || std::is_assignable<Target,Source>::value;
+};
 
 template <class To, class From> typename std::enable_if<std::is_arithmetic<From>::value && is_std_basic_string<To>::value,To>::type lexical_cast(From const& value) {
   std::basic_ostringstream<typename To::value_type, typename To::traits_type, typename To::allocator_type> output;
