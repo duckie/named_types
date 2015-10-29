@@ -51,23 +51,36 @@ make_setter() {
   return nullptr;
 }
 
-
+template <class Tuple, size_t Index> 
+typename std::enable_if< 
+, std::function<value_setter_interface*(Tuple&)>>::type
+make_setter() {
+  return [](Tuple& tuple, Source&& source)->void { std::get<Index>(tuple) = std::move(source); };
 }
 
-template <class Tuple, class Encoding> class reader_handler;
+// This interface can be used either for a named_tuple or a map
+template <class KeyCharT, class ValueCharT> struct value_setter_interface {
+  virtual ~value_setter_interface() = default;
+  virtual bool setNull(std::basic_string<KeyCharT> const&) = 0;
+  virtual bool setBool(std::basic_string<KeyCharT> const&, bool) = 0;
+  virtual bool setInt(std::basic_string<KeyCharT> const&, int) = 0;
+  virtual bool setUint(std::basic_string<KeyCharT> const&, unsigned) = 0;
+  virtual bool setInt64(std::basic_string<KeyCharT> const&, int64_t) = 0;
+  virtual bool setUint64(std::basic_string<KeyCharT> const&, uint64_t) = 0;
+  virtual bool setDouble(std::basic_string<KeyCharT> const&, double) = 0;
+  virtual bool setString(std::basic_string<KeyCharT> const&, const ChartT*, ::rapidjson::SizeType) = 0;
+  virtual value_setter_interface* createChildNode(std::basic_string<KeyCharT> const&) = 0;
+};
 
-template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags...>,Encoding> : public ::rapidjson::BaseReaderHandler<Encoding, reader_handler<named_tuple<Tags...>,Encoding>> {
-  using State = __rapidjson_impl::reader_state;
+template <class KeyCharT, class ValueCharT, class T> struct value_setter;
+
+template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<KeyCharT,ValueCharT,named_tuple<Tags...>>
+  : public value_setter_interface<KeyCharT,ValueCharT>  
+{
   using Tuple = named_tuple<Tags...>;
-  using Ch = typename Encoding::Ch;
-  using SizeType = ::rapidjson::SizeType;
-  using StdString = std::basic_string<Ch>;
- 
+
   Tuple& root_;
   rt_view<Tuple> rt_root_;
-  State state_;
-  std::string current_key_;
-  size_t current_index_;
 
   template <class T> bool setFrom(size_t field_index, T&& value) {
     static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
@@ -78,6 +91,66 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
     }
     return false;
   }
+
+ public:
+  value_setter(Tuple& root) : value_setter_interface<KeyCharT,ValueCharT>(), root_(root), rt_root_(root) {} 
+
+  virtual bool setNull(std::basic_string<KeyCharT> const& key) override {
+    return setFrom<std::nullptr_t>(rt_root_.index_of(key), nullptr);
+  }
+
+  virtual bool setBool(std::basic_string<KeyCharT> const& key, bool value) override {
+    return setFrom<bool>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setInt(std::basic_string<KeyCharT> const& key, int value) override {
+    return setFrom<int>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setUint(std::basic_string<KeyCharT> const& key, unsigned value) override {
+    return setFrom<unsigned>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setInt64(std::basic_string<KeyCharT> const& key, int64_t value) override {
+    return setFrom<int64_t>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setUint64(std::basic_string<KeyCharT> const& key, uint64_t value) override {
+    return setFrom<uint64_t>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setDouble(std::basic_string<KeyCharT> const& key, double value) override {
+    return setFrom<double>(rt_root_.index_of(key), std::move(value));
+  }
+
+  virtual bool setString(std::basic_string<KeyCharT> const& key, const ChartT* data, ::rapidjson::SizeType length) override {
+    return setFrom<std::nullptr_t>(rt_root_.index_of(key), nullptr);
+  }
+
+  virtual value_setter_interface* createChildNode(std::basic_string<KeyCharT> const&) {
+    static std::array<std::function<value_setter_interface*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+  }
+};
+
+}  // namespace __rapidjson_impl
+
+
+template <class Tuple, class Encoding> class reader_handler;
+
+template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags...>,Encoding> : public ::rapidjson::BaseReaderHandler<Encoding, reader_handler<named_tuple<Tags...>,Encoding>> {
+  using State = __rapidjson_impl::reader_state;
+  using Tuple = named_tuple<Tags...>;
+  using Ch = typename Encoding::Ch;
+  using SizeType = ::rapidjson::SizeType;
+  using StdString = std::basic_string<Ch>;
+ 
+  //rt_view<Tuple> rt_root_;
+  Tuple& root_;
+  std::stack<std::unique_ptr<value_setter_interface>> nodes_;
+  State state_;
+  std::string current_key_;
+  size_t current_index_;
+
 
  public:
   reader_handler(Tuple& root) : 
@@ -150,6 +223,9 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   bool StartObject() { 
     if (State::wait_start_object != state_)
       return false;
+
+     
+    
     
     state_ = State::wait_key;
     return true;

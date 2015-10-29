@@ -28,6 +28,8 @@ template <class T> struct is_char {
   static constexpr bool const value = std::is_same<char,raw_type>::value || std::is_same<wchar_t,raw_type>::value || std::is_same<char16_t,raw_type>::value || std::is_same<char32_t,raw_type>::value;
 };
 
+// is_basic_string
+
 template <class T> struct is_std_basic_string {
   static constexpr bool const value = false;
 };
@@ -35,6 +37,8 @@ template <class T> struct is_std_basic_string {
 template <class CharT, class Traits, class Allocator> struct is_std_basic_string<std::basic_string<CharT,Traits,Allocator>> {
   static constexpr bool const value = true;
 };
+
+// is_raw_string
 
 template <class T> struct is_raw_string {
   static constexpr bool const value = false;
@@ -48,6 +52,7 @@ template <class CharT> struct is_raw_string<CharT*> {
   static constexpr bool const value = is_char<CharT>::value;
 };
 
+// is_sequence_container
 
 template <class T> struct is_sequence_container {
   static constexpr bool const value = false;
@@ -57,9 +62,27 @@ template <class T, class Allocator> struct is_sequence_container<std::vector<T,A
   static constexpr bool const value = true;
 };
 
-//template <class T, class Allocator> struct is_sequence_container<std::vector<T,Allocator>> {
-  //static constexpr bool const value = true;
-//};
+// is_associative_container
+
+template <class T> struct is_associative_container {
+  static constexpr bool const value = false;
+};
+
+template <class T, class Allocator> struct is_associative_container<std::map<T,Allocator>> {
+  static constexpr bool const value = true;
+};
+
+
+// is_unique_ptr
+
+template <class T> struct is_unique_ptr {
+  static constexpr bool const value = false;
+};
+
+template <class T> struct is_unique_ptr<std::unique_ptr<T>> {
+  static constexpr bool const value = true;
+};
+
 
 template <class Source, class Target> struct is_convertible {
   static constexpr bool const value =
