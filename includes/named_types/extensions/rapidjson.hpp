@@ -3,6 +3,7 @@
 #include "../rt_named_tuple.hpp"
 #include <array>
 #include <rapidjson/reader.h>
+#include <stack>
 
 namespace named_types {
 namespace extensions {
@@ -51,13 +52,6 @@ make_setter() {
   return nullptr;
 }
 
-template <class Tuple, size_t Index> 
-typename std::enable_if< 
-, std::function<value_setter_interface*(Tuple&)>>::type
-make_setter() {
-  return [](Tuple& tuple, Source&& source)->void { std::get<Index>(tuple) = std::move(source); };
-}
-
 // This interface can be used either for a named_tuple or a map
 template <class KeyCharT, class ValueCharT> struct value_setter_interface {
   virtual ~value_setter_interface() = default;
@@ -68,7 +62,7 @@ template <class KeyCharT, class ValueCharT> struct value_setter_interface {
   virtual bool setInt64(std::basic_string<KeyCharT> const&, int64_t) = 0;
   virtual bool setUint64(std::basic_string<KeyCharT> const&, uint64_t) = 0;
   virtual bool setDouble(std::basic_string<KeyCharT> const&, double) = 0;
-  virtual bool setString(std::basic_string<KeyCharT> const&, const ChartT*, ::rapidjson::SizeType) = 0;
+  virtual bool setString(std::basic_string<KeyCharT> const&, const ValueCharT*, ::rapidjson::SizeType) = 0;
   virtual value_setter_interface* createChildNode(std::basic_string<KeyCharT> const&) = 0;
 };
 
@@ -123,14 +117,33 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
     return setFrom<double>(rt_root_.index_of(key), std::move(value));
   }
 
-  virtual bool setString(std::basic_string<KeyCharT> const& key, const ChartT* data, ::rapidjson::SizeType length) override {
+  virtual bool setString(std::basic_string<KeyCharT> const& key, const ValueCharT* data, ::rapidjson::SizeType length) override {
     return setFrom<std::nullptr_t>(rt_root_.index_of(key), nullptr);
   }
 
-  virtual value_setter_interface* createChildNode(std::basic_string<KeyCharT> const&) {
-    static std::array<std::function<value_setter_interface*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+  virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) {
+    static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_setter<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    size_t field_index = rt_root_.index_of(key);
+    if (field_index < creators.size()) {
+      std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
+      if (creator)
+        return creator(root_);
+    }
+    return nullptr;
   }
 };
+
+template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
+typename std::enable_if<parsing::is_named_tuple<decltype(std::get<Index>(std::declval<Tuple>()))>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+make_setter() {
+  return [](Tuple& tuple)->void { return new value_setter<KeyCharT, ValueCharT, decltype(std::get<Index>(std::declval<Tuple>()))>(std::get<Index>(std::declval<Tuple>())); };
+}
+
+template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
+typename std::enable_if<!parsing::is_named_tuple<decltype(std::get<Index>(std::declval<Tuple>()))>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+make_setter() {
+  return nullptr;
+}
 
 }  // namespace __rapidjson_impl
 
@@ -143,10 +156,11 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   using Ch = typename Encoding::Ch;
   using SizeType = ::rapidjson::SizeType;
   using StdString = std::basic_string<Ch>;
+  //using __rapidjson_impl::value_setter_interface;
  
   //rt_view<Tuple> rt_root_;
   Tuple& root_;
-  std::stack<std::unique_ptr<value_setter_interface>> nodes_;
+  std::stack<std::unique_ptr<__rapidjson_impl::value_setter_interface<Ch,Ch>>> nodes_;
   State state_;
   std::string current_key_;
   size_t current_index_;
@@ -156,79 +170,76 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   reader_handler(Tuple& root) : 
     ::rapidjson::BaseReaderHandler<Encoding, reader_handler>()
       , root_(root)
-      , rt_root_(root)
+      //, rt_root_(root)
       , state_(State::wait_start_object)
       , current_key_()
       , current_index_(0)
-  {}
+  {
+    nodes_.emplace(new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root));
+  }
 
-  reader_handler(reader_handler&& origin) : 
-    ::rapidjson::BaseReaderHandler<Encoding, reader_handler>()
-      , root_(origin.root_)
-      , rt_root_(origin.root_)
-      , state_(origin.state_)
-      , current_key_(std::move(origin.current_key_))
-      , current_index_(origin.current_index_)
-  {}
 
   //bool Default() { return true; }
   bool Null() { 
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<std::nullptr_t>(current_index_, nullptr);
+    return nodes_.top()->setNull(current_key_);
   }
   
   bool Bool(bool value) {
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<bool>(current_index_, std::move(value));
+    return nodes_.top()->setBool(current_key_,value);
   }
   
   bool Int(int value) {
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<int>(current_index_, std::move(value));
+    return nodes_.top()->setInt(current_key_,value);
   }
   
   bool Uint(unsigned value) {
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<unsigned>(current_index_, std::move(value));
+    return nodes_.top()->setUint(current_key_,value);
   }
   
   bool Int64(int64_t value) {
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<int64_t>(current_index_, std::move(value));
+    return nodes_.top()->setInt64(current_key_,value);
   }
   
   bool Uint64(uint64_t value) {
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<uint64_t>(current_index_, std::move(value));
+    return nodes_.top()->setUint64(current_key_,value);
   }
   
   bool Double(double value) { 
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<double>(current_index_, std::move(value));
+    return nodes_.top()->setDouble(current_key_,value);
   }
 
-  bool String(const Ch* data, SizeType, bool) { 
+  bool String(const Ch* data, SizeType length, bool) { 
     if (State::wait_value != state_) return false;
     state_ = State::wait_key;
-    return setFrom<StdString>(current_index_, StdString(data));
+    return nodes_.top()->setString(current_key_,data,length);
   }
 
   bool StartObject() { 
-    if (State::wait_start_object != state_)
+    if (State::wait_start_object != state_ || State::wait_value != state_)
       return false;
 
-     
-    
-    
-    state_ = State::wait_key;
-    return true;
+    __rapidjson_impl::value_setter_interface<Ch,Ch>* interface = nodes_.top()->createChildNode(current_key_);
+    if (interface) {
+      state_ = State::wait_key;
+      nodes_.emplace(interface);   
+      return true;
+    }
+
+    return false;
   }
 
   bool Key(const Ch* str, SizeType len, bool copy) { 
@@ -236,7 +247,7 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
       return false;
 
     current_key_ = std::string(str);
-    current_index_ = rt_root_.index_of(str);
+    //current_index_ = rt_root_.index_of(str);
     state_ = State::wait_value;
     return true;
   }
@@ -245,6 +256,7 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
     if (State::wait_key != state_ && State::wait_end_object != state_)
       return false;
     state_ = State::wait_key;
+    nodes_.pop();
     return true;
   }
 

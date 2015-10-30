@@ -72,6 +72,16 @@ template <class T, class Allocator> struct is_associative_container<std::map<T,A
   static constexpr bool const value = true;
 };
 
+// is_named_tuple
+
+template <class T> struct is_named_tuple {
+  static constexpr bool const value = false;
+};
+
+template <class ... Tags> struct is_named_tuple<named_tuple<Tags...>> {
+  static constexpr bool const value = true;
+};
+
 
 // is_unique_ptr
 
