@@ -166,9 +166,14 @@ template <class ... Types, class Func> inline constexpr void apply(named_tuple<T
   using swallow = int[];
   (void) swallow {int{}, (f(typename __ntuple_tag_spec<Types>::type {},get<typename __ntuple_tag_spec<Types>::type>(in)),int{})...};
 }
-/*
-template <class TagSpec, class Tuple, class Func> inline constexpr void apply_func(Tuple const& tuple, Func&& f) {
-	f(typename __ntuple_tag_spec<Types>::type{}, get<typename __ntuple_tag_spec<Types>::type>(in));
-}*/
 
 }  // namespace named_types
+
+// Standard specialization
+
+namespace std {
+  template <size_t Index, class ... Tags> class tuple_element<Index, named_types::named_tuple<Tags...>> {
+   public:
+    using type = typename tuple_element<Index, tuple<typename named_types::__ntuple_tag_elem<Tags>::type ...>>::type;
+  };
+}  // namespace std
