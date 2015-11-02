@@ -69,15 +69,21 @@ template <class KeyCharT, class ValueCharT> struct value_setter_interface {
 template <class KeyCharT, class ValueCharT, class T> struct value_setter;
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<parsing::is_named_tuple<decltype(std::get<Index>(std::declval<Tuple>()))>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<parsing::is_named_tuple<typename std::tuple_element<Index,Tuple>::type>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
-  return [](Tuple& tuple)->void { return new value_setter<KeyCharT, ValueCharT, decltype(std::get<Index>(std::declval<Tuple>()))>(std::get<Index>(std::declval<Tuple>())); };
+  return [](Tuple& tuple) -> value_setter_interface<KeyCharT,ValueCharT>* { 
+    return new value_setter<KeyCharT, ValueCharT, typename std::tuple_element<Index,Tuple>::type>(std::get<Index>(tuple)); 
+  };
 }
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<!parsing::is_named_tuple<decltype(std::get<Index>(std::declval<Tuple>()))>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<!parsing::is_named_tuple<typename std::tuple_element<Index,Tuple>::type>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
-  return nullptr;
+  //return nullptr;
+  return [](Tuple& tuple) -> value_setter_interface<KeyCharT,ValueCharT>* { 
+    //std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    return nullptr;
+  };
 }
 
 template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<KeyCharT,ValueCharT,named_tuple<Tags...>>
