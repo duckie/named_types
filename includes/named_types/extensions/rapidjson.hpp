@@ -89,14 +89,14 @@ template <class KeyCharT, class ValueCharT> struct value_setter_interface {
 // This interface can be used either for aby SequenceContainer
 template <class KeyCharT, class ValueCharT> struct sequence_pusher_interface {
   virtual ~sequence_pusher_interface () = default;
-  virtual bool pushNull() = 0;
-  virtual bool pushBool(bool) = 0;
-  virtual bool pushInt(int) = 0;
-  virtual bool pushUint(unsigned) = 0;
-  virtual bool pushInt64(int64_t) = 0;
-  virtual bool pushUint64(uint64_t) = 0;
-  virtual bool pushDouble(double) = 0;
-  virtual bool pushString(const ValueCharT*, ::rapidjson::SizeType) = 0;
+  virtual bool appendNull() = 0;
+  virtual bool appendBool(bool) = 0;
+  virtual bool appendInt(int) = 0;
+  virtual bool appendUint(unsigned) = 0;
+  virtual bool appendInt64(int64_t) = 0;
+  virtual bool appendUint64(uint64_t) = 0;
+  virtual bool appendDouble(double) = 0;
+  virtual bool appendString(const ValueCharT*, ::rapidjson::SizeType) = 0;
   virtual value_setter_interface<KeyCharT,ValueCharT>* appendChildNode() = 0;
   virtual sequence_pusher_interface* appendChildArray() = 0;
 };
@@ -221,35 +221,35 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
  public:
   sequence_pusher(Container& root) : sequence_pusher_interface<KeyCharT,ValueCharT>(), root_(root), inserter_(std::back_inserter(root)) {}
 
-  virtual bool pushNull() override {
+  virtual bool appendNull() override {
     return appendValue<std::nullptr_t>(nullptr);
   }
 
-  virtual bool pushBool(bool value) override {
+  virtual bool appendBool(bool value) override {
     return appendValue<bool>(std::move(value));
   }
 
-  virtual bool pushInt(int value) override {
+  virtual bool appendInt(int value) override {
     return appendValue<int>(std::move(value));
   }
 
-  virtual bool pushUint(unsigned value) override {
+  virtual bool appendUint(unsigned value) override {
     return appendValue<unsigned>(std::move(value));
   }
 
-  virtual bool pushInt64(int64_t value) override {
+  virtual bool appendInt64(int64_t value) override {
     return appendValue<int64_t>(std::move(value));
   }
 
-  virtual bool pushUint64(uint64_t value) override {
+  virtual bool appendUint64(uint64_t value) override {
     return appendValue<uint64_t>(std::move(value));
   }
 
-  virtual bool pushDouble(double value) override {
+  virtual bool appendDouble(double value) override {
     return appendValue<double>(std::move(value));
   }
 
-  virtual bool pushString(const ValueCharT* data, ::rapidjson::SizeType length) override {
+  virtual bool appendString(const ValueCharT* data, ::rapidjson::SizeType length) override {
     return appendValue<std::basic_string<ValueCharT>>(data);
   }
 
@@ -273,9 +273,18 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   using Ch = typename Encoding::Ch;
   using SizeType = ::rapidjson::SizeType;
   using StdString = std::basic_string<Ch>;
+
+  struct Node {
+    std::unique_ptr<__rapidjson_impl::value_setter_interface<Ch,Ch>> obj_node;
+    std::unique_ptr<__rapidjson_impl::sequence_pusher_interface<Ch,Ch>> array_node;
+
+    Node(__rapidjson_impl::value_setter_interface<Ch,Ch>* obj_interface, __rapidjson_impl::sequence_pusher_interface<Ch,Ch>* array_interface)
+      : obj_node(obj_interface), array_node(array_interface)
+    {}
+  };
  
   Tuple& root_;
-  std::stack<std::unique_ptr<__rapidjson_impl::value_setter_interface<Ch,Ch>>> nodes_;
+  std::stack<Node> nodes_;
   State state_;
   std::string current_key_;
   size_t current_index_;
@@ -291,61 +300,135 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   {}
 
   bool Null() { 
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setNull(current_key_);
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setNull(current_key_);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendNull();
+      return true;
+    }
+    return false;
   }
   
   bool Bool(bool value) {
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setBool(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setBool(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendBool(value);
+      return true;
+    }
+    return false;
   }
   
   bool Int(int value) {
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setInt(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setInt(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendInt(value);
+      return true;
+    }
+    return false;
   }
   
   bool Uint(unsigned value) {
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setUint(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setUint(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendUint(value);
+      return true;
+    }
+    return false;
   }
   
   bool Int64(int64_t value) {
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setInt64(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setInt64(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendInt64(value);
+      return true;
+    }
+    return false;
   }
   
   bool Uint64(uint64_t value) {
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setUint64(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setUint64(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendUint64(value);
+      return true;
+    }
+    return false;
   }
   
   bool Double(double value) { 
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setDouble(current_key_,value);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setDouble(current_key_,value);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendDouble(value);
+      return true;
+    }
+    return false;
   }
 
   bool String(const Ch* data, SizeType length, bool) { 
-    if (State::wait_value != state_) return false;
-    state_ = State::wait_key;
-    return nodes_.top()->setString(current_key_,data,length);
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_value == state_ && nodes_.top().obj_node) {
+      nodes_.top().obj_node->setString(current_key_,data,length);
+      state_ = State::wait_key;
+      return true;
+    }
+    else if (State::wait_element == state_ && nodes_.top().array_node) {
+      nodes_.top().array_node->appendString(data,length);
+      return true;
+    }
+    return false;
   }
 
   bool StartObject() { 
-    if (State::wait_start_object != state_ && State::wait_value != state_)
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_start_object != state_ && State::wait_value != state_  && State::wait_element != state_)
       return false;
 
-    __rapidjson_impl::value_setter_interface<Ch,Ch>* interface = nodes_.empty() ? new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root_) : nodes_.top()->createChildNode(current_key_);
+    __rapidjson_impl::value_setter_interface<Ch,Ch>* interface = nullptr;
+    if (nodes_.empty()) {
+      interface = new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root_);
+    }
+    else if (nodes_.top().obj_node) {
+      interface = nodes_.top().obj_node->createChildNode(current_key_);
+    }
+    else if (nodes_.top().array_node) {
+      interface = nodes_.top().array_node->appendChildNode();
+    }
+
     if (interface) {
       state_ = State::wait_key;
-      nodes_.emplace(interface);   
+      nodes_.emplace(interface, nullptr);
       return true;
     }
 
@@ -364,8 +447,10 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   bool EndObject(SizeType) {
     if (State::wait_key != state_ && State::wait_end_object != state_)
       return false;
-    state_ = State::wait_key;
     nodes_.pop();
+    if (!nodes_.empty()) {
+      state_ = nodes_.top().obj_node ? State::wait_key : State::wait_element;
+    }
     return true;
   }
 
