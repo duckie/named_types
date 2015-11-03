@@ -102,18 +102,33 @@ template <class KeyCharT, class ValueCharT> struct sequence_pusher_interface {
 };
 
 template <class KeyCharT, class ValueCharT, class T> struct value_setter;
+template <class KeyCharT, class ValueCharT, class Container> class sequence_pusher;
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
 typename std::enable_if<parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
   return [](Tuple& tuple) -> value_setter_interface<KeyCharT,ValueCharT>* { 
-    return new value_setter<KeyCharT, ValueCharT, typename std::tuple_element<Index,Tuple>::type>(std::get<Index>(tuple)); 
+    return new value_setter<KeyCharT, ValueCharT, std::tuple_element_t<Index,Tuple>>(std::get<Index>(tuple)); 
   };
 }
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
 typename std::enable_if<!parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
+  return nullptr;
+}
+
+template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
+typename std::enable_if<parsing::is_sequence_container<std::tuple_element_t<Index,Tuple>>::value, std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+make_sequence_creator() {
+  return [](Tuple& tuple) -> sequence_pusher_interface<KeyCharT,ValueCharT>* { 
+    return new sequence_pusher<KeyCharT, ValueCharT, std::tuple_element_t<Index,Tuple>>(std::get<Index>(tuple)); 
+  };
+}
+
+template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
+typename std::enable_if<!parsing::is_sequence_container<std::tuple_element_t<Index,Tuple>>::value, std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+make_sequence_creator() {
   return nullptr;
 }
 
@@ -181,13 +196,20 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
     return nullptr;
   }
 
-  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const&) override {
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const& key) override {
+    static std::array<std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_sequence_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    size_t field_index = rt_root_.index_of(key);
+    if (field_index < creators.size()) {
+      std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
+      if (creator)
+        return creator(root_);
+    }
     return nullptr;
   }
 };
 
 template <class KeyCharT, class ValueCharT, class Container> class sequence_pusher
-  : public value_setter_interface<KeyCharT,ValueCharT>  
+  : public sequence_pusher_interface<KeyCharT,ValueCharT>  
 {
   static_assert(parsing::is_sequence_container<Container>::value, "Container must be a SequenceContainer.");
 
@@ -200,7 +222,7 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
     return true;
   }
 
-  template <class T> typename std::enable_if<is_static_cast_assignable<T, value_type>::value, bool>::type appendValue(T&& value) {
+  template <class T> typename std::enable_if<is_static_cast_assignable<T, value_type>::value && !std::is_convertible<T,value_type>::value, bool>::type appendValue(T&& value) {
     inserter_ = static_cast<value_type>(value);
     return true;
   }
@@ -209,12 +231,12 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
     return false;
   }
 
-  template <class T> typename std::enable_if<parsing::is_named_tuple<value_type>::value, bool>::type appendChildNode() {
+  template <class T> typename std::enable_if<parsing::is_named_tuple<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
     inserter_ = T {};
     return new value_setter<KeyCharT,ValueCharT,T>(root_.back());
   }
 
-  template <class T> typename std::enable_if<!parsing::is_named_tuple<value_type>::value, bool>::type appendChildNode() {
+  template <class T> typename std::enable_if<!parsing::is_named_tuple<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
     return nullptr;
   }
 
@@ -261,6 +283,7 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
     return nullptr;
   };
 };
+
 
 }  // namespace __rapidjson_impl
 
@@ -313,7 +336,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Bool(bool value) {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setBool(current_key_,value);
       state_ = State::wait_key;
@@ -327,7 +349,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Int(int value) {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setInt(current_key_,value);
       state_ = State::wait_key;
@@ -341,7 +362,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Uint(unsigned value) {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setUint(current_key_,value);
       state_ = State::wait_key;
@@ -355,7 +375,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Int64(int64_t value) {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setInt64(current_key_,value);
       state_ = State::wait_key;
@@ -369,7 +388,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Uint64(uint64_t value) {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setUint64(current_key_,value);
       state_ = State::wait_key;
@@ -383,7 +401,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
   
   bool Double(double value) { 
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setDouble(current_key_,value);
       state_ = State::wait_key;
@@ -397,7 +414,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
 
   bool String(const Ch* data, SizeType length, bool) { 
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_value == state_ && nodes_.top().obj_node) {
       nodes_.top().obj_node->setString(current_key_,data,length);
       state_ = State::wait_key;
@@ -411,7 +427,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
 
   bool StartObject() { 
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_start_object != state_ && State::wait_value != state_  && State::wait_element != state_)
       return false;
 
@@ -455,7 +470,6 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
 
   bool StartArray() {
-    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
     if (State::wait_start_sequence != state_ && State::wait_value != state_  && State::wait_element != state_)
       return false;
 
