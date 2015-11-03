@@ -4,7 +4,9 @@
 #include <type_traits>
 #include <cstdint>
 #include <vector>
+#include <list>
 #include <map>
+#include <unordered_map>
 
 namespace named_types {
 namespace extensions {
@@ -62,6 +64,10 @@ template <class T, class Allocator> struct is_sequence_container<std::vector<T,A
   static constexpr bool const value = true;
 };
 
+template <class T, class Allocator> struct is_sequence_container<std::list<T,Allocator>> {
+  static constexpr bool const value = true;
+};
+
 // is_associative_container
 
 template <class T> struct is_associative_container {
@@ -69,6 +75,10 @@ template <class T> struct is_associative_container {
 };
 
 template <class T, class Allocator> struct is_associative_container<std::map<T,Allocator>> {
+  static constexpr bool const value = true;
+};
+
+template <class T, class Allocator> struct is_associative_container<std::unordered_map<T,Allocator>> {
   static constexpr bool const value = true;
 };
 

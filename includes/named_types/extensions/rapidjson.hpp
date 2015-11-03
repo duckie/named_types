@@ -4,6 +4,7 @@
 #include <array>
 #include <rapidjson/reader.h>
 #include <stack>
+#include <iterator>
 
 namespace named_types {
 namespace extensions {
@@ -20,17 +21,24 @@ enum class reader_state {
     , wait_end_sequence
 };
 
+template <class Target, class Source> struct is_static_cast_assignable {
+  static constexpr bool const value = std::is_arithmetic<Target>::value && std::is_arithmetic<Source>::value && !std::is_assignable<Target,Source>::value;
+};
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_assignable {
-  static constexpr bool const value = std::is_assignable<decltype(std::get<Index>(std::declval<Tuple>())), Source>::value;
+  static constexpr bool const value = std::is_assignable<std::tuple_element_t<Index,Tuple>,Source>::value;
 };
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_static_cast_assignable {
-  static constexpr bool const value = std::is_arithmetic<typename std::remove_reference<decltype(std::get<Index>(std::declval<Tuple>()))>::type>::value && std::is_arithmetic<Source>::value && !tuple_member_assignable<Source,Tuple,Index>::value;
+  static constexpr bool const value = is_static_cast_assignable<std::tuple_element_t<Index,Tuple>,Source>::value;
 };
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_not_assignable {
   static constexpr bool const value = !tuple_member_assignable<Source,Tuple,Index>::value && !tuple_member_static_cast_assignable<Source,Tuple,Index>::value;
+};
+
+template <class T> struct is_sub_element {
+  static constexpr bool const value = parsing::is_named_tuple<T>::value || parsing::is_sequence_container<T>::value || parsing::is_associative_container<T>::value;
 };
 
 // Assigner for struct parser
@@ -145,6 +153,70 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
     }
     return nullptr;
   }
+};
+
+template <class KeyCharT, class ValueCharT, class Container> class sequence_value_setter
+  : public value_setter_interface<KeyCharT,ValueCharT>  
+{
+  static_assert(parsing::is_sequence_container<Container>::value, "Container must be a SequenceContainer.");
+
+  std::back_insert_iterator<Container> inserter_;
+
+  //template <class T> bool setFrom(size_t field_index, T&& value) {
+    //static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    //std::function<void(Tuple&,T&&)> setter(field_index < setters.size() ? setters[field_index] : nullptr);
+    //if (setter) {
+      //setter(root_, std::move(value));
+      //return true;
+    //}
+    //return false;
+  //}
+
+ public:
+  //value_setter(Tuple& root) : value_setter_interface<KeyCharT,ValueCharT>(), root_(root), rt_root_(root) {} 
+//
+  //virtual bool setNull(std::basic_string<KeyCharT> const& key) override {
+    //return setFrom<std::nullptr_t>(rt_root_.index_of(key), nullptr);
+  //}
+//
+  //virtual bool setBool(std::basic_string<KeyCharT> const& key, bool value) override {
+    //return setFrom<bool>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setInt(std::basic_string<KeyCharT> const& key, int value) override {
+    //return setFrom<int>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setUint(std::basic_string<KeyCharT> const& key, unsigned value) override {
+    //return setFrom<unsigned>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setInt64(std::basic_string<KeyCharT> const& key, int64_t value) override {
+    //return setFrom<int64_t>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setUint64(std::basic_string<KeyCharT> const& key, uint64_t value) override {
+    //return setFrom<uint64_t>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setDouble(std::basic_string<KeyCharT> const& key, double value) override {
+    //return setFrom<double>(rt_root_.index_of(key), std::move(value));
+  //}
+//
+  //virtual bool setString(std::basic_string<KeyCharT> const& key, const ValueCharT* data, ::rapidjson::SizeType length) override {
+    //return setFrom<std::basic_string<ValueCharT>>(rt_root_.index_of(key), std::basic_string<ValueCharT>(data));
+  //}
+//
+  //virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) override {
+    //static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    //size_t field_index = rt_root_.index_of(key);
+    //if (field_index < creators.size()) {
+      //std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
+      //if (creator)
+        //return creator(root_);
+    //}
+    //return nullptr;
+  //}
 };
 
 }  // namespace __rapidjson_impl
