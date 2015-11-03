@@ -22,11 +22,15 @@ enum class reader_state {
 };
 
 template <class Target, class Source> struct is_static_cast_assignable {
-  static constexpr bool const value = std::is_arithmetic<Target>::value && std::is_arithmetic<Source>::value && !std::is_assignable<Target,Source>::value;
+  static constexpr bool const value = std::is_arithmetic<Target>::value && std::is_arithmetic<Source>::value && !std::is_assignable<Target,Source>::value; //&& !std::is_convertible<Source,Target>::value;
 };
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_assignable {
   static constexpr bool const value = std::is_assignable<std::tuple_element_t<Index,Tuple>,Source>::value;
+};
+
+template <class Source, class Tuple, size_t Index> struct tuple_member_convertible {
+  static constexpr bool const value = std::is_convertible<Source, std::tuple_element_t<Index,Tuple>>::value && !std::is_assignable<std::tuple_element_t<Index,Tuple>,Source>::value;
 };
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_static_cast_assignable {
@@ -34,7 +38,11 @@ template <class Source, class Tuple, size_t Index> struct tuple_member_static_ca
 };
 
 template <class Source, class Tuple, size_t Index> struct tuple_member_not_assignable {
-  static constexpr bool const value = !tuple_member_assignable<Source,Tuple,Index>::value && !tuple_member_static_cast_assignable<Source,Tuple,Index>::value;
+  static constexpr bool const value = !tuple_member_assignable<Source,Tuple,Index>::value && !tuple_member_convertible<Source,Tuple,Index>::value && !tuple_member_static_cast_assignable<Source,Tuple,Index>::value;
+};
+
+template <class T> struct is_sub_object {
+  static constexpr bool const value = parsing::is_named_tuple<T>::value || parsing::is_associative_container<T>::value;
 };
 
 template <class T> struct is_sub_element {
@@ -60,6 +68,9 @@ make_setter() {
   return nullptr;
 }
 
+template <class KeyCharT, class ValueCharT> struct value_setter_interface;
+template <class KeyCharT, class ValueCharT> struct sequence_pusher_interface;
+
 // This interface can be used either for a named_tuple or a map
 template <class KeyCharT, class ValueCharT> struct value_setter_interface {
   virtual ~value_setter_interface() = default;
@@ -72,6 +83,22 @@ template <class KeyCharT, class ValueCharT> struct value_setter_interface {
   virtual bool setDouble(std::basic_string<KeyCharT> const&, double) = 0;
   virtual bool setString(std::basic_string<KeyCharT> const&, const ValueCharT*, ::rapidjson::SizeType) = 0;
   virtual value_setter_interface* createChildNode(std::basic_string<KeyCharT> const&) = 0;
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const&) = 0;
+};
+
+// This interface can be used either for aby SequenceContainer
+template <class KeyCharT, class ValueCharT> struct sequence_pusher_interface {
+  virtual ~sequence_pusher_interface () = default;
+  virtual bool pushNull() = 0;
+  virtual bool pushBool(bool) = 0;
+  virtual bool pushInt(int) = 0;
+  virtual bool pushUint(unsigned) = 0;
+  virtual bool pushInt64(int64_t) = 0;
+  virtual bool pushUint64(uint64_t) = 0;
+  virtual bool pushDouble(double) = 0;
+  virtual bool pushString(const ValueCharT*, ::rapidjson::SizeType) = 0;
+  virtual value_setter_interface<KeyCharT,ValueCharT>* appendChildNode() = 0;
+  virtual sequence_pusher_interface* appendChildArray() = 0;
 };
 
 template <class KeyCharT, class ValueCharT, class T> struct value_setter;
@@ -153,66 +180,86 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
     }
     return nullptr;
   }
+
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const&) override {
+    return nullptr;
+  }
 };
 
-template <class KeyCharT, class ValueCharT, class Container> class sequence_value_setter
+template <class KeyCharT, class ValueCharT, class Container> class sequence_pusher
   : public value_setter_interface<KeyCharT,ValueCharT>  
 {
   static_assert(parsing::is_sequence_container<Container>::value, "Container must be a SequenceContainer.");
 
   using value_type = typename Container::value_type;
+  Container& root_;
   std::back_insert_iterator<Container> inserter_;
 
-  template <class T> typename std::enable_if<std::is_assignable<value_type, T>::value, bool>::type append(T&& value) {
+  template <class T> typename std::enable_if<std::is_convertible<T, value_type>::value, bool>::type appendValue(T&& value) {
     inserter_ = std::move(value);
     return true;
   }
 
+  template <class T> typename std::enable_if<is_static_cast_assignable<T, value_type>::value, bool>::type appendValue(T&& value) {
+    inserter_ = static_cast<value_type>(value);
+    return true;
+  }
+
+  template <class T> typename std::enable_if<!std::is_convertible<T,value_type>::value && !is_static_cast_assignable<T, value_type>::value, bool>::type appendValue(T&& value) {
+    return false;
+  }
+
+  template <class T> typename std::enable_if<parsing::is_named_tuple<value_type>::value, bool>::type appendChildNode() {
+    inserter_ = T {};
+    return new value_setter<KeyCharT,ValueCharT,T>(root_.back());
+  }
+
+  template <class T> typename std::enable_if<!parsing::is_named_tuple<value_type>::value, bool>::type appendChildNode() {
+    return nullptr;
+  }
+
  public:
-  //value_setter(Tuple& root) : value_setter_interface<KeyCharT,ValueCharT>(), root_(root), rt_root_(root) {} 
-//
-  //virtual bool setNull(std::basic_string<KeyCharT> const& key) override {
-    //return setFrom<std::nullptr_t>(rt_root_.index_of(key), nullptr);
-  //}
-//
-  //virtual bool setBool(std::basic_string<KeyCharT> const& key, bool value) override {
-    //return setFrom<bool>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setInt(std::basic_string<KeyCharT> const& key, int value) override {
-    //return setFrom<int>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setUint(std::basic_string<KeyCharT> const& key, unsigned value) override {
-    //return setFrom<unsigned>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setInt64(std::basic_string<KeyCharT> const& key, int64_t value) override {
-    //return setFrom<int64_t>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setUint64(std::basic_string<KeyCharT> const& key, uint64_t value) override {
-    //return setFrom<uint64_t>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setDouble(std::basic_string<KeyCharT> const& key, double value) override {
-    //return setFrom<double>(rt_root_.index_of(key), std::move(value));
-  //}
-//
-  //virtual bool setString(std::basic_string<KeyCharT> const& key, const ValueCharT* data, ::rapidjson::SizeType length) override {
-    //return setFrom<std::basic_string<ValueCharT>>(rt_root_.index_of(key), std::basic_string<ValueCharT>(data));
-  //}
-//
-  //virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) override {
-    //static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
-    //size_t field_index = rt_root_.index_of(key);
-    //if (field_index < creators.size()) {
-      //std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
-      //if (creator)
-        //return creator(root_);
-    //}
-    //return nullptr;
-  //}
+  sequence_pusher(Container& root) : sequence_pusher_interface<KeyCharT,ValueCharT>(), root_(root), inserter_(std::back_inserter(root)) {}
+
+  virtual bool pushNull() override {
+    return appendValue<std::nullptr_t>(nullptr);
+  }
+
+  virtual bool pushBool(bool value) override {
+    return appendValue<bool>(std::move(value));
+  }
+
+  virtual bool pushInt(int value) override {
+    return appendValue<int>(std::move(value));
+  }
+
+  virtual bool pushUint(unsigned value) override {
+    return appendValue<unsigned>(std::move(value));
+  }
+
+  virtual bool pushInt64(int64_t value) override {
+    return appendValue<int64_t>(std::move(value));
+  }
+
+  virtual bool pushUint64(uint64_t value) override {
+    return appendValue<uint64_t>(std::move(value));
+  }
+
+  virtual bool pushDouble(double value) override {
+    return appendValue<double>(std::move(value));
+  }
+
+  virtual bool pushString(const ValueCharT* data, ::rapidjson::SizeType length) override {
+    return appendValue<std::basic_string<ValueCharT>>(data);
+  }
+
+  virtual value_setter_interface<KeyCharT,ValueCharT>* appendChildNode() override {
+    return appendChildNode<value_type>();
+  }
+
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* appendChildArray() override { 
+    return nullptr;
+  };
 };
 
 }  // namespace __rapidjson_impl
