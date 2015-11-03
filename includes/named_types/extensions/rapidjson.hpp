@@ -98,7 +98,7 @@ template <class KeyCharT, class ValueCharT> struct sequence_pusher_interface {
   virtual bool appendDouble(double) = 0;
   virtual bool appendString(const ValueCharT*, ::rapidjson::SizeType) = 0;
   virtual value_setter_interface<KeyCharT,ValueCharT>* appendChildNode() = 0;
-  virtual sequence_pusher_interface* appendChildArray() = 0;
+  virtual sequence_pusher_interface* appendChildSequence() = 0;
 };
 
 template <class KeyCharT, class ValueCharT, class T> struct value_setter;
@@ -208,6 +208,81 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
   }
 };
 
+template <class KeyCharT, class ValueCharT, class AssociativeContainer> class value_setter
+  : public value_setter_interface<KeyCharT,ValueCharT>  
+{
+  static_assert(parsing::is_associative_container<AssociativeContainer>::value, "The used container must be an AssociativeContainer.");
+
+  AssociativeContainer& root_;
+
+  template <class T> bool setFrom(std::basic_string<KeyCharT> const& key, T&& value) {
+    //static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    //std::function<void(Tuple&,T&&)> setter(field_index < setters.size() ? setters[field_index] : nullptr);
+    //if (setter) {
+      //setter(root_, std::move(value));
+      //return true;
+    //}
+    return false;
+  }
+
+ public:
+  value_setter(AssociativeContainer& root) : value_setter_interface<KeyCharT,ValueCharT>(), root_(root) {} 
+
+  virtual bool setNull(std::basic_string<KeyCharT> const& key) override {
+    return setFrom<std::nullptr_t>(key, nullptr);
+  }
+
+  virtual bool setBool(std::basic_string<KeyCharT> const& key, bool value) override {
+    return setFrom<bool>(key, std::move(value));
+  }
+
+  virtual bool setInt(std::basic_string<KeyCharT> const& key, int value) override {
+    return setFrom<int>(key, std::move(value));
+  }
+
+  virtual bool setUint(std::basic_string<KeyCharT> const& key, unsigned value) override {
+    return setFrom<unsigned>(key, std::move(value));
+  }
+
+  virtual bool setInt64(std::basic_string<KeyCharT> const& key, int64_t value) override {
+    return setFrom<int64_t>(key, std::move(value));
+  }
+
+  virtual bool setUint64(std::basic_string<KeyCharT> const& key, uint64_t value) override {
+    return setFrom<uint64_t>(key, std::move(value));
+  }
+
+  virtual bool setDouble(std::basic_string<KeyCharT> const& key, double value) override {
+    return setFrom<double>(key, std::move(value));
+  }
+
+  virtual bool setString(std::basic_string<KeyCharT> const& key, const ValueCharT* data, ::rapidjson::SizeType length) override {
+    return setFrom<std::basic_string<ValueCharT>>(key, std::basic_string<ValueCharT>(data));
+  }
+
+  virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) override {
+    //static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    //size_t field_index = rt_root_.index_of(key);
+    //if (field_index < creators.size()) {
+      //std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
+      //if (creator)
+        //return creator(root_);
+    //}
+    return nullptr;
+  }
+
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const& key) override {
+    //static std::array<std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_sequence_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    //size_t field_index = rt_root_.index_of(key);
+    //if (field_index < creators.size()) {
+      //std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
+      //if (creator)
+        //return creator(root_);
+    //}
+    return nullptr;
+  }
+};
+
 template <class KeyCharT, class ValueCharT, class Container> class sequence_pusher
   : public sequence_pusher_interface<KeyCharT,ValueCharT>  
 {
@@ -237,6 +312,15 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
   }
 
   template <class T> typename std::enable_if<!parsing::is_named_tuple<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
+    return nullptr;
+  }
+
+  template <class T> typename std::enable_if<parsing::is_sequence_container<T>::value, sequence_pusher_interface<KeyCharT,ValueCharT>*>::type appendChildSequence() {
+    inserter_ = T {};
+    return new sequence_pusher<KeyCharT,ValueCharT,T>(root_.back());
+  }
+
+  template <class T> typename std::enable_if<!parsing::is_sequence_container<T>::value, sequence_pusher_interface<KeyCharT,ValueCharT>*>::type appendChildSequence() {
     return nullptr;
   }
 
@@ -279,8 +363,8 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
     return appendChildNode<value_type>();
   }
 
-  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* appendChildArray() override { 
-    return nullptr;
+  virtual sequence_pusher_interface<KeyCharT,ValueCharT>* appendChildSequence() override { 
+    return appendChildSequence<value_type>();
   };
 };
 
@@ -475,14 +559,13 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
 
     __rapidjson_impl::sequence_pusher_interface<Ch,Ch>* interface = nullptr;
     if (nodes_.empty()) {
-      //interface = new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root_);
-      interface = nullptr; // Not yet supported
+      interface = nullptr;  // Root arrays not implemented
     }
     else if (nodes_.top().obj_node) {
       interface = nodes_.top().obj_node->createChildSequence(current_key_);
     }
     else if (nodes_.top().array_node) {
-      interface = nodes_.top().array_node->appendChildArray();
+      interface = nodes_.top().array_node->appendChildSequence();
     }
 
     if (interface) {

@@ -143,10 +143,12 @@ TEST_F(UnitTests, RapidJson2) {
     , double (attr<"size"_s>)
     , named_tuple<std::string (attr<"name"_s>), size_t (attr<"age"_s>)> (attr<"child1"_s>)
     , std::vector<named_tuple<std::string (attr<"name"_s>), size_t (attr<"age"_s>)>> (attr<"children"_s>)
+    , std::vector<int> (attr<"miles"_s>)
+    , std::vector<std::vector<int>> (attr<"matrix"_s>)
   >;
 
   MyTuple t1;
-  std::string input1 = R"json({"age":57,"name":"Marcelo","size":1.8,"child1":{"name":"Coucou","age":3},"children":[{"name":"Albertine","age":4}]})json";
+  std::string input1 = R"json({"age":57,"name":"Marcelo","size":1.8,"child1":{"name":"Coucou","age":3},"children":[{"name":"Albertine","age":4}],"miles":[1,2,3],"matrix":[[1,2],[3,4]]})json";
   auto handler = make_reader_handler(t1);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
@@ -154,4 +156,5 @@ TEST_F(UnitTests, RapidJson2) {
   EXPECT_EQ(3,t1.get<attr<"child1"_s>>().get<attr<"age"_s>>());
   EXPECT_EQ("Albertine",t1.get<attr<"children"_s>>()[0].get<attr<"name"_s>>());
   EXPECT_EQ(4,t1.get<attr<"children"_s>>()[0].get<attr<"age"_s>>());
+  EXPECT_EQ(4,t1.get<attr<"matrix"_s>>()[1][1]);
 }
