@@ -454,8 +454,41 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
     return true;
   }
 
-  //bool StartArray() { return static_cast<Override&>(*this).Default(); }
-  //bool EndArray(SizeType) { return static_cast<Override&>(*this).Default(); }
+  bool StartArray() {
+    std::cout << "DEBUG " << __FUNCTION__ << " " << __FILE__ << ":" << __LINE__ << "\n";
+    if (State::wait_start_sequence != state_ && State::wait_value != state_  && State::wait_element != state_)
+      return false;
+
+    __rapidjson_impl::sequence_pusher_interface<Ch,Ch>* interface = nullptr;
+    if (nodes_.empty()) {
+      //interface = new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root_);
+      interface = nullptr; // Not yet supported
+    }
+    else if (nodes_.top().obj_node) {
+      interface = nodes_.top().obj_node->createChildSequence(current_key_);
+    }
+    else if (nodes_.top().array_node) {
+      interface = nodes_.top().array_node->appendChildArray();
+    }
+
+    if (interface) {
+      state_ = State::wait_element;
+      nodes_.emplace(nullptr, interface);
+      return true;
+    }
+
+    return false;
+  }
+
+  bool EndArray(SizeType) {
+    if (State::wait_element != state_ && State::wait_end_sequence != state_)
+      return false;
+    nodes_.pop();
+    if (!nodes_.empty()) {
+      state_ = nodes_.top().obj_node ? State::wait_key : State::wait_element;
+    }
+    return true;
+  }
 };
 
 template <class ... Tags> reader_handler<named_tuple<Tags...>, ::rapidjson::UTF8<>> make_reader_handler(named_tuple<Tags...>& tuple) {

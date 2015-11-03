@@ -142,11 +142,11 @@ TEST_F(UnitTests, RapidJson2) {
     , int (attr<"age"_s>)
     , double (attr<"size"_s>)
     , named_tuple<std::string (attr<"name"_s>), size_t (attr<"age"_s>)> (attr<"child1"_s>)
-    //, std::vector<named_tuple<std::string (attr<"name"_s>), size_t (attr<"age"_s>)>> (attr<"children"_s>)
+    , std::vector<named_tuple<std::string (attr<"name"_s>), size_t (attr<"age"_s>)>> (attr<"children"_s>)
   >;
 
   MyTuple t1;
-  std::string input1 = R"json({"age":57,"name":"Marcelo","size":1.8,"child1":{"name":"Coucou","age":3}})json";
+  std::string input1 = R"json({"age":57,"name":"Marcelo","size":1.8,"child1":{"name":"Coucou","age":3},"children":[]})json";
   auto handler = make_reader_handler(t1);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
