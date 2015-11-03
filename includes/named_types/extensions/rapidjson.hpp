@@ -51,7 +51,7 @@ make_setter() {
 template <class Source, class Tuple, size_t Index> 
 typename std::enable_if<tuple_member_static_cast_assignable<Source,Tuple,Index>::value, std::function<void(Tuple&,Source&&)>>::type
 make_setter() {
-  return [](Tuple& tuple, Source&& source)->void { std::get<Index>(tuple) = static_cast<typename std::remove_reference<decltype(std::get<Index>(tuple))>::type>(std::move(source)); };
+  return [](Tuple& tuple, Source&& source)->void { std::get<Index>(tuple) = static_cast<typename std::remove_reference<std::tuple_element_t<Index,Tuple>>::type>(std::move(source)); };
 }
 
 template <class Source, class Tuple, size_t Index> 
@@ -77,7 +77,7 @@ template <class KeyCharT, class ValueCharT> struct value_setter_interface {
 template <class KeyCharT, class ValueCharT, class T> struct value_setter;
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<parsing::is_named_tuple<typename std::tuple_element<Index,Tuple>::type>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
   return [](Tuple& tuple) -> value_setter_interface<KeyCharT,ValueCharT>* { 
     return new value_setter<KeyCharT, ValueCharT, typename std::tuple_element<Index,Tuple>::type>(std::get<Index>(tuple)); 
@@ -85,7 +85,7 @@ make_creator() {
 }
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<!parsing::is_named_tuple<typename std::tuple_element<Index,Tuple>::type>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<!parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
   return nullptr;
 }
