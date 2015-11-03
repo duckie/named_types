@@ -160,17 +160,13 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_valu
 {
   static_assert(parsing::is_sequence_container<Container>::value, "Container must be a SequenceContainer.");
 
+  using value_type = typename Container::value_type;
   std::back_insert_iterator<Container> inserter_;
 
-  //template <class T> bool setFrom(size_t field_index, T&& value) {
-    //static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
-    //std::function<void(Tuple&,T&&)> setter(field_index < setters.size() ? setters[field_index] : nullptr);
-    //if (setter) {
-      //setter(root_, std::move(value));
-      //return true;
-    //}
-    //return false;
-  //}
+  template <class T> typename std::enable_if<std::is_assignable<value_type, T>::value, bool>::type append(T&& value) {
+    inserter_ = std::move(value);
+    return true;
+  }
 
  public:
   //value_setter(Tuple& root) : value_setter_interface<KeyCharT,ValueCharT>(), root_(root), rt_root_(root) {} 
