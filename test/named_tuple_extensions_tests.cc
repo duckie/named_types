@@ -174,8 +174,20 @@ TEST_F(UnitTests, RapidJson3) {
   auto handler = make_reader_handler(t1);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
-  EXPECT_TRUE((named_types::extensions::rapidjson::is_sub_object<std::map<std::string,int>>::value));
-  EXPECT_TRUE((named_types::extensions::rapidjson::is_sub_object<MyTuple>::value));
   EXPECT_TRUE(reader.Parse(ss, handler));
   EXPECT_EQ(4,t1.get<attr<"children"_s>>()["Albertine"].get<attr<"age"_s>>());
+}
+
+TEST_F(UnitTests, RapidJson4) {
+  using named_types::extensions::rapidjson::make_reader_handler;
+
+  using MyTuple = named_tuple<std::string (attr<"name"_s>) , int (attr<"age"_s>)>;
+
+  std::vector<MyTuple> data;
+  std::string input1 = R"json([{"name":"Robert","age":48},{"age":57,"name":"Marcelo"}])json";
+  auto handler = make_reader_handler(data);
+  ::rapidjson::Reader reader;
+  ::rapidjson::StringStream ss(input1.c_str());
+  EXPECT_TRUE(reader.Parse(ss, handler));
+  EXPECT_EQ("Marcelo",data[1].get<attr<"name"_s>>());
 }

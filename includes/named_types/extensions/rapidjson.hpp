@@ -390,6 +390,8 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
 template <class RootType, class Encoding> class reader_handler;
 
 template <class RootType, class Encoding> class reader_handler : public ::rapidjson::BaseReaderHandler<Encoding, reader_handler<RootType,Encoding>> {
+  static_assert(is_sub_object<RootType>::value || parsing::is_sequence_container<RootType>::value, "Root type of a handler must either be a named_tuple, an AssociativeContainer or a SequenceContainer.");
+
   using State = reader_state;
   using Ch = typename Encoding::Ch;
   using SizeType = ::rapidjson::SizeType;
@@ -410,11 +412,11 @@ template <class RootType, class Encoding> class reader_handler : public ::rapidj
   std::string current_key_;
   size_t current_index_;
 
-  template <class T> typename std::enable_if<is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createRootdNode(T& root) {
+  template <class T> typename std::enable_if<is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createRootNode(T& root) {
     return new value_setter<Ch,Ch,T>(root);
   }
 
-  template <class T> typename std::enable_if<!is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createNode(T& root) {
+  template <class T> typename std::enable_if<!is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createRootNode(T& root) {
     return nullptr;
   }
 
@@ -430,7 +432,7 @@ template <class RootType, class Encoding> class reader_handler : public ::rapidj
   reader_handler(RootType& root) : 
     ::rapidjson::BaseReaderHandler<Encoding, reader_handler>()
       , root_(root)
-      , state_(State::wait_start_object)
+      , state_(is_sub_object<RootType>::value ? State::wait_start_object : State::wait_start_sequence)
       , current_key_()
       , current_index_(0)
   {}
@@ -545,7 +547,7 @@ template <class RootType, class Encoding> class reader_handler : public ::rapidj
 
     value_setter_interface<Ch,Ch>* interface = nullptr;
     if (nodes_.empty()) {
-      interface = createRootdNode<RootType>(root_);
+      interface = createRootNode<RootType>(root_);
     }
     else if (nodes_.top().obj_node) {
       interface = nodes_.top().obj_node->createChildNode(current_key_);
