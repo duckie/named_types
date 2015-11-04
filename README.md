@@ -13,9 +13,9 @@ named\_types
 
  - Write code more robust to future changes
  - Make different parts of a software to communicate without sharing complex types
- - Generate flexible factories with one line [(see an example)](test/named_tuple_extensions_tests.cc)
- - Generate JSON data from statically defined structures without the boilerplate hassle [(see an example)](test/demo6.cc)
- - Project JSON data onto statically defined structures [(see examples)](test/named_tuple_extensions_tests.cc)
+ - Generate flexible factories with one line ([see an example](test/examples/factory.cc))
+ - Generate JSON data from statically defined structures without the boilerplate hassle ([see an example](test/demo6.cc))
+ - Project JSON data onto statically defined structures ([see examples](test/named_tuple_extensions_tests.cc))
 
 ## named\_tuple
 

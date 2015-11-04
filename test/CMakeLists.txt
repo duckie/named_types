@@ -88,3 +88,5 @@ if (${compiles_string_literal_operator_template})
   add_nt_test(demo4)
 endif()
 
+# Compile examples
+add_subdirectory(examples)
