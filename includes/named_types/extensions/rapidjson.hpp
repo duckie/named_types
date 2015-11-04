@@ -10,7 +10,7 @@ namespace named_types {
 namespace extensions {
 namespace rapidjson {
 
-namespace __rapidjson_impl {
+inline namespace __rapidjson_impl {
 enum class reader_state { 
   wait_start_object
     , wait_key
@@ -105,7 +105,7 @@ template <class KeyCharT, class ValueCharT, class T> struct value_setter;
 template <class KeyCharT, class ValueCharT, class Container> class sequence_pusher;
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<is_sub_object<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
   return [](Tuple& tuple) -> value_setter_interface<KeyCharT,ValueCharT>* { 
     return new value_setter<KeyCharT, ValueCharT, std::tuple_element_t<Index,Tuple>>(std::get<Index>(tuple)); 
@@ -113,7 +113,7 @@ make_creator() {
 }
 
 template <class KeyCharT, class ValueCharT, class Tuple, size_t Index> 
-typename std::enable_if<!parsing::is_named_tuple<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
+typename std::enable_if<!is_sub_object<std::tuple_element_t<Index,Tuple>>::value, std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>>::type
 make_creator() {
   return nullptr;
 }
@@ -141,7 +141,7 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
   rt_view<Tuple> rt_root_;
 
   template <class T> bool setFrom(size_t field_index, T&& value) {
-    static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
     std::function<void(Tuple&,T&&)> setter(field_index < setters.size() ? setters[field_index] : nullptr);
     if (setter) {
       setter(root_, std::move(value));
@@ -186,7 +186,7 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
   }
 
   virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) override {
-    static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
@@ -197,7 +197,7 @@ template <class KeyCharT, class ValueCharT, class ... Tags> class value_setter<K
   }
 
   virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const& key) override {
-    static std::array<std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_sequence_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
+    static std::array<std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { make_sequence_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
@@ -212,17 +212,46 @@ template <class KeyCharT, class ValueCharT, class AssociativeContainer> class va
   : public value_setter_interface<KeyCharT,ValueCharT>  
 {
   static_assert(parsing::is_associative_container<AssociativeContainer>::value, "The used container must be an AssociativeContainer.");
+  using value_type = typename AssociativeContainer::mapped_type;
 
   AssociativeContainer& root_;
 
-  template <class T> bool setFrom(std::basic_string<KeyCharT> const& key, T&& value) {
-    //static std::array<std::function<void(Tuple&,T&&)>, Tuple::size> setters = { __rapidjson_impl::make_setter<T, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
-    //std::function<void(Tuple&,T&&)> setter(field_index < setters.size() ? setters[field_index] : nullptr);
-    //if (setter) {
-      //setter(root_, std::move(value));
-      //return true;
-    //}
+  template <class T> typename std::enable_if<std::is_convertible<T, value_type>::value, bool>::type setFrom(std::basic_string<KeyCharT> const& key,T&& value) {
+    root_.emplace(key, std::move(value));
+    return true;
+  }
+
+  template <class T> typename std::enable_if<is_static_cast_assignable<T, value_type>::value && !std::is_convertible<T,value_type>::value, bool>::type setFrom(std::basic_string<KeyCharT> const& key,T&& value) {
+    root_.emplace(key, static_cast<value_type>(value));
+    return true;
+  }
+
+  template <class T> typename std::enable_if<!std::is_convertible<T,value_type>::value && !is_static_cast_assignable<T, value_type>::value, bool>::type setFrom(std::basic_string<KeyCharT> const& key,T&& value) {
     return false;
+  }
+
+  template <class T> typename std::enable_if<is_sub_object<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type createChildNode(std::basic_string<KeyCharT> const& key) {
+    auto inserted = root_.emplace(key, T {});
+    if (inserted.second)
+      return new value_setter<KeyCharT,ValueCharT,T>(inserted.first->second);
+    else
+      return nullptr;
+  }
+
+  template <class T> typename std::enable_if<!is_sub_object<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type createChildNode(std::basic_string<KeyCharT> const& key) {
+    return nullptr;
+  }
+
+  template <class T> typename std::enable_if<parsing::is_sequence_container<T>::value, sequence_pusher_interface<KeyCharT,ValueCharT>*>::type createChildSequence(std::basic_string<KeyCharT> const& key) {
+    auto inserted = root_.emplace(key, T {});
+    if (inserted.second)
+      return new sequence_pusher<KeyCharT,ValueCharT,T>(inserted.first->second);
+    else
+      return nullptr;
+  }
+
+  template <class T> typename std::enable_if<!parsing::is_sequence_container<T>::value, sequence_pusher_interface<KeyCharT,ValueCharT>*>::type createChildSequence(std::basic_string<KeyCharT> const& key) {
+    return nullptr;
   }
 
  public:
@@ -261,25 +290,11 @@ template <class KeyCharT, class ValueCharT, class AssociativeContainer> class va
   }
 
   virtual value_setter_interface<KeyCharT,ValueCharT>* createChildNode(std::basic_string<KeyCharT> const& key) override {
-    //static std::array<std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
-    //size_t field_index = rt_root_.index_of(key);
-    //if (field_index < creators.size()) {
-      //std::function<value_setter_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
-      //if (creator)
-        //return creator(root_);
-    //}
-    return nullptr;
+    return createChildNode<value_type>(key);
   }
 
   virtual sequence_pusher_interface<KeyCharT,ValueCharT>* createChildSequence(std::basic_string<KeyCharT> const& key) override {
-    //static std::array<std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)>, Tuple::size> creators = { __rapidjson_impl::make_sequence_creator<KeyCharT,ValueCharT, Tuple, Tuple::template tag_index<typename __ntuple_tag_spec<Tags>::type>::value>() ... };
-    //size_t field_index = rt_root_.index_of(key);
-    //if (field_index < creators.size()) {
-      //std::function<sequence_pusher_interface<KeyCharT,ValueCharT>*(Tuple&)> creator = creators[field_index];
-      //if (creator)
-        //return creator(root_);
-    //}
-    return nullptr;
+    return createChildSequence<value_type>(key);
   }
 };
 
@@ -306,12 +321,12 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
     return false;
   }
 
-  template <class T> typename std::enable_if<parsing::is_named_tuple<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
+  template <class T> typename std::enable_if<is_sub_object<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
     inserter_ = T {};
     return new value_setter<KeyCharT,ValueCharT,T>(root_.back());
   }
 
-  template <class T> typename std::enable_if<!parsing::is_named_tuple<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
+  template <class T> typename std::enable_if<!is_sub_object<T>::value, value_setter_interface<KeyCharT,ValueCharT>*>::type appendChildNode() {
     return nullptr;
   }
 
@@ -372,33 +387,47 @@ template <class KeyCharT, class ValueCharT, class Container> class sequence_push
 }  // namespace __rapidjson_impl
 
 
-template <class Tuple, class Encoding> class reader_handler;
+template <class RootType, class Encoding> class reader_handler;
 
-template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags...>,Encoding> : public ::rapidjson::BaseReaderHandler<Encoding, reader_handler<named_tuple<Tags...>,Encoding>> {
-  using State = __rapidjson_impl::reader_state;
-  using Tuple = named_tuple<Tags...>;
+template <class RootType, class Encoding> class reader_handler : public ::rapidjson::BaseReaderHandler<Encoding, reader_handler<RootType,Encoding>> {
+  using State = reader_state;
   using Ch = typename Encoding::Ch;
   using SizeType = ::rapidjson::SizeType;
   using StdString = std::basic_string<Ch>;
 
   struct Node {
-    std::unique_ptr<__rapidjson_impl::value_setter_interface<Ch,Ch>> obj_node;
-    std::unique_ptr<__rapidjson_impl::sequence_pusher_interface<Ch,Ch>> array_node;
+    std::unique_ptr<value_setter_interface<Ch,Ch>> obj_node;
+    std::unique_ptr<sequence_pusher_interface<Ch,Ch>> array_node;
 
-    Node(__rapidjson_impl::value_setter_interface<Ch,Ch>* obj_interface, __rapidjson_impl::sequence_pusher_interface<Ch,Ch>* array_interface)
+    Node(value_setter_interface<Ch,Ch>* obj_interface, sequence_pusher_interface<Ch,Ch>* array_interface)
       : obj_node(obj_interface), array_node(array_interface)
     {}
   };
  
-  Tuple& root_;
+  RootType& root_;
   std::stack<Node> nodes_;
   State state_;
   std::string current_key_;
   size_t current_index_;
 
+  template <class T> typename std::enable_if<is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createRootdNode(T& root) {
+    return new value_setter<Ch,Ch,T>(root);
+  }
+
+  template <class T> typename std::enable_if<!is_sub_object<T>::value, value_setter_interface<Ch,Ch>*>::type createNode(T& root) {
+    return nullptr;
+  }
+
+  template <class T> typename std::enable_if<parsing::is_sequence_container<T>::value, sequence_pusher_interface<Ch,Ch>*>::type createRootSequence(T& root) {
+    return new sequence_pusher<Ch,Ch,T>(root);
+  }
+
+  template <class T> typename std::enable_if<!parsing::is_sequence_container<T>::value, sequence_pusher_interface<Ch,Ch>*>::type createRootSequence(T& root) {
+    return nullptr;
+  }
 
  public:
-  reader_handler(Tuple& root) : 
+  reader_handler(RootType& root) : 
     ::rapidjson::BaseReaderHandler<Encoding, reader_handler>()
       , root_(root)
       , state_(State::wait_start_object)
@@ -514,9 +543,9 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
     if (State::wait_start_object != state_ && State::wait_value != state_  && State::wait_element != state_)
       return false;
 
-    __rapidjson_impl::value_setter_interface<Ch,Ch>* interface = nullptr;
+    value_setter_interface<Ch,Ch>* interface = nullptr;
     if (nodes_.empty()) {
-      interface = new __rapidjson_impl::value_setter<Ch,Ch, Tuple>(root_);
+      interface = createRootdNode<RootType>(root_);
     }
     else if (nodes_.top().obj_node) {
       interface = nodes_.top().obj_node->createChildNode(current_key_);
@@ -557,9 +586,9 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
     if (State::wait_start_sequence != state_ && State::wait_value != state_  && State::wait_element != state_)
       return false;
 
-    __rapidjson_impl::sequence_pusher_interface<Ch,Ch>* interface = nullptr;
+    sequence_pusher_interface<Ch,Ch>* interface = nullptr;
     if (nodes_.empty()) {
-      interface = nullptr;  // Root arrays not implemented
+      interface = createRootSequence<RootType>(root_);
     }
     else if (nodes_.top().obj_node) {
       interface = nodes_.top().obj_node->createChildSequence(current_key_);
@@ -588,12 +617,12 @@ template <class ... Tags, class Encoding> class reader_handler<named_tuple<Tags.
   }
 };
 
-template <class ... Tags> reader_handler<named_tuple<Tags...>, ::rapidjson::UTF8<>> make_reader_handler(named_tuple<Tags...>& tuple) {
-  return reader_handler<named_tuple<Tags...>, ::rapidjson::UTF8<>>(tuple);
+template <class RootType> reader_handler<RootType, ::rapidjson::UTF8<>> make_reader_handler(RootType& root) {
+  return reader_handler<RootType, ::rapidjson::UTF8<>>(root);
 }
 
-template <class Encoding, class ... Tags> reader_handler<named_tuple<Tags...>, Encoding> make_reader_handler(named_tuple<Tags...>& tuple) {
-  return reader_handler<named_tuple<Tags...>, Encoding>(tuple);
+template <class Encoding, class RootType> reader_handler<RootType, Encoding> make_reader_handler(RootType& root) {
+  return reader_handler<RootType, Encoding>(root);
 }
 
 }  // namespace rapidjson

@@ -158,3 +158,24 @@ TEST_F(UnitTests, RapidJson2) {
   EXPECT_EQ(4,t1.get<attr<"children"_s>>()[0].get<attr<"age"_s>>());
   EXPECT_EQ(4,t1.get<attr<"matrix"_s>>()[1][1]);
 }
+
+TEST_F(UnitTests, RapidJson3) {
+  using named_types::extensions::rapidjson::make_reader_handler;
+
+  using MyTuple = named_tuple<
+    std::string (attr<"name"_s>)
+    , int (attr<"age"_s>)
+    , double (attr<"size"_s>)
+    , std::map<std::string, named_tuple<size_t (attr<"age"_s>)>> (attr<"children"_s>)
+  >;
+
+  MyTuple t1;
+  std::string input1 = R"json({"age":57,"name":"Marcelo","size":1.8,"children":{"Albertine":{"age":4},"Rupert":{"age":5}}})json";
+  auto handler = make_reader_handler(t1);
+  ::rapidjson::Reader reader;
+  ::rapidjson::StringStream ss(input1.c_str());
+  EXPECT_TRUE((named_types::extensions::rapidjson::is_sub_object<std::map<std::string,int>>::value));
+  EXPECT_TRUE((named_types::extensions::rapidjson::is_sub_object<MyTuple>::value));
+  EXPECT_TRUE(reader.Parse(ss, handler));
+  EXPECT_EQ(4,t1.get<attr<"children"_s>>()["Albertine"].get<attr<"age"_s>>());
+}
