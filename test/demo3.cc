@@ -1,40 +1,37 @@
 #include <named_types/named_tuple.hpp>
+#include <type_traits>
 #include <string>
 #include <iostream>
 #include <vector>
 
+using namespace named_types;
 namespace {
-using named_types::named_tag;
-using named_types::named_tuple;
-using named_types::make_named_tuple;
-template <class T>  named_tag<T> _() { return {}; }
-template <class Tag, class Tuple> auto _(Tuple&& in) -> decltype(_<Tag>()(in)) { return _<Tag>()(in); }
+size_t constexpr operator "" _h(const char* c, size_t s) { return const_hash(c); }
 
-struct name;
-struct age;
-struct size;
+template <size_t HashCode> 
+constexpr named_tag<std::integral_constant<size_t,HashCode>> at() { return {}; }
+
+template <size_t HashCode, class Tuple> constexpr decltype(auto)
+at(Tuple&& in) { return at<HashCode>()(std::forward<Tuple>(in)); }
 }
 
-int main() { 
-  auto test = make_named_tuple( 
-      _<name>() = std::string("Roger")
-      , _<age>() = 47
+int main() {
+  auto test = make_named_tuple(
+      at<"name"_h>() = std::string("Roger")
+      , at<"age"_h>() = 47
+      , at<"size"_h>() = 1.92
+      , at<"list"_h>() = std::vector<int> {1,2,3}
       );
 
-  std::tuple<std::string, int> tuple1 = test;
+  std::cout
+    << at<"name"_h>(test) << "\n"
+    << at<"age"_h>(test)  << "\n"
+    << at<"size"_h>(test) << "\n"
+    << at<"list"_h>(test).size()
+    << std::endl;
 
-  named_tuple<std::string(name), int(age)> test2 = tuple1;
-  named_tuple<std::string(name), int(age)> test3("Marcel", 55);
-
-  std::string name_val;
-  std::tie(name_val, std::ignore) = test2;
-  int age_val = std::get<1>(test2);
-
-  std::cout 
-    << "Name is: " << name_val << "\n"
-    << "Has member \"size\": " << (decltype(test2)::has_tag<named_tag<size>>() ? "yes" : "no") << "\n"
-    << "Has member \"name\": " << (decltype(test2)::has_tag<named_tag<name>>() ? "yes" : "no") << "\n"
-    ;
-
+  std::get<decltype(at<"name"_h>())>(test) = "Marcel";
+  ++std::get<1>(test);
+  at<"size"_h>(test) = 1.93;
   return 0;
 }
