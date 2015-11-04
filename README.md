@@ -9,6 +9,14 @@ named\_types
  - *Clang* `3.5` or higher
  - *Visual C++* `14.0.23107.0 D14REL` or higher
 
+## What can I do with it ?
+
+ - Write code more robust to future changes
+ - Make different parts of a software to communicate without sharing complex types
+ - Generate flexible factories with one line [(see an example)](test/named_tuple_extensions_tests.cc)
+ - Generate JSON data from statically defined structures without the boilerplate hassle [(see an example)](test/demo6.cc)
+ - Project JSON data onto statically defined structures [(see examples)](test/named_tuple_extensions_tests.cc)
+
 ## named\_tuple
 
 #### With literal operator template for strings ([N3599](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3599.html)), `GCC` and `Clang` only
