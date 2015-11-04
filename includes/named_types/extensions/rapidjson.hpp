@@ -45,19 +45,19 @@ template <class RootType, class Encoding> class reader_handler : public ::rapidj
   std::string current_key_;
   size_t current_index_;
 
-  template <class T> typename std::enable_if<is_sub_object<T>::value, parsing::value_setter_interface<Ch,Ch,SizeType>*>::type createRootNode(T& root) {
+  template <class T> inline typename std::enable_if<is_sub_object<T>::value, parsing::value_setter_interface<Ch,Ch,SizeType>*>::type createRootNode(T& root) {
     return new parsing::value_setter<Ch,Ch,SizeType,T>(root);
   }
 
-  template <class T> typename std::enable_if<!is_sub_object<T>::value, parsing::value_setter_interface<Ch,Ch,SizeType>*>::type createRootNode(T& root) {
+  template <class T> inline typename std::enable_if<!is_sub_object<T>::value, parsing::value_setter_interface<Ch,Ch,SizeType>*>::type createRootNode(T& root) {
     return nullptr;
   }
 
-  template <class T> typename std::enable_if<is_sequence_container<T>::value, parsing::sequence_pusher_interface<Ch,Ch,SizeType>*>::type createRootSequence(T& root) {
+  template <class T> inline typename std::enable_if<is_sequence_container<T>::value, parsing::sequence_pusher_interface<Ch,Ch,SizeType>*>::type createRootSequence(T& root) {
     return new parsing::sequence_pusher<Ch,Ch,SizeType,T>(root);
   }
 
-  template <class T> typename std::enable_if<!is_sequence_container<T>::value, parsing::sequence_pusher_interface<Ch,Ch,SizeType>*>::type createRootSequence(T& root) {
+  template <class T> inline typename std::enable_if<!is_sequence_container<T>::value, parsing::sequence_pusher_interface<Ch,Ch,SizeType>*>::type createRootSequence(T& root) {
     return nullptr;
   }
 
