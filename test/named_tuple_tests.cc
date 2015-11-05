@@ -166,8 +166,6 @@ TEST_F(UnitTests, ConstexprStrings1) {
   constexpr uint64_t const str_test1 =
       std::integral_constant<uint64_t,
                              basic_charset_format::encode("coucou")>::value;
-  // std::cout << basic_charset_format::decode<str_test1>::type().str() <<
-  // std::endl;
   EXPECT_EQ(
       6u,
       (std::integral_constant<
@@ -216,6 +214,16 @@ TEST_F(UnitTests, ConstexprStrings1) {
                               string_literal<char, 'f', 'g'>>::type().str()));
 }
 
+TEST_F(UnitTests, ConstexprStrings2) {
+  using Str1 = string_literal<char,'R','o','g','e','r'>;
+  using Str2 = string_literal<char,'M','a','r','c','e','l'>;
+  using Str3 = string_literal<char,'P','a','s','t','i','s'>;
+
+  EXPECT_EQ(std::string("Roger"), (join<char,',',Str1>::type::data));
+  EXPECT_EQ(std::string("Roger,Marcel"), (join<char,',',Str1,Str2>::type::data));
+  EXPECT_EQ(std::string("Roger,Marcel,Pastis"), (join<char,',',Str1,Str2,Str3>::type::data));
+}
+
 size_t constexpr operator"" _s(const char* c, size_t s) {
   return named_types::basic_lowcase_charset_format::encode(c, s);
 }
@@ -236,5 +244,5 @@ TEST_F(UnitTests, RuntimeView1) {
   decltype(t1) const& t1_const = t1;
 
   auto const_view1 = make_rt_view(t1_const);
-  std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
+  //std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
 }
