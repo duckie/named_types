@@ -88,5 +88,10 @@ if (${compiles_string_literal_operator_template})
   add_nt_test(demo4)
 endif()
 
+# Rapidjson extension
+if (${RAPIDJSON_FOUND})
+  add_nt_test(named_tuple_rapidjson_tests GT)
+endif()
+
 # Compile examples
 add_subdirectory(examples)

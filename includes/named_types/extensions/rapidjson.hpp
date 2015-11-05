@@ -5,6 +5,7 @@
 #include <rapidjson/reader.h>
 #include "named_types/named_tuple.hpp"
 #include "named_types/extensions/type_traits.hpp"
+#include <named_types/extensions/parsing_tools.hpp>
 #include "named_types/rt_named_tuple.hpp"
 
 namespace named_types {
