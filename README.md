@@ -197,7 +197,7 @@ template <class Tuple> class Serializer {
 
   void stream(Tuple const& t) {
     output_ << '{';
-    apply(t,*this);
+    for_each(*this,t);
     output_ << '}';
   }
 };

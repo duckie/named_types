@@ -88,7 +88,7 @@ template <class Tuple> class JsonSerializer {
 
   void stream(Tuple const& t) {
     output_ << std::boolalpha << '{';
-    apply(t, *this);
+    for_each(*this,t);
     output_ << '}';
   }
 };

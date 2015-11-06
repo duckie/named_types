@@ -87,7 +87,7 @@ struct serializer_01 {
 
 template <class Tuple> std::string func_apply_01(Tuple const& t) {
   serializer_01 instance;
-  apply(t, instance);
+  for_each(instance, t);
   return instance.result();
 }
 

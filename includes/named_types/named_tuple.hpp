@@ -195,10 +195,10 @@ inline constexpr decltype(auto) make_named_tuple(Types&&... args) {
       std::move(args).get()...);
 }
 
-// apply
+// for_each
 
-template <class... Types, class Func>
-inline constexpr void apply(named_tuple<Types...> const& in, Func&& f) {
+template <class Func, class... Types>
+inline constexpr void for_each(Func&& f, named_tuple<Types...> const& in) {
   using swallow = int[];
   (void)swallow{
       int{},
