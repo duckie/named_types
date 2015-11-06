@@ -78,6 +78,8 @@ struct concatenate<string_literal<Char, charset1...>> {
   using type = string_literal<Char, charset1...>;
 };
 
+template <class ... T> using concatenate_t = typename concatenate<T...>::type;
+
 // join
 
 template <class CharT, CharT Glue, class... T> struct join;
@@ -108,5 +110,7 @@ template <class CharT, CharT Glue, CharT... charset1>
 struct join<CharT, Glue, string_literal<CharT, charset1...>> {
   using type = string_literal<CharT, charset1...>;
 };
+
+template <class CharT, CharT Glue, class... T> using join_t = typename join<CharT,Glue,T...>::type;
 
 } // namespace string_literal

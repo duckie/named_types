@@ -83,8 +83,8 @@ struct tagged : Base, __getters::collect<tagged<Base, Tags...>, Tags...> {
   }
 
   template <class U> // requires Assignable<Base, U>() && !Same<decay_t<U>,
-                     // tagged>()
-                     tagged& operator=(U&& u) {
+  // tagged>()
+  tagged& operator=(U&& u) {
     static_cast<Base&>(*this) = std::forward<U>(u);
     return *this;
   }
@@ -94,10 +94,12 @@ template <class T> struct __tag_spec {};
 template <class Spec, class Arg> struct __tag_spec<Spec(Arg)> {
   using type = Spec;
 };
+template <class T> using __tag_spec_t = typename __tag_spec<T>::type;
 template <class T> struct __tag_elem {};
 template <class Spec, class Arg> struct __tag_elem<Spec(Arg)> {
   using type = Arg;
 };
+template <class T> using __tag_elem_t = typename __tag_elem<T>::type;
 
 template <class Base, class... Tags> struct indexed_tagged;
 
@@ -110,16 +112,16 @@ struct __indexes {
   template <class Tag, class Arg, std::size_t Index> struct tag_indexer_ {
     constexpr tag_indexer_() = default;
     using type = Arg;
-    using raw_type =
-        typename remove_cv<typename remove_reference<Arg>::type>::type;
+    using raw_type = remove_cv_t<remove_reference_t<Arg>>;
     using tag_type = Tag;
     using tag_index = integral_constant<std::size_t, Index>;
   };
 
   template <class Type, std::size_t... Is, class... Types>
   struct collect_<Type, index_sequence<Is...>, Types...>
-      : tag_indexer_<typename __tag_spec<Types>::type,
-                     typename __tag_elem<Types>::type, Is>... {
+      : tag_indexer_<__tag_spec_t<Types>,
+                     __tag_elem_t<Types>,
+                     Is>... {
     constexpr collect_(){};
     ~collect_() = default;
     constexpr collect_(const collect_&) = default;
@@ -141,9 +143,9 @@ struct __indexes {
 
     template <class Tag>
     struct has_tag
-        : integral_constant<
-              bool, (collect_::template permissive_get_tag_index_value<Tag>(
-                         collect_()) < sizeof...(Types))> {};
+        : integral_constant<bool,
+                            (collect_::template permissive_get_tag_index_value<
+                                 Tag>(collect_()) < sizeof...(Types))> {};
 
    private:
     template <class Tag, class Arg, std::size_t Index>
@@ -159,8 +161,8 @@ struct __indexes {
     }
 
     template <class Tag>
-    static constexpr typename tag_indexer_<
-        Tag, void, sizeof...(Types)>::tag_index permissive_get_tag_index(...) {
+    static constexpr typename tag_indexer_<Tag, void, sizeof...(Types)>::
+        tag_index permissive_get_tag_index(...) {
       return {};
     }
 
@@ -203,19 +205,20 @@ struct __indexes {
 
 template <class Base, class... Types>
 struct indexed_tagged
-    : tagged<Base, typename __tag_spec<Types>::type...>,
+    : tagged<Base, __tag_spec_t<Types>...>,
       __indexes::collect<indexed_tagged<Base, Types...>, Types...> {
-  using tagged<Base, typename __tag_spec<Types>::type...>::tagged;
+  using tagged<Base, __tag_spec_t<Types>...>::tagged;
 };
 
 template <class F, class S>
 using tagged_pair =
-    tagged<pair<typename __tag_elem<F>::type, typename __tag_elem<S>::type>,
-           typename __tag_spec<F>::type, typename __tag_spec<S>::type>;
+    tagged<pair<__tag_elem_t<F>, __tag_elem_t<S>>,
+           __tag_spec_t<F>,
+           __tag_spec_t<S>>;
 
 template <class... Types>
 using __tagged_tuple =
-    indexed_tagged<tuple<typename __tag_elem<Types>::type...>, Types...>;
+    indexed_tagged<tuple<__tag_elem_t<Types>...>, Types...>;
 
 /**
  * Making tagged_tuple a new type is mandatory to make

@@ -10,6 +10,8 @@ template <class Spec, class Arg> struct __ntag_notation<Arg(Spec)> {
   using type = Spec(Arg);
 };
 
+template <class T> using __ntag_notation_t = typename __ntag_notation<T>::type;
+
 // Traits for compile time name extraction
 
 template <class T> class has_user_defined_name {
@@ -77,6 +79,9 @@ template <class T, T... chars>
 char const* constexpr_type_name<string_literal<T, chars...>>::value =
     string_literal<T, chars...>::data;
 
+template <class T>
+using constexpr_type_name_t = typename constexpr_type_name<T>::type;
+
 // Private types
 
 template <class Tag, typename Value> class __attribute_const_reference_holder;
@@ -110,7 +115,7 @@ template <class Tag> struct named_tag : std::tag::basic_tag {
  public:
   using type = typename unnested_<Tag>::type;
   using value_type = typename unnested_value_<Tag>::type;
-  using tag_func_notation = typename __ntag_notation<type(value_type)>::type;
+  using tag_func_notation = __ntag_notation_t<type(value_type)>;
   constexpr named_tag() = default;
 
   // Attribute holder generation
@@ -159,8 +164,8 @@ template <class Tag, typename Value> class __attribute_const_reference_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
-  using tag_func_notation = typename __ntag_notation<
-      typename named_tag<tag_type>::type(value_type)>::type;
+  using tag_func_notation =
+      __ntag_notation_t<typename named_tag<tag_type>::type(value_type)>;
   __attribute_const_reference_holder(Value const& input)
       : value_(input) {}
   __attribute_const_reference_holder(
@@ -180,8 +185,8 @@ template <class Tag, typename Value> class __attribute_reference_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
-  using tag_func_notation = typename __ntag_notation<
-      typename named_tag<tag_type>::type(value_type)>::type;
+  using tag_func_notation =
+      __ntag_notation_t<typename named_tag<tag_type>::type(value_type)>;
   __attribute_reference_holder(Value& input)
       : value_(input) {}
   __attribute_reference_holder(__attribute_reference_holder const&) = delete;
@@ -199,8 +204,8 @@ template <class Tag, typename Value> class __attribute_value_holder {
  public:
   using tag_type = Tag;
   using value_type = Value;
-  using tag_func_notation = typename __ntag_notation<
-      typename named_tag<tag_type>::type(value_type)>::type;
+  using tag_func_notation =
+      __ntag_notation_t<typename named_tag<tag_type>::type(value_type)>;
   __attribute_value_holder(Value&& input)
       : value_(std::move(input)) {}
   __attribute_value_holder(__attribute_value_holder const&) = delete;

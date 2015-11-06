@@ -22,8 +22,8 @@ struct const_rt_view_impl<Parent, named_tuple<Types...>> : public Parent {
 
  public:
   const_rt_view_impl(named_tuple<Types...> const& viewed)
-      : pointers_{const_cast<typename __ntuple_tag_elem<Types>::type*>(
-            &std::get<typename __ntuple_tag_spec<Types>::type>(viewed))...} {}
+      : pointers_{const_cast<__ntuple_tag_elem_t<Types>*>(
+            &std::get<__ntuple_tag_spec_t<Types>>(viewed))...} {}
 
   virtual size_t index_of(std::type_info const& tag_id) const {
     auto matching_attribute_iterator =
@@ -72,18 +72,18 @@ struct const_rt_view_impl<Parent, named_tuple<Types...>> : public Parent {
 template <class Parent, class... Types>
 std::array<std::type_info const*, sizeof...(Types)> const
     const_rt_view_impl<Parent, named_tuple<Types...>>::tag_typeinfos = {
-        {&typeid(typename __ntuple_tag_spec<Types>::type::value_type)...}};
+        {&typeid(typename __ntuple_tag_spec_t<Types>::value_type)...}};
 
 template <class Parent, class... Types>
 std::array<std::type_info const*, sizeof...(Types)> const
     const_rt_view_impl<Parent, named_tuple<Types...>>::value_typeinfos = {
-        {&typeid(typename __ntuple_tag_elem<Types>::type)...}};
+        {&typeid(__ntuple_tag_elem_t<Types>)...}};
 
 template <class Parent, class... Types>
 std::array<std::string const, sizeof...(Types)> const
     const_rt_view_impl<Parent, named_tuple<Types...>>::attributes = {
         {std::string(type_name<
-            typename __ntuple_tag_spec<Types>::type::value_type>::value)...}};
+            typename __ntuple_tag_spec_t<Types>::value_type>::value)...}};
 
 // Non-const version
 template <class... Types>

@@ -136,8 +136,9 @@ struct tuple_member_convertible {
 
 template <class Source, class Tuple, size_t Index>
 struct tuple_member_static_cast_assignable {
-  static constexpr bool const value = is_static_cast_assignable<
-      std::tuple_element_t<Index, Tuple>, Source>::value;
+  static constexpr bool const value =
+      is_static_cast_assignable<std::tuple_element_t<Index, Tuple>,
+                                Source>::value;
 };
 
 template <class Source, class Tuple, size_t Index>

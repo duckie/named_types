@@ -16,25 +16,29 @@ namespace parsing {
 // Basic lexical cast
 
 template <class To, class From>
-inline typename std::enable_if<
-    std::is_arithmetic<From>::value && is_std_basic_string<To>::value, To>::type
+inline std::enable_if_t<std::is_arithmetic<From>::value &&
+                            is_std_basic_string<To>::value,
+                        To>
 lexical_cast(From const& value) {
-  std::basic_ostringstream<typename To::value_type, typename To::traits_type,
+  std::basic_ostringstream<typename To::value_type,
+                           typename To::traits_type,
                            typename To::allocator_type> output;
   output << value;
   return output.str();
 }
 
 template <class To, class From>
-inline typename std::enable_if<
-    std::is_arithmetic<From>::value && std::is_arithmetic<To>::value, To>::type
+inline std::enable_if_t<std::is_arithmetic<From>::value &&
+                            std::is_arithmetic<To>::value,
+                        To>
 lexical_cast(From const& value) {
   return static_cast<To>(value);
 }
 
 template <class To, class From>
-inline typename std::enable_if<
-    is_std_basic_string<From>::value && std::is_arithmetic<To>::value, To>::type
+inline std::enable_if_t<is_std_basic_string<From>::value &&
+                            std::is_arithmetic<To>::value,
+                        To>
 lexical_cast(From const& value) {
   To result{};
   std::basic_istringstream<typename From::value_type,
@@ -45,8 +49,9 @@ lexical_cast(From const& value) {
 }
 
 template <class To, class From>
-inline typename std::enable_if<
-    is_raw_string<From>::value && std::is_arithmetic<To>::value, To>::type
+inline std::enable_if_t<is_raw_string<From>::value &&
+                            std::is_arithmetic<To>::value,
+                        To>
 lexical_cast(From const& value) {
   To result{};
   std::istringstream(value) >> result;
@@ -55,29 +60,29 @@ lexical_cast(From const& value) {
 
 // Assigner for struct parser
 template <class Source, class Tuple, size_t Index>
-inline typename std::enable_if<
-    tuple_member_assignable<Source, Tuple, Index>::value,
-    std::function<void(Tuple&, Source&&)>>::type
+inline std::enable_if_t<tuple_member_assignable<Source, Tuple, Index>::value,
+                        std::function<void(Tuple&, Source&&)>>
 make_setter() {
   return [](Tuple& tuple, Source&& source)
       -> void { std::get<Index>(tuple) = std::move(source); };
 }
 
 template <class Source, class Tuple, size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     tuple_member_static_cast_assignable<Source, Tuple, Index>::value,
-    std::function<void(Tuple&, Source&&)>>::type
+    std::function<void(Tuple&, Source&&)>>
 make_setter() {
   return [](Tuple& tuple, Source&& source) -> void {
-    std::get<Index>(tuple) = static_cast<typename std::remove_reference<
-        std::tuple_element_t<Index, Tuple>>::type>(std::move(source));
+    std::get<Index>(tuple) = static_cast<
+        std::remove_reference_t<std::tuple_element_t<Index, Tuple>>>(
+        std::move(source));
   };
 }
 
 template <class Source, class Tuple, size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     tuple_member_not_assignable<Source, Tuple, Index>::value,
-    std::function<void(Tuple&, Source&&)>>::type
+    std::function<void(Tuple&, Source&&)>>
 make_setter() {
   return nullptr;
 }
@@ -98,7 +103,8 @@ struct value_setter_interface {
   virtual bool setInt64(std::basic_string<KeyCharT> const&, int64_t) = 0;
   virtual bool setUint64(std::basic_string<KeyCharT> const&, uint64_t) = 0;
   virtual bool setDouble(std::basic_string<KeyCharT> const&, double) = 0;
-  virtual bool setString(std::basic_string<KeyCharT> const&, const ValueCharT*,
+  virtual bool setString(std::basic_string<KeyCharT> const&,
+                         const ValueCharT*,
                          SizeType) = 0;
   virtual value_setter_interface*
   createChildNode(std::basic_string<KeyCharT> const&) = 0;
@@ -128,58 +134,76 @@ struct value_setter;
 template <class KeyCharT, class ValueCharT, class SizeType, class Container>
 class sequence_pusher;
 
-template <class KeyCharT, class ValueCharT, class SizeType, class Tuple,
+template <class KeyCharT,
+          class ValueCharT,
+          class SizeType,
+          class Tuple,
           size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     is_sub_object<std::tuple_element_t<Index, Tuple>>::value,
     std::function<
-        value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>::type
+        value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_creator() {
   return [](Tuple & tuple)
       -> value_setter_interface<KeyCharT, ValueCharT, SizeType> * {
-    return new value_setter<KeyCharT, ValueCharT, SizeType,
+    return new value_setter<KeyCharT,
+                            ValueCharT,
+                            SizeType,
                             std::tuple_element_t<Index, Tuple>>(
         std::get<Index>(tuple));
   };
 }
 
-template <class KeyCharT, class ValueCharT, class SizeType, class Tuple,
+template <class KeyCharT,
+          class ValueCharT,
+          class SizeType,
+          class Tuple,
           size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !is_sub_object<std::tuple_element_t<Index, Tuple>>::value,
     std::function<
-        value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>::type
+        value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_creator() {
   return nullptr;
 }
 
-template <class KeyCharT, class ValueCharT, class SizeType, class Tuple,
+template <class KeyCharT,
+          class ValueCharT,
+          class SizeType,
+          class Tuple,
           size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     is_sequence_container<std::tuple_element_t<Index, Tuple>>::value,
-    std::function<sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(
-        Tuple&)>>::type
+    std::function<
+        sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_sequence_creator() {
   return [](Tuple & tuple)
       -> sequence_pusher_interface<KeyCharT, ValueCharT, SizeType> * {
-    return new sequence_pusher<KeyCharT, ValueCharT, SizeType,
+    return new sequence_pusher<KeyCharT,
+                               ValueCharT,
+                               SizeType,
                                std::tuple_element_t<Index, Tuple>>(
         std::get<Index>(tuple));
   };
 }
 
-template <class KeyCharT, class ValueCharT, class SizeType, class Tuple,
+template <class KeyCharT,
+          class ValueCharT,
+          class SizeType,
+          class Tuple,
           size_t Index>
-inline typename std::enable_if<
+inline std::enable_if_t<
     !is_sequence_container<std::tuple_element_t<Index, Tuple>>::value,
-    std::function<sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(
-        Tuple&)>>::type
+    std::function<
+        sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_sequence_creator() {
   return nullptr;
 }
 
 // Implementation for associatives containers
-template <class KeyCharT, class ValueCharT, class SizeType,
+template <class KeyCharT,
+          class ValueCharT,
+          class SizeType,
           class AssociativeContainer>
 class value_setter
     : public value_setter_interface<KeyCharT, ValueCharT, SizeType> {
@@ -190,36 +214,33 @@ class value_setter
   AssociativeContainer& root_;
 
   template <class T>
-  inline typename std::enable_if<std::is_convertible<T, value_type>::value,
-                                 bool>::type
+  inline std::enable_if_t<std::is_convertible<T, value_type>::value, bool>
   setFrom(std::basic_string<KeyCharT> const& key, T&& value) {
     root_.emplace(key, std::move(value));
     return true;
   }
 
   template <class T>
-  inline typename std::enable_if<
-      is_static_cast_assignable<T, value_type>::value &&
-          !std::is_convertible<T, value_type>::value,
-      bool>::type
+  inline std::enable_if_t<is_static_cast_assignable<T, value_type>::value &&
+                              !std::is_convertible<T, value_type>::value,
+                          bool>
   setFrom(std::basic_string<KeyCharT> const& key, T&& value) {
     root_.emplace(key, static_cast<value_type>(value));
     return true;
   }
 
   template <class T>
-  inline typename std::enable_if<
-      !std::is_convertible<T, value_type>::value &&
-          !is_static_cast_assignable<T, value_type>::value,
-      bool>::type
+  inline std::enable_if_t<!std::is_convertible<T, value_type>::value &&
+                              !is_static_cast_assignable<T, value_type>::value,
+                          bool>
   setFrom(std::basic_string<KeyCharT> const& key, T&& value) {
     return false;
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       is_sub_object<T>::value,
-      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>
   createChildNode(std::basic_string<KeyCharT> const& key) {
     auto inserted = root_.emplace(key, T{});
     if (inserted.second)
@@ -230,17 +251,17 @@ class value_setter
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       !is_sub_object<T>::value,
-      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>
   createChildNode(std::basic_string<KeyCharT> const& key) {
     return nullptr;
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       is_sequence_container<T>::value,
-      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>
   createChildSequence(std::basic_string<KeyCharT> const& key) {
     auto inserted = root_.emplace(key, T{});
     if (inserted.second)
@@ -251,9 +272,9 @@ class value_setter
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       !is_sequence_container<T>::value,
-      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>
   createChildSequence(std::basic_string<KeyCharT> const& key) {
     return nullptr;
   }
@@ -298,7 +319,8 @@ class value_setter
   }
 
   virtual bool setString(std::basic_string<KeyCharT> const& key,
-                         const ValueCharT* data, SizeType length) override {
+                         const ValueCharT* data,
+                         SizeType length) override {
     return setFrom<std::basic_string<ValueCharT>>(
         key, std::basic_string<ValueCharT>(data));
   }
@@ -325,9 +347,10 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
 
   template <class T> bool setFrom(size_t field_index, T&& value) {
     static std::array<std::function<void(Tuple&, T && )>, Tuple::size> setters =
-        {make_setter<T, Tuple,
-                     Tuple::template tag_index<
-                         typename __ntuple_tag_spec<Tags>::type>::value>()...};
+        {make_setter<
+            T,
+            Tuple,
+            Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
     std::function<void(Tuple&, T && )> setter(
         field_index < setters.size() ? setters[field_index] : nullptr);
     if (setter) {
@@ -378,19 +401,24 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
   }
 
   virtual bool setString(std::basic_string<KeyCharT> const& key,
-                         const ValueCharT* data, SizeType length) override {
+                         const ValueCharT* data,
+                         SizeType length) override {
     return setFrom<std::basic_string<ValueCharT>>(
         rt_root_.index_of(key), std::basic_string<ValueCharT>(data));
   }
 
   virtual value_setter_interface<KeyCharT, ValueCharT, SizeType>*
   createChildNode(std::basic_string<KeyCharT> const& key) override {
-    static std::array<std::function<value_setter_interface<KeyCharT, ValueCharT,
-                                                           SizeType>*(Tuple&)>,
-                      Tuple::size> creators = {
-        make_creator<KeyCharT, ValueCharT, SizeType, Tuple,
-                     Tuple::template tag_index<
-                         typename __ntuple_tag_spec<Tags>::type>::value>()...};
+    static std::array<
+        std::function<
+            value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
+        Tuple::size> creators = {
+        make_creator<
+            KeyCharT,
+            ValueCharT,
+            SizeType,
+            Tuple,
+            Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<value_setter_interface<KeyCharT, ValueCharT, SizeType>*(
@@ -403,13 +431,16 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
 
   virtual sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*
   createChildSequence(std::basic_string<KeyCharT> const& key) override {
-    static std::array<std::function<sequence_pusher_interface<
-                          KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
-                      Tuple::size> creators = {
+    static std::array<
+        std::function<
+            sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
+        Tuple::size> creators = {
         make_sequence_creator<
-            KeyCharT, ValueCharT, SizeType, Tuple,
-            Tuple::template tag_index<
-                typename __ntuple_tag_spec<Tags>::type>::value>()...};
+            KeyCharT,
+            ValueCharT,
+            SizeType,
+            Tuple,
+            Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(
@@ -433,62 +464,59 @@ class sequence_pusher
   std::back_insert_iterator<Container> inserter_;
 
   template <class T>
-  inline typename std::enable_if<std::is_convertible<T, value_type>::value,
-                                 bool>::type
+  inline std::enable_if_t<std::is_convertible<T, value_type>::value, bool>
   appendValue(T&& value) {
     inserter_ = std::move(value);
     return true;
   }
 
   template <class T>
-  inline typename std::enable_if<
-      is_static_cast_assignable<T, value_type>::value &&
-          !std::is_convertible<T, value_type>::value,
-      bool>::type
+  inline std::enable_if_t<is_static_cast_assignable<T, value_type>::value &&
+                              !std::is_convertible<T, value_type>::value,
+                          bool>
   appendValue(T&& value) {
     inserter_ = static_cast<value_type>(value);
     return true;
   }
 
   template <class T>
-  inline typename std::enable_if<
-      !std::is_convertible<T, value_type>::value &&
-          !is_static_cast_assignable<T, value_type>::value,
-      bool>::type
+  inline std::enable_if_t<!std::is_convertible<T, value_type>::value &&
+                              !is_static_cast_assignable<T, value_type>::value,
+                          bool>
   appendValue(T&& value) {
     return false;
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       is_sub_object<T>::value,
-      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>
   appendChildNode() {
     inserter_ = T{};
     return new value_setter<KeyCharT, ValueCharT, SizeType, T>(root_.back());
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       !is_sub_object<T>::value,
-      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      value_setter_interface<KeyCharT, ValueCharT, SizeType>*>
   appendChildNode() {
     return nullptr;
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       is_sequence_container<T>::value,
-      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>
   appendChildSequence() {
     inserter_ = T{};
     return new sequence_pusher<KeyCharT, ValueCharT, SizeType, T>(root_.back());
   }
 
   template <class T>
-  inline typename std::enable_if<
+  inline std::enable_if_t<
       !is_sequence_container<T>::value,
-      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>::type
+      sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*>
   appendChildSequence() {
     return nullptr;
   }

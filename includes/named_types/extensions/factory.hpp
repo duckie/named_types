@@ -23,9 +23,11 @@ template <class BaseClass, class... T> class factory {
   BaseClass* create(std::string const& name, BuildArgs&&... args) {
     using builder_tuple_type =
         named_tuple<typename id<std::function<BaseClass*(BuildArgs...)>(
-            typename __ntuple_tag_spec<T>::type)>::type...>;
-    static builder_tuple_type const builders_{__factory_impl::make_builder<
-        typename __ntuple_tag_elem<T>::type, BaseClass, BuildArgs...>()...};
+            __ntuple_tag_spec_t<T>)>::type...>;
+    static builder_tuple_type const builders_{
+        __factory_impl::make_builder<__ntuple_tag_elem_t<T>,
+                                     BaseClass,
+                                     BuildArgs...>()...};
     static const_rt_view<builder_tuple_type> const rt_view_(builders_);
     auto builder =
         rt_view_.template retrieve<std::function<BaseClass*(BuildArgs...)>>(

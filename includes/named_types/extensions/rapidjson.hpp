@@ -16,7 +16,8 @@ template <class RootType, class Encoding> class reader_handler;
 
 template <class RootType, class Encoding>
 class reader_handler : public ::rapidjson::BaseReaderHandler<
-                           Encoding, reader_handler<RootType, Encoding>> {
+                           Encoding,
+                           reader_handler<RootType, Encoding>> {
   static_assert(is_sub_object<RootType>::value ||
                     is_sequence_container<RootType>::value,
                 "Root type of a handler must either be a named_tuple, an "
