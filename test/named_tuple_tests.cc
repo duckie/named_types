@@ -8,9 +8,6 @@
 #include <named_types/named_tuple.hpp>
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
-#include <named_types/extensions/factory.hpp>
-#include <named_types/extensions/generation_tools.hpp>
-#include <named_types/extensions/printf_json_generator.hpp>
 
 using namespace named_types;
 
@@ -228,22 +225,7 @@ TEST_F(UnitTests, ConstexprStrings2) {
   EXPECT_EQ(std::string("Roger"), (join<char,',',Str1>::type::data));
   EXPECT_EQ(std::string("Roger,Marcel"), (join<char,',',Str1,Str2>::type::data));
   EXPECT_EQ(std::string("Roger,Marcel,Pastis"), (join<char,',',Str1,Str2,Str3>::type::data));
-
-  attr<"name"_s> name_k;
-  attr<"size"_s> size_k;
-  attr<"surname"_s> surname_k;
-  attr<"birthday"_s> bday_k;
-
-  auto tuple1 = make_named_tuple(name_k = std::string("Roger"), size_k = 3, bday_k = 23);
-  std::cout << named_types::extensions::generation::json_printf_sequence<decltype(tuple1)>::type::data << std::endl;
 }
-
-//size_t constexpr operator"" _s(const char* c, size_t s) {
-  //return named_types::basic_lowcase_charset_format::encode(c, s);
-//}
-//template <size_t EncStr>
-//using attr = named_tag<
-    //typename named_types::basic_lowcase_charset_format::decode<EncStr>::type>;
 
 TEST_F(UnitTests, RuntimeView1) {
   attr<"name"_s> name_k;

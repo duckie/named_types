@@ -206,6 +206,13 @@ inline constexpr void for_each(Func&& f, named_tuple<Types...> const& in) {
        int{})...};
 }
 
+// apply
+
+template <class Func, class... Types>
+inline constexpr void apply(Func&& f, named_tuple<Types...> const& in) {
+  f(get<__ntuple_tag_spec_t<Types>>(in)...);
+}
+
 } // namespace named_types
 
 // Standard specialization
