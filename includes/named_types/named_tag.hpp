@@ -66,6 +66,7 @@ class has_user_defined_name<string_literal<T, chars...>> {
 template <class T, T... chars>
 class constexpr_type_name<string_literal<T, chars...>> {
  public:
+  using type = string_literal<T, chars...>;
   static char const* value;
   static constexpr char const* str() {
     return string_literal<T, chars...>().str();

@@ -17,40 +17,40 @@ template <class T> struct has_printf_sequence {
   static constexpr bool const value = false;
 };
 
-template <> has_printf_sequence<char const*> {
+template <> struct has_printf_sequence<char const*> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<std::string> {
+template <> struct has_printf_sequence<std::string> {
   static constexpr bool const value = true;
 };
 
 
-template <> has_printf_sequence<int> {
+template <> struct has_printf_sequence<int> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<unsigned> {
+template <> struct has_printf_sequence<unsigned> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<int64_t> {
+template <> struct has_printf_sequence<int64_t> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<uint64_t> {
+template <> struct has_printf_sequence<uint64_t> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<bool> {
+template <> struct has_printf_sequence<bool> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<float> {
+template <> struct has_printf_sequence<float> {
   static constexpr bool const value = true;
 };
 
-template <> has_printf_sequence<double> {
+template <> struct has_printf_sequence<double> {
   static constexpr bool const value = true;
 };
 
@@ -61,10 +61,10 @@ template <class ... Tags> struct json_printf_sequence<named_tuple<Tags ...>> {
    using OBrace = string_literal<char,'{'>;
    using CBrace = string_literal<char,'}'>;
    using Quote = string_literal<char,'"'>;
-   using Quote = string_literal<char,'"'>;
+   using Colon = string_literal<char,':'>;
  public:
-  using type = typename concatenate<string_literal<char,'{'>, 
-      typename concatenate<string_literal<char,'{'>
+  using type = 
+      typename concatenate<OBrace, typename join<char,',',typename concatenate<Quote, typename constexpr_type_name<typename __ntuple_tag_spec<Tags>::type::value_type>::type, Quote, Colon,Quote,Quote>::type...>::type, CBrace>::type;
 };
 
 } // namespace generation
