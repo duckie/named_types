@@ -1,10 +1,6 @@
 #pragma once
 #include <type_traits>
 #include <cstdint>
-#include <vector>
-#include <list>
-#include <map>
-#include <unordered_map>
 #include "named_types/named_tuple.hpp"
 #include "named_types/rt_named_tuple.hpp"
 #include "named_types/extensions/type_traits.hpp"
@@ -13,58 +9,56 @@ namespace named_types {
 namespace extensions {
 namespace generation {
 
-template <class T> struct has_printf_sequence {
-  static constexpr bool const value = false;
+template <class T> struct printf_sequence {
+  using type = void;
+  static void evaluate(void){};
 };
 
-template <> struct has_printf_sequence<char const*> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<char const*> {
+  using type = string_literal<char, '%', 's'>;
+  static inline char const* evaluate(char const* data) { return data; };
 };
 
-template <> struct has_printf_sequence<std::string> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<std::string> {
+  using type = string_literal<char, '%', 's'>;
+  static inline char const* evaluate(std::string const& data) {
+    return data.c_str();
+  };
 };
 
-
-template <> struct has_printf_sequence<int> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<int> {
+  using type = string_literal<char, '%', 'd'>;
+  static inline int evaluate(int data) { return data; };
 };
 
-template <> struct has_printf_sequence<unsigned> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<unsigned> {
+  using type = string_literal<char, '%', 'u'>;
+  static inline unsigned evaluate(unsigned data) { return data; };
 };
 
-template <> struct has_printf_sequence<int64_t> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<int64_t> {
+  using type = string_literal<char, '%', 'l', 'd'>;
+  static inline int64_t evaluate(int64_t data) { return data; };
 };
 
-template <> struct has_printf_sequence<uint64_t> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<uint64_t> {
+  using type = string_literal<char, '%', 'l', 'u'>;
+  static inline uint64_t evaluate(uint64_t data) { return data; };
 };
 
-template <> struct has_printf_sequence<bool> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<bool> {
+  using type = string_literal<char, '%', 'd'>;
+  static inline int evaluate(bool data) { return data; };
 };
 
-template <> struct has_printf_sequence<float> {
-  static constexpr bool const value = true;
+template <> struct printf_sequence<float> {
+  using type = string_literal<char, '%', 'f'>;
+  static inline double evaluate(float data) { return data; };
 };
 
-template <> struct has_printf_sequence<double> {
-  static constexpr bool const value = true;
-};
-
-template <class T> struct json_printf_sequence {};
-
-template <class ... Tags> struct json_printf_sequence<named_tuple<Tags ...>> {
- private:
-   using OBrace = string_literal<char,'{'>;
-   using CBrace = string_literal<char,'}'>;
-   using Quote = string_literal<char,'"'>;
-   using Colon = string_literal<char,':'>;
- public:
-  using type = 
-      typename concatenate<OBrace, typename join<char,',',typename concatenate<Quote, typename constexpr_type_name<typename __ntuple_tag_spec<Tags>::type::value_type>::type, Quote, Colon,Quote,Quote>::type...>::type, CBrace>::type;
+template <> struct printf_sequence<double> {
+  using type = string_literal<char, '%', 'f'>;
+  static inline double evaluate(double data) { return data; };
 };
 
 } // namespace generation

@@ -5,6 +5,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <memory>
 #include "named_types/named_tuple.hpp"
 #include "named_types/rt_named_tuple.hpp"
 

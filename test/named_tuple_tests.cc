@@ -10,6 +10,7 @@
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
 #include <named_types/extensions/generation_tools.hpp>
+#include <named_types/extensions/printf_json_generator.hpp>
 
 using namespace named_types;
 
