@@ -206,11 +206,11 @@ inline constexpr void for_each(Func&& f, named_tuple<Types...> const& in) {
        int{})...};
 }
 
-// apply
+// apply : should be replaceable by std::experimental::apply
 
 template <class Func, class... Types>
-inline constexpr void apply(Func&& f, named_tuple<Types...> const& in) {
-  f(get<__ntuple_tag_spec_t<Types>>(in)...);
+inline constexpr auto apply(Func&& f, named_tuple<Types...> const& in) -> decltype(auto) {
+  return f(get<__ntuple_tag_spec_t<Types>>(in)...);
 }
 
 } // namespace named_types

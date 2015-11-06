@@ -242,3 +242,60 @@ TEST_F(UnitTests, RuntimeView1) {
   auto const_view1 = make_rt_view(t1_const);
   //std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
 }
+
+struct serializer_01 {
+  std::ostringstream output;
+
+  template <class Tag, class Type>
+  void operator()(Tag const&, Type const& value) {
+    output << '"' << value << "\";";
+  }
+
+  std::string result() { return output.str(); };
+};
+
+template <class Tuple> std::string func_apply_01(Tuple const& t) {
+  serializer_01 instance;
+  for_each(instance, t);
+  return instance.result();
+}
+
+TEST_F(UnitTests, ForEach1) {
+  attr<"name"_s> name_k;
+  attr<"size"_s> size_k;
+  attr<"surname"_s> surname_k;
+
+  auto t1 = make_named_tuple(name_k = std::string("Roger"),
+                             surname_k = std::string("Marcel"),
+                             size_k = 3u);
+  std::string serialized = func_apply_01(t1);
+  EXPECT_EQ("\"Roger\";\"Marcel\";\"3\";", serialized);
+
+  auto t2 = make_named_tuple();
+  serialized = func_apply_01(t2);
+  EXPECT_EQ("", serialized);
+
+  auto t3 = make_named_tuple(name_k = std::string("Roger"));
+  serialized = func_apply_01(t3);
+  EXPECT_EQ("\"Roger\";", serialized);
+}
+
+struct func_to_apply_01 {
+  template <class ...T> size_t operator() (T&& ... args) const { return sizeof ... (T); }
+};
+
+TEST_F(UnitTests, Apply1) {
+  attr<"name"_s> name_k;
+  attr<"size"_s> size_k;
+  attr<"surname"_s> surname_k;
+
+  auto t1 = make_named_tuple(name_k = std::string("Roger"),
+                             surname_k = std::string("Marcel"),
+                             size_k = 3u);
+
+  EXPECT_EQ(3u, (apply(func_to_apply_01(),t1)));
+  auto t2 = make_named_tuple();
+  EXPECT_EQ(0u, (apply(func_to_apply_01(),t2)));
+  auto t3 = make_named_tuple(name_k = std::string("Roger"));
+  EXPECT_EQ(1u, (apply(func_to_apply_01(),t3)));
+}
