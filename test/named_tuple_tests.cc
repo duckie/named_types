@@ -226,6 +226,11 @@ TEST_F(UnitTests, ConstexprStrings2) {
   EXPECT_EQ(std::string("Roger"), (join<char,',',Str1>::type::data));
   EXPECT_EQ(std::string("Roger,Marcel"), (join<char,',',Str1,Str2>::type::data));
   EXPECT_EQ(std::string("Roger,Marcel,Pastis"), (join<char,',',Str1,Str2,Str3>::type::data));
+
+  EXPECT_EQ(std::string(""), (repeat_string<0,Str1>::type::data));
+  EXPECT_EQ(std::string("Roger"), (repeat_string<1,Str1>::type::data));
+  EXPECT_EQ(std::string("RogerRoger"), (repeat_string<2,Str1>::type::data));
+  EXPECT_EQ(std::string("RogerRogerRoger"), (repeat_string<3,Str1>::type::data));
 }
 
 TEST_F(UnitTests, RuntimeView1) {

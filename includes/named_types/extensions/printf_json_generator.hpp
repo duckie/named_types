@@ -24,12 +24,20 @@ template <> struct json_printf_sequence<std::string> {
   }
 };
 
+template <class T, std::size_t Size> struct json_printf_sequence<std::array<T,Size>> {
+  using type = string_literal<char, '"', '%', 's', '"'>;
+  static inline char const* evaluate(std::string const& data) {
+    return data.c_str();
+  }
+};
+
 template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
  private:
   using OBrace = string_literal<char, '{'>;
   using CBrace = string_literal<char, '}'>;
   using Quote = string_literal<char, '"'>;
   using Colon = string_literal<char, ':'>;
+  using tuple_type = typename named_tuple<Tags...>::tuple_type;
 
  public:
   using type = concatenate_t<
@@ -44,6 +52,61 @@ template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
                            typename json_printf_sequence<
                                __ntuple_tag_elem_t<Tags>>::type>...>,
       CBrace>;
+
+ private:
+  template <std::size_t... Indexes>
+  static inline int unpacked_printf(tuple_type const& tuple,
+                                    std::index_sequence<Indexes...>) {
+    return type::printf(
+        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+            evaluate(std::get<Indexes>(tuple))...);
+  }
+
+  template <std::size_t... Indexes>
+  static inline int unpacked_sprintf(char* buffer,
+                                     tuple_type const& tuple,
+                                     std::index_sequence<Indexes...>) {
+    return type::sprintf(
+        buffer,
+        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+            evaluate(std::get<Indexes>(tuple))...);
+  }
+
+  template <std::size_t... Indexes>
+  static inline int unpacked_snprintf(char* buffer,
+                                      int buffer_size,
+                                      tuple_type const& tuple,
+                                      std::index_sequence<Indexes...>) {
+    return type::snprintf(
+        buffer,
+        buffer_size,
+        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+            evaluate(std::get<Indexes>(tuple))...);
+  }
+
+ public:
+  template <class... Args> static inline int printf(tuple_type const& tuple) {
+    return unpacked_printf(
+        tuple, std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+  }
+
+  template <class... Args>
+  static inline int sprintf(char* buffer, tuple_type const& tuple) {
+    return unpacked_sprintf(
+        buffer,
+        tuple,
+        std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+  }
+
+  template <class... Args>
+  static inline int
+  snprintf(char* buffer, int buffer_size, tuple_type const& tuple) {
+    return unpacked_snprintf(
+        buffer,
+        buffer_size,
+        tuple,
+        std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+  }
 };
 
 } // namespace generation

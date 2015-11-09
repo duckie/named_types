@@ -11,7 +11,7 @@ namespace generation {
 
 template <class T> struct printf_sequence {
   using type = void;
-  static void evaluate(void){};
+  static T evaluate(T value){ return value; };
 };
 
 template <> struct printf_sequence<char const*> {

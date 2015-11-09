@@ -52,20 +52,20 @@ template <class T, T... chars> struct string_literal {
   constexpr char const* str() const { return data; }
   constexpr size_t size() const { return sizeof...(chars); }
   constexpr char operator[](size_t index) const { return data[index]; }
-  
 
   // printf mappings
   // stdio includes are user's responsibility
-  template <class ... Args> static int printf(Args&& ... args) {
-    return ::printf(data, std::forward<Args>(args) ...);
+  template <class... Args> static int printf(Args&&... args) {
+    return ::printf(data, std::forward<Args>(args)...);
   }
 
-  template <class ... Args> static int sprintf(char* buffer, Args&& ... args) {
-    return ::sprintf(buffer, data, std::forward<Args>(args) ...);
+  template <class... Args> static int sprintf(char* buffer, Args&&... args) {
+    return ::sprintf(buffer, data, std::forward<Args>(args)...);
   }
 
-  template <class ... Args> static int snprintf(char* buffer, int buffer_size, Args&& ... args) {
-    return ::snprintf(buffer, buffer_size, data, std::forward<Args>(args) ...);
+  template <class... Args>
+  static int snprintf(char* buffer, int buffer_size, Args&&... args) {
+    return ::snprintf(buffer, buffer_size, data, std::forward<Args>(args)...);
   }
 };
 
@@ -94,7 +94,7 @@ struct concatenate<string_literal<Char, charset1...>> {
   using type = string_literal<Char, charset1...>;
 };
 
-template <class ... T> using concatenate_t = typename concatenate<T...>::type;
+template <class... T> using concatenate_t = typename concatenate<T...>::type;
 
 // join
 
@@ -110,8 +110,7 @@ struct join<CharT, Glue, Head, MiddleLeft, MiddleRight, Tail...> {
       CharT,
       Glue,
       Head,
-      typename join<CharT, Glue, MiddleLeft, MiddleRight, Tail...>::
-          type>::type;
+      typename join<CharT, Glue, MiddleLeft, MiddleRight, Tail...>::type>::type;
 };
 
 template <class CharT, CharT Glue, CharT... charset1, CharT... charset2>
@@ -127,11 +126,25 @@ struct join<CharT, Glue, string_literal<CharT, charset1...>> {
   using type = string_literal<CharT, charset1...>;
 };
 
-template <class CharT, CharT Glue, class... T> using join_t = typename join<CharT,Glue,T...>::type;
+template <class CharT, CharT Glue, class... T>
+using join_t = typename join<CharT, Glue, T...>::type;
 
+// repeat
 
+template <std::size_t Size, class StringLiteral> struct repeat_string;
 
+template <class CharT, CharT... chars>
+struct repeat_string<0u, string_literal<CharT, chars...>> {
+  using type = string_literal<CharT>;
+};
 
+template <std::size_t Size, class CharT, CharT... chars>
+struct repeat_string<Size, string_literal<CharT, chars...>> {
+  using type = concatenate_t < string_literal<CharT, chars...>,
+        typename repeat_string<Size - 1, string_literal<CharT, chars...>>::type>;
+};
 
+template <std::size_t Size, class StringLiteral>
+using repeat_string_t = typename repeat_string<Size, StringLiteral>::type;
 
 } // namespace string_literal

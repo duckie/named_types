@@ -32,7 +32,7 @@ struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
                      // struct named_tuple : std::tagged_tuple< Types ...
                      {
   // Type aliases
-
+  using tuple_type = std::tuple<__ntuple_tag_elem_t<Types>...>;
   using tagged_type = std::tagged_tuple<__ntuple_tag_notation_t<Types>...>;
   using std::tagged_tuple<__ntuple_tag_notation_t<Types>...>::tagged_tuple;
 
