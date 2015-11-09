@@ -5,6 +5,7 @@
 #include <tuple>
 #include <array>
 #include <functional>
+#include <stdio.h>
 #include <named_types/named_tuple.hpp>
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
@@ -298,4 +299,12 @@ TEST_F(UnitTests, Apply1) {
   EXPECT_EQ(0u, (apply(func_to_apply_01(),t2)));
   auto t3 = make_named_tuple(name_k = std::string("Roger"));
   EXPECT_EQ(1u, (apply(func_to_apply_01(),t3)));
+}
+
+TEST_F(UnitTests, LiteralPrintfFamily1) {
+  std::array<char,1024> buffer;   
+  string_literal<char,'%','s'>::sprintf(buffer.data(), "Hello Marcello");
+  EXPECT_EQ("Hello Marcello", std::string(buffer.data()));
+  string_literal<char,'%','s'>::snprintf(buffer.data(), buffer.size(), "Hello Roberta");
+  EXPECT_EQ("Hello Roberta", std::string(buffer.data()));
 }

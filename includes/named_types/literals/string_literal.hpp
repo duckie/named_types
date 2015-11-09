@@ -1,5 +1,6 @@
 #pragma once
 #include <type_traits>
+#include <utility>
 #include "string_literal.hpp"
 
 namespace named_types {
@@ -51,6 +52,21 @@ template <class T, T... chars> struct string_literal {
   constexpr char const* str() const { return data; }
   constexpr size_t size() const { return sizeof...(chars); }
   constexpr char operator[](size_t index) const { return data[index]; }
+  
+
+  // printf mappings
+  // stdio includes are user's responsibility
+  template <class ... Args> static int printf(Args&& ... args) {
+    return ::printf(data, std::forward<Args>(args) ...);
+  }
+
+  template <class ... Args> static int sprintf(char* buffer, Args&& ... args) {
+    return ::sprintf(buffer, data, std::forward<Args>(args) ...);
+  }
+
+  template <class ... Args> static int snprintf(char* buffer, int buffer_size, Args&& ... args) {
+    return ::snprintf(buffer, buffer_size, data, std::forward<Args>(args) ...);
+  }
 };
 
 template <class T, T... chars>
@@ -112,5 +128,10 @@ struct join<CharT, Glue, string_literal<CharT, charset1...>> {
 };
 
 template <class CharT, CharT Glue, class... T> using join_t = typename join<CharT,Glue,T...>::type;
+
+
+
+
+
 
 } // namespace string_literal
