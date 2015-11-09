@@ -147,4 +147,28 @@ struct repeat_string<Size, string_literal<CharT, chars...>> {
 template <std::size_t Size, class StringLiteral>
 using repeat_string_t = typename repeat_string<Size, StringLiteral>::type;
 
+// join_repeat
+
+template <std::size_t Size, class CharT, CharT Glue, class StringLiteral> struct join_repeat_string;
+
+
+template <class CharT, CharT Glue, CharT... chars>
+struct join_repeat_string<0u, CharT, Glue, string_literal<CharT, chars...>> {
+  using type = string_literal<CharT>;
+};
+
+template <class CharT, CharT Glue, CharT... chars>
+struct join_repeat_string<1u, CharT, Glue, string_literal<CharT, chars...>> {
+  using type = string_literal<CharT,chars...>;
+};
+
+template <std::size_t Size, class CharT, CharT Glue, CharT... chars>
+struct join_repeat_string<Size, CharT, Glue, string_literal<CharT, chars...>> {
+  using type = concatenate_t <string_literal<CharT, chars..., Glue>,
+        typename join_repeat_string<Size - 1, CharT, Glue, string_literal<CharT, chars...>>::type>;
+};
+
+template <std::size_t Size, class CharT, CharT Glue, class StringLiteral>
+using join_repeat_string_t = typename join_repeat_string<Size, CharT, Glue, StringLiteral>::type;
+
 } // namespace string_literal
