@@ -61,6 +61,8 @@ template <> struct printf_sequence<double> {
   static inline double evaluate(double data) { return data; };
 };
 
+//template <typename ... T> forward_as_flattened_tuple(
+
 } // namespace generation
 } // namespace extensions
 } // namespace named_types

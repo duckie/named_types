@@ -25,10 +25,10 @@ template <> struct json_printf_sequence<std::string> {
 };
 
 template <class T, std::size_t Size> struct json_printf_sequence<std::array<T,Size>> {
-  using type = string_literal<char, '"', '%', 's', '"'>;
-  static inline char const* evaluate(std::string const& data) {
-    return data.c_str();
-  }
+  using type = concatenate_t<string_literal<char,'['>, join_repeat_string_t<Size,char,',', typename json_printf_sequence<T>::type>,string_literal<char,']'>>;
+  //static inline char const* evaluate(std::string const& data) {
+    //return data.c_str();
+  //}
 };
 
 template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {

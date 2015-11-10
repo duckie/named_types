@@ -112,4 +112,6 @@ TEST_F(UnitTests, JsonPrintf1) {
   t1[size()] = 134u;
   json_printf_sequence<decltype(t1)>::snprintf(buffer.data(), buffer.size(), t1);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"size":134})json", std::string(buffer.data()));
+
+  std::cout << json_printf_sequence<std::array<std::string,3>>::type::data << std::endl;
 }
