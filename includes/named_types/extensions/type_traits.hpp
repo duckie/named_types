@@ -161,4 +161,19 @@ struct is_sub_element
                                  is_sequence_container<T>::value ||
                                  is_associative_container<T>::value> {};
 
+template <class T> struct array_to_tuple;
+
+template <class T, std::size_t N, class IndexSequence>
+struct __array_to_tuple_impl;
+template <class T, std::size_t N, std::size_t... Indexes>
+struct __array_to_tuple_impl<T, N, std::index_sequence<Indexes...>> {
+  template <std::size_t Index> using expand_element = T;
+  using type = std::tuple<expand_element<Indexes>...>;
+};
+
+template <class T, std::size_t N> struct array_to_tuple<std::array<T, N>> {
+  using type =
+      typename __array_to_tuple_impl<T, N, std::make_index_sequence<N>>::type;
+};
+
 } // namespace named_types

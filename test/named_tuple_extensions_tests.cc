@@ -61,6 +61,9 @@ struct MessageError : Message {
     return result.str();
   }
 };
+TEST_F(UnitTests, Traits1) {
+  EXPECT_TRUE( (std::is_same< std::tuple<int,int,int>, typename named_types::array_to_tuple<std::array<int,3u>>::type>::value));
+}
 
 TEST_F(UnitTests, Factory1) {
   using namespace named_types;
