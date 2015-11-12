@@ -12,7 +12,6 @@ include_directories(
   ${PROJECT_BINARY_DIR}/src/
   ${PROJECT_BINARY_DIR}/test/
   ${GTEST_INCLUDE_DIRS}
-  ${RAPIDJSON_INCLUDE_DIRS}
 )
 
 # C++14 is a requirement here
@@ -91,6 +90,7 @@ endif()
 
 # Rapidjson extension
 if (${RAPIDJSON_FOUND})
+  include_directories(${RAPIDJSON_INCLUDE_DIRS})
   add_nt_test(named_tuple_rapidjson_tests GT)
 endif()
 
