@@ -218,7 +218,7 @@ using tagged_pair =
 
 template <class... Types>
 using __tagged_tuple =
-    indexed_tagged<tuple<__tag_elem_t<Types>...>, Types...>;
+    indexed_tagged<tuple<typename __tag_elem<Types>::type ... >, Types...>;
 
 /**
  * Making tagged_tuple a new type is mandatory to make
