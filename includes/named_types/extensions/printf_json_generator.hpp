@@ -54,58 +54,57 @@ template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
       CBrace>;
 
  private:
-  template <std::size_t... Indexes>
-  static inline int unpacked_printf(tuple_type const& tuple,
+  template <class ConcatenatedTuple, std::size_t... Indexes>
+  static inline int unpacked_printf(ConcatenatedTuple const& tuple,
                                     std::index_sequence<Indexes...>) {
     return type::printf(
-        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+        json_printf_sequence<std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<Indexes, ConcatenatedTuple>>>>::
             evaluate(std::get<Indexes>(tuple))...);
   }
 
-  template <std::size_t... Indexes>
+  template <class ConcatenatedTuple, std::size_t... Indexes>
   static inline int unpacked_sprintf(char* buffer,
-                                     tuple_type const& tuple,
+                                     ConcatenatedTuple const& tuple,
                                      std::index_sequence<Indexes...>) {
     return type::sprintf(
         buffer,
-        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+        json_printf_sequence<std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<Indexes, ConcatenatedTuple>>>>::
             evaluate(std::get<Indexes>(tuple))...);
   }
 
-  template <std::size_t... Indexes>
+  template <class ConcatenatedTuple, std::size_t... Indexes>
   static inline int unpacked_snprintf(char* buffer,
                                       int buffer_size,
-                                      tuple_type const& tuple,
+                                      ConcatenatedTuple const& tuple,
                                       std::index_sequence<Indexes...>) {
     return type::snprintf(
         buffer,
         buffer_size,
-        json_printf_sequence<std::tuple_element_t<Indexes, tuple_type>>::
+        json_printf_sequence<std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<Indexes, ConcatenatedTuple>>>>::
             evaluate(std::get<Indexes>(tuple))...);
   }
 
  public:
-  template <class... Args> static inline int printf(tuple_type const& tuple) {
+    static inline int printf(tuple_type const& tuple) {
     return unpacked_printf(
-        tuple, std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+        forward_as_concatenated_tuple(tuple),
+        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
   }
 
-  template <class... Args>
   static inline int sprintf(char* buffer, tuple_type const& tuple) {
     return unpacked_sprintf(
         buffer,
-        tuple,
-        std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+        forward_as_concatenated_tuple(tuple),
+        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
   }
 
-  template <class... Args>
   static inline int
   snprintf(char* buffer, int buffer_size, tuple_type const& tuple) {
     return unpacked_snprintf(
         buffer,
         buffer_size,
-        tuple,
-        std::make_index_sequence<std::tuple_size<tuple_type>::value>());
+        forward_as_concatenated_tuple(tuple),
+        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
   }
 };
 

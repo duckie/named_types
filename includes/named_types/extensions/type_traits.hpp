@@ -161,8 +161,20 @@ struct is_sub_element
                                  is_sequence_container<T>::value ||
                                  is_associative_container<T>::value> {};
 
-template <class T> struct array_to_tuple;
+// is_tuple
+template <class T> struct is_tuple : std::integral_constant<bool, false> {};
+template <class... T>
+struct is_tuple<std::tuple<T...>> : std::integral_constant<bool, true> {};
+template <class... T>
+struct is_tuple<named_tuple<T...>> : std::integral_constant<bool, true> {};
 
+// is_array
+template <class T> struct is_array : std::integral_constant<bool, false> {};
+template <class T, std::size_t N>
+struct is_array<std::array<T, N>> : std::integral_constant<bool, true> {};
+
+// array to tuple
+template <class T> struct array_to_tuple;
 template <class T, std::size_t N, class IndexSequence>
 struct __array_to_tuple_impl;
 template <class T, std::size_t N, std::size_t... Indexes>
@@ -175,5 +187,70 @@ template <class T, std::size_t N> struct array_to_tuple<std::array<T, N>> {
   using type =
       typename __array_to_tuple_impl<T, N, std::make_index_sequence<N>>::type;
 };
+
+template <class T> using array_to_tuple_t = typename array_to_tuple<T>::type;
+
+// Forward as concatenated tuple
+template <class T>
+inline auto forward_as_concatenated_tuple(T&& value)
+    -> std::enable_if_t<
+          !is_tuple<std::remove_cv_t<std::remove_reference_t<T>>>::value &&
+              !is_array<std::remove_cv_t<std::remove_reference_t<T>>>::value,
+          decltype(std::forward_as_tuple(std::forward<T>(value)))> {
+  return std::forward_as_tuple(std::forward<T>(value));
+}
+
+template <class... T, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value,
+                                          std::index_sequence<Indexes...>)
+    -> decltype(std::tuple_cat(
+        forward_as_concatenated_tuple(std::get<Indexes>(value))...));
+
+template <class... T>
+inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
+    -> decltype(forward_as_concatenated_tuple(value,
+                                              std::index_sequence_for<T...>()));
+
+template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
+                                          std::index_sequence<Indexes...>)
+    -> decltype(
+        std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...));
+
+template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_concatenated_tuple(value,
+                                              std::make_index_sequence<N>()));
+
+template <class... T, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value,
+                                          std::index_sequence<Indexes...>)
+    -> decltype(std::tuple_cat(
+        forward_as_concatenated_tuple(std::get<Indexes>(value))...)) {
+  return std::tuple_cat(
+      forward_as_concatenated_tuple(std::get<Indexes>(value))...);
+}
+
+template <class... T>
+inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
+    -> decltype(forward_as_concatenated_tuple(
+        value, std::index_sequence_for<T...>())) {
+  return forward_as_concatenated_tuple(value, std::index_sequence_for<T...>());
+}
+
+template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
+                                          std::index_sequence<Indexes...>)
+    -> decltype(
+          std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...)) {
+  return std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...);
+}
+
+template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_concatenated_tuple(value,
+                                              std::make_index_sequence<N>())) {
+  return forward_as_concatenated_tuple(value, std::make_index_sequence<N>());
+}
 
 } // namespace named_types
