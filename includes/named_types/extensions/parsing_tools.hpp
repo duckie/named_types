@@ -130,7 +130,7 @@ struct sequence_pusher_interface {
 };
 
 template <class KeyCharT, class ValueCharT, class SizeType, class T>
-struct value_setter;
+class value_setter;
 template <class KeyCharT, class ValueCharT, class SizeType, class Container>
 class sequence_pusher;
 
