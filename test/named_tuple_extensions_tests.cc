@@ -126,25 +126,25 @@ TEST_F(UnitTests, JsonPrintf1) {
 
   t1[size()] = 134u;
   json_printf_sequence<decltype(t1)>::snprintf(
-      buffer.data(), buffer.size(), t1);
+      buffer.data(), static_cast<int>(buffer.size()), t1);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"size":134})json",
             std::string(buffer.data()));
 
   auto t2 = make_named_tuple(
-      name() = std::string("Roger"),
-      age() = 35,
-      children() = std::array<std::string, 3>{"Marceau", "Emile", "Amandine"});
+    name() = std::string("Roger"),
+    age() = 35,
+    children() = std::array<std::string, 3>{"Marceau", "Emile", "Amandine"});
   json_printf_sequence<decltype(t2)>::sprintf(buffer.data(), t2);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"children":["Marceau","Emile",)json"
             R"json("Amandine"]})json",
             std::string(buffer.data()));
 
-  auto t3 = make_named_tuple(
+  /*auto t3 = make_named_tuple(
       children() = std::array<named_tuple<std::string(name), int(age)>, 2>{
           {std::make_tuple(std::string("Marceau"), 3),
            std::make_tuple(std::string("Emile"), 4)}});
   json_printf_sequence<decltype(t3)>::sprintf(buffer.data(), t3);
   EXPECT_EQ(R"json({"children":[{"name":"Marceau","age":3},{"name":"Emile")json"
             R"json(,"age":4}]})json",
-            std::string(buffer.data()));
+            std::string(buffer.data()));*/
 }

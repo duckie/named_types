@@ -184,8 +184,33 @@ struct __array_to_tuple_impl<T, N, std::index_sequence<Indexes...>> {
 };
 
 template <class T, std::size_t N> struct array_to_tuple<std::array<T, N>> {
-  using type =
+  using l_value_reference_forwarded_type = typename __array_to_tuple_impl<T&, N, std::make_index_sequence<N>>::type;
+  using const_l_value_reference_forwarded_type = typename __array_to_tuple_impl<T const&, N, std::make_index_sequence<N>>::type;
+  using r_value_reference_forwarded_type = typename __array_to_tuple_impl<T, N, std::make_index_sequence<N>>::type;
+
+ private:
+   template <std::size_t ... Indexes> static l_value_reference_forwarded_type forward_impl(std::array<T, N>& value, std::index_sequence<Indexes...>) {
+     return l_value_reference_forwarded_type(value[Indexes]... );
+   }
+   template <std::size_t ... Indexes> static constexpr const_l_value_reference_forwarded_type forward_impl(std::array<T, N> const& value, std::index_sequence<Indexes...>) {
+     return const_l_value_reference_forwarded_type(value[Indexes]...);
+   }
+   template <std::size_t ... Indexes> static constexpr r_value_reference_forwarded_type forward_impl(std::array<T, N>&& value, std::index_sequence<Indexes...>) {
+     return r_value_reference_forwarded_type(std::move(value[Indexes])... );
+   }
+ public:
+   using type =
       typename __array_to_tuple_impl<T, N, std::make_index_sequence<N>>::type;
+
+  static constexpr l_value_reference_forwarded_type forward(std::array<T, N>& value) {
+    return forward_impl(value, std::make_index_sequence<N>());
+  }
+  static constexpr const_l_value_reference_forwarded_type forward(std::array<T, N> const& value) {
+    return forward_impl(value, std::make_index_sequence<N>());
+  }
+  static constexpr l_value_reference_forwarded_type forward(std::array<T, N>&& value) {
+    return forward_impl(std::move(value), std::make_index_sequence<N>());
+  }
 };
 
 template <class T> using array_to_tuple_t = typename array_to_tuple<T>::type;
@@ -213,14 +238,17 @@ inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
 
 template <class T, std::size_t N, std::size_t... Indexes>
 inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
-                                          std::index_sequence<Indexes...>)
-    -> decltype(
-        std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...));
+  std::index_sequence<Indexes...>)
+  -> decltype(std::tuple_cat(std::forward_as_tuple(value[Indexes])...));
+//    -> decltype(
+//        std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...));
 
 template <class T, std::size_t N, std::size_t... Indexes>
 inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
-    -> decltype(forward_as_concatenated_tuple(value,
-                                              std::make_index_sequence<N>()));
+-> decltype(forward_as_concatenated_tuple(value, std::make_index_sequence<N>()));
+/*template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_concatenated_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type));*/
 
 template <class... T, std::size_t... Indexes>
 inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value,
@@ -241,16 +269,24 @@ inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
 template <class T, std::size_t N, std::size_t... Indexes>
 inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
                                           std::index_sequence<Indexes...>)
-    -> decltype(
-          std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...)) {
-  return std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...);
+  -> decltype(std::tuple_cat(std::forward_as_tuple(value[Indexes])...))
+{
+  return std::tuple_cat(std::forward_as_tuple(value[Indexes])...);
 }
+//    -> decltype(std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...)) {
+//  return std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...);
+//}
 
 template <class T, std::size_t N, std::size_t... Indexes>
 inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
-    -> decltype(forward_as_concatenated_tuple(value,
-                                              std::make_index_sequence<N>())) {
-  return forward_as_concatenated_tuple(value, std::make_index_sequence<N>());
+-> decltype(forward_as_concatenated_tuple(value, std::make_index_sequence<N>())) {
+  return{};
 }
+
+/*template <class T, std::size_t N, std::size_t... Indexes>
+inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_concatenated_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type)) {
+  return forward_as_concatenated_tuple(array_to_tuple<std::array<T, N>>::forward(value));
+}*/
 
 } // namespace named_types
