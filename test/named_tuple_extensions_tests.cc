@@ -114,11 +114,14 @@ TEST_F(UnitTests, ParsersTools1) {
 }
 
 TEST_F(UnitTests, JsonPrintf1) {
+  /*std::string test("aaa");
+  std::tuple<std::string const&> t(test);*/
+
   using namespace named_types;
   using named_types::extensions::generation::json_printf_sequence;
 
   std::array<char, 1024> buffer;
-  auto t1 = make_named_tuple(
+  /*auto t1 = make_named_tuple(
       name() = std::string("Roger"), age() = 35, size() = 143u);
   json_printf_sequence<decltype(t1)>::sprintf(buffer.data(), t1);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"size":143})json",
@@ -128,12 +131,13 @@ TEST_F(UnitTests, JsonPrintf1) {
   json_printf_sequence<decltype(t1)>::snprintf(
       buffer.data(), static_cast<int>(buffer.size()), t1);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"size":134})json",
-            std::string(buffer.data()));
+            std::string(buffer.data()));*/
 
-  auto t2 = make_named_tuple(
-    name() = std::string("Roger"),
-    age() = 35,
-    children() = std::array<std::string, 3>{"Marceau", "Emile", "Amandine"});
+  auto t2 = make_named_tuple(children() = std::array<int, 1>{1});
+    //name() = std::string("Roger"),
+    //age() = 35,
+    //children() = std::array<int, 1>{1,2,3});
+    //children() = std::array<std::string, 3>{"Marceau", "Emile", "Amandine"});
   json_printf_sequence<decltype(t2)>::sprintf(buffer.data(), t2);
   EXPECT_EQ(R"json({"name":"Roger","age":35,"children":["Marceau","Emile",)json"
             R"json("Amandine"]})json",

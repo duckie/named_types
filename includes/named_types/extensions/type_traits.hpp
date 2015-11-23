@@ -215,78 +215,93 @@ template <class T, std::size_t N> struct array_to_tuple<std::array<T, N>> {
 
 template <class T> using array_to_tuple_t = typename array_to_tuple<T>::type;
 
+template <class ... T> struct tuple_cat_type; 
+
+template <class Head, class ... Tail> struct tuple_cat_type<Head,Tail...> {
+  using type = typename tuple_cat_type<Head, typename tuple_cat_type<Tail...>::type>::type;
+};
+
+template <class ... T1, class ... T2> struct tuple_cat_type<std::tuple<T1...>, std::tuple<T2...>> {
+  using type = std::tuple<T1...,T2...>;
+};
+
+template <class ... T> struct tuple_cat_type<std::tuple<T...>> {
+  using type = std::tuple<T...>;
+};
+
+template <> struct tuple_cat_type<> {
+  using type = std::tuple<>;
+};
+
 // Forward as concatenated tuple
 template <class T>
-inline auto forward_as_concatenated_tuple(T&& value)
-    -> std::enable_if_t<
-          !is_tuple<std::remove_cv_t<std::remove_reference_t<T>>>::value &&
-              !is_array<std::remove_cv_t<std::remove_reference_t<T>>>::value,
-          decltype(std::forward_as_tuple(std::forward<T>(value)))> {
-  return std::forward_as_tuple(std::forward<T>(value));
+inline constexpr auto forward_as_reference_tuple(T const& value)
+    -> std::enable_if_t<!is_tuple<T>::value && !is_array<T>::value, std::tuple<T const&>> {
+  return std::tuple<T const&>(value);
 }
 
 template <class... T, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value,
+inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value,
                                           std::index_sequence<Indexes...>)
     -> decltype(std::tuple_cat(
-        forward_as_concatenated_tuple(std::get<Indexes>(value))...));
+        forward_as_reference_tuple(std::get<Indexes>(value))...));
 
 template <class... T>
-inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
-    -> decltype(forward_as_concatenated_tuple(value,
+inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value)
+    -> decltype(forward_as_reference_tuple(value,
                                               std::index_sequence_for<T...>()));
 
 template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
+inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value,
   std::index_sequence<Indexes...>)
-  -> decltype(std::tuple_cat(std::forward_as_tuple(value[Indexes])...));
+  -> decltype(std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...));
 //    -> decltype(
-//        std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...));
+//        std::tuple_cat(forward_as_reference_tuple(value[Indexes])...));
 
 template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
--> decltype(forward_as_concatenated_tuple(value, std::make_index_sequence<N>()));
+inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value)
+-> decltype(forward_as_reference_tuple(value, std::make_index_sequence<N>()));
 /*template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
-    -> decltype(forward_as_concatenated_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type));*/
+inline auto forward_as_reference_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_reference_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type));*/
 
 template <class... T, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value,
+inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value,
                                           std::index_sequence<Indexes...>)
     -> decltype(std::tuple_cat(
-        forward_as_concatenated_tuple(std::get<Indexes>(value))...)) {
+        forward_as_reference_tuple(std::get<Indexes>(value))...)) {
   return std::tuple_cat(
-      forward_as_concatenated_tuple(std::get<Indexes>(value))...);
+      forward_as_reference_tuple(std::get<Indexes>(value))...);
 }
 
 template <class... T>
-inline auto forward_as_concatenated_tuple(std::tuple<T...> const& value)
-    -> decltype(forward_as_concatenated_tuple(
+inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value)
+    -> decltype(forward_as_reference_tuple(
         value, std::index_sequence_for<T...>())) {
-  return forward_as_concatenated_tuple(value, std::index_sequence_for<T...>());
+  return forward_as_reference_tuple(value, std::index_sequence_for<T...>());
 }
 
 template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value,
+inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value,
                                           std::index_sequence<Indexes...>)
-  -> decltype(std::tuple_cat(std::forward_as_tuple(value[Indexes])...))
+  -> decltype(std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...))
 {
-  return std::tuple_cat(std::forward_as_tuple(value[Indexes])...);
+  return std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...);
 }
-//    -> decltype(std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...)) {
-//  return std::tuple_cat(forward_as_concatenated_tuple(value[Indexes])...);
+//    -> decltype(std::tuple_cat(forward_as_reference_tuple(value[Indexes])...)) {
+//  return std::tuple_cat(forward_as_reference_tuple(value[Indexes])...);
 //}
 
 template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
--> decltype(forward_as_concatenated_tuple(value, std::make_index_sequence<N>())) {
-  return{};
+inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value)
+-> decltype(forward_as_reference_tuple(value, std::make_index_sequence<N>())) {
+  return forward_as_reference_tuple(value, std::make_index_sequence<N>());
 }
 
 /*template <class T, std::size_t N, std::size_t... Indexes>
-inline auto forward_as_concatenated_tuple(std::array<T, N> const& value)
-    -> decltype(forward_as_concatenated_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type)) {
-  return forward_as_concatenated_tuple(array_to_tuple<std::array<T, N>>::forward(value));
+inline auto forward_as_reference_tuple(std::array<T, N> const& value)
+    -> decltype(forward_as_reference_tuple(typename array_to_tuple<std::array<T, N>>::const_l_value_reference_forwarded_type)) {
+  return forward_as_reference_tuple(array_to_tuple<std::array<T, N>>::forward(value));
 }*/
 
 } // namespace named_types

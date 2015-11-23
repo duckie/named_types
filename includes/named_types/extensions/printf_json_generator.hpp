@@ -67,9 +67,9 @@ template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
                                      ConcatenatedTuple const& tuple,
                                      std::index_sequence<Indexes...>) {
     return type::sprintf(
-        buffer,
-        json_printf_sequence<std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<Indexes, ConcatenatedTuple>>>>::
-            evaluate(std::get<Indexes>(tuple))...);
+      buffer, 0);
+        //json_printf_sequence<std::remove_cv_t<std::remove_reference_t<std::tuple_element_t<Indexes, ConcatenatedTuple>>>>::
+        //    evaluate(std::get<Indexes>(tuple))...);
   }
 
   template <class ConcatenatedTuple, std::size_t... Indexes>
@@ -87,15 +87,16 @@ template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
  public:
     static inline int printf(tuple_type const& tuple) {
     return unpacked_printf(
-        forward_as_concatenated_tuple(tuple),
-        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
+        forward_as_reference_tuple(tuple),
+        std::make_index_sequence<std::tuple_size<decltype(forward_as_reference_tuple(tuple))>::value>());
   }
 
   static inline int sprintf(char* buffer, tuple_type const& tuple) {
     return unpacked_sprintf(
         buffer,
-        forward_as_concatenated_tuple(tuple),
-        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
+        forward_as_reference_tuple(tuple),
+        std::make_index_sequence<1>());
+        //std::make_index_sequence<std::tuple_size<decltype(forward_as_reference_tuple(tuple))>::value>());
   }
 
   static inline int
@@ -103,8 +104,8 @@ template <class... Tags> struct json_printf_sequence<named_tuple<Tags...>> {
     return unpacked_snprintf(
         buffer,
         buffer_size,
-        forward_as_concatenated_tuple(tuple),
-        std::make_index_sequence<std::tuple_size<decltype(forward_as_concatenated_tuple(tuple))>::value>());
+        forward_as_reference_tuple(tuple),
+        std::make_index_sequence<std::tuple_size<decltype(forward_as_reference_tuple(tuple))>::value>());
   }
 };
 
