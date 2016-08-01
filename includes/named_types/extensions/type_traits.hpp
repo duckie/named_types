@@ -254,7 +254,7 @@ inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value)
 template <class T, std::size_t N, std::size_t... Indexes>
 inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value,
   std::index_sequence<Indexes...>)
-  -> decltype(std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...));
+  -> decltype(std::tuple_cat(forward_as_reference_tuple(value[Indexes])...));
 //    -> decltype(
 //        std::tuple_cat(forward_as_reference_tuple(value[Indexes])...));
 
@@ -284,9 +284,9 @@ inline constexpr auto forward_as_reference_tuple(std::tuple<T...> const& value)
 template <class T, std::size_t N, std::size_t... Indexes>
 inline constexpr auto forward_as_reference_tuple(std::array<T, N> const& value,
                                           std::index_sequence<Indexes...>)
-  -> decltype(std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...))
+  -> decltype(std::tuple_cat(forward_as_reference_tuple(value[Indexes])...))
 {
-  return std::tuple_cat(std::forward_as_reference_tuple(value[Indexes])...);
+  return std::tuple_cat(forward_as_reference_tuple(value[Indexes])...);
 }
 //    -> decltype(std::tuple_cat(forward_as_reference_tuple(value[Indexes])...)) {
 //  return std::tuple_cat(forward_as_reference_tuple(value[Indexes])...);

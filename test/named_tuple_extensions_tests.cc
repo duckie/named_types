@@ -12,7 +12,6 @@
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
 #include <named_types/extensions/parsing_tools.hpp>
-#include <named_types/extensions/printf_json_generator.hpp>
 
 class UnitTests : public ::testing::Test {
  protected:
@@ -111,44 +110,4 @@ TEST_F(UnitTests, ParsersTools1) {
   EXPECT_EQ(1u, (lexical_cast<size_t>(1.f)));
   EXPECT_EQ(23, (lexical_cast<int>(std::string("23"))));
   EXPECT_EQ(23, (lexical_cast<int>("23")));
-}
-
-TEST_F(UnitTests, JsonPrintf1) {
-  /*std::string test("aaa");
-  std::tuple<std::string const&> t(test);*/
-
-  using namespace named_types;
-  using named_types::extensions::generation::json_printf_sequence;
-
-  std::array<char, 1024> buffer;
-  /*auto t1 = make_named_tuple(
-      name() = std::string("Roger"), age() = 35, size() = 143u);
-  json_printf_sequence<decltype(t1)>::sprintf(buffer.data(), t1);
-  EXPECT_EQ(R"json({"name":"Roger","age":35,"size":143})json",
-            std::string(buffer.data()));
-
-  t1[size()] = 134u;
-  json_printf_sequence<decltype(t1)>::snprintf(
-      buffer.data(), static_cast<int>(buffer.size()), t1);
-  EXPECT_EQ(R"json({"name":"Roger","age":35,"size":134})json",
-            std::string(buffer.data()));*/
-
-  auto t2 = make_named_tuple(children() = std::array<int, 1>{1});
-    //name() = std::string("Roger"),
-    //age() = 35,
-    //children() = std::array<int, 1>{1,2,3});
-    //children() = std::array<std::string, 3>{"Marceau", "Emile", "Amandine"});
-  json_printf_sequence<decltype(t2)>::sprintf(buffer.data(), t2);
-  EXPECT_EQ(R"json({"name":"Roger","age":35,"children":["Marceau","Emile",)json"
-            R"json("Amandine"]})json",
-            std::string(buffer.data()));
-
-  /*auto t3 = make_named_tuple(
-      children() = std::array<named_tuple<std::string(name), int(age)>, 2>{
-          {std::make_tuple(std::string("Marceau"), 3),
-           std::make_tuple(std::string("Emile"), 4)}});
-  json_printf_sequence<decltype(t3)>::sprintf(buffer.data(), t3);
-  EXPECT_EQ(R"json({"children":[{"name":"Marceau","age":3},{"name":"Emile")json"
-            R"json(,"age":4}]})json",
-            std::string(buffer.data()));*/
 }
