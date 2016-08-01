@@ -150,14 +150,14 @@ install:
       echo "Nothin"
     elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
       brew install cmake
-		  # gtest install workaround
-		  wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
-		  tar -xvzf gtest-1.7.0.zip
-		  cd gtest-1.7.0
-		  cmake .
-		  make
-		  export GTEST_ROOT="`pwd`"
-		  cd ..
+      # gtest install workaround
+      wget http://googletest.googlecode.com/files/gtest-1.7.0.zip
+      tar -xvzf gtest-1.7.0.zip
+      cd gtest-1.7.0
+      cmake .
+      make
+      export GTEST_ROOT="`pwd`"
+      cd ..
     fi
 
 before_script:
