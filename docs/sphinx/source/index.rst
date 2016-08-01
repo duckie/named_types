@@ -6,7 +6,7 @@ This is a default documentation for read the docs.
 .. toctree::
    :maxdepth: 2
 
-.. doxygennamespace:: project
+.. doxygennamespace:: named_types
 
 Indices and tables
 ==================
