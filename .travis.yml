@@ -125,7 +125,7 @@ matrix:
     - os: osx
       osx_image: xcode8
       compiler: clang
-      env: C_COMPILER=clang CXX_COMPILER='clang++' BUILD_TYPE='Debug' SANITIZER="address"
+      env: C_COMPILER=clang CXX_COMPILER='clang++' BUILD_TYPE='Debug' SANITIZER="address" ASAN_OPTIONS="handle_segv=0:allow_user_segv_handler=1"
     # Currently unsupported
     #- os: osx
       #osx_image: xcode8
