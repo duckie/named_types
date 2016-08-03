@@ -1,8 +1,8 @@
 #include <iostream>
-#include <gtest/gtest.h>
 #include <string>
 #include <functional>
 #include <memory>
+#include <sstream>
 #include <named_types/named_tuple.hpp>
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
