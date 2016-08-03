@@ -1,7 +1,6 @@
 include(CheckCXXCompilerFlag)
 include(CheckCXXSourceCompiles)
 Find_Package(Threads REQUIRED)
-Find_Package(GTest)
 Find_Package(rapidjson)
 
 include_directories(
@@ -30,17 +29,14 @@ endif ()
 add_custom_target(build-test)
 
 # "nt" stands for "named tuple"
-if (${GTEST_FOUND})
-  add_library(test-main OBJECT test-main.cc)
-endif()
+add_library(test-main test-main.cc)
+target_link_libraries(test-main catch)
 
 function(add_nt_test name)
   if("${ARGV1}" STREQUAL "GT")
-    if (GTEST_FOUND)
-      add_executable(${name} ${name}.cc $<TARGET_OBJECTS:test-main> ${HEADER_FILES})
-      target_link_libraries(${name} ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-      project_add_test(${name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name})  
-    endif()
+    add_executable(${name} ${name}.cc ${HEADER_FILES})
+    target_link_libraries(${name} ${GTEST_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} test-main catch) 
+    project_add_test(${name} ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${name})  
   else()
     add_executable(${name} ${name}.cc ${HEADER_FILES})
     target_link_libraries(${name} ${CMAKE_THREAD_LIBS_INIT})

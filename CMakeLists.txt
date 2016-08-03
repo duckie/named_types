@@ -39,14 +39,12 @@ project_enable_sanitizer_build()
 project_enable_clang_format()
 project_enable_documentation()
 
-# Generate configuration
-
 
 ### MANUAL_INCLUDE_DIRS is useful to force ides to find some includes (useless for compilation) ###
 ### To be used by editing the cache manually
 include_directories(${MANUAL_INCLUDE_DIRS})
 
-#project_add_3rdparty(catch)
+project_add_3rdparty(catch)
 
 # By default we put binaries into this directory
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)

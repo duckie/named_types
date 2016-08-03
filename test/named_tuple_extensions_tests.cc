@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <iostream>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -12,10 +11,7 @@
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/factory.hpp>
 #include <named_types/extensions/parsing_tools.hpp>
-
-class UnitTests : public ::testing::Test {
- protected:
-};
+#include "catch.hpp"
 
 namespace {
 size_t constexpr operator"" _s(const char* c, size_t s) {
@@ -68,13 +64,13 @@ struct MessageError : Message {
     return result.str();
   }
 };
-TEST_F(UnitTests, Traits1) {
-  EXPECT_TRUE((
+TEST_CASE("Traits1", "[Traits1]") {
+  CHECK((
       std::is_same<std::tuple<int, int, int>,
                    named_types::array_to_tuple_t<std::array<int, 3u>>>::value));
 }
 
-TEST_F(UnitTests, Factory1) {
+TEST_CASE("Factory1", "[Factory1]") {
   using namespace named_types;
   using namespace named_types::extensions;
 
@@ -83,31 +79,31 @@ TEST_F(UnitTests, Factory1) {
                       MessageError(attr<"error"_s>)> my_factory;
 
   std::unique_ptr<Message> message(my_factory.create("ok", "yeah"));
-  ASSERT_TRUE(static_cast<bool>(message));
-  EXPECT_TRUE(message->by_move_);
-  EXPECT_EQ("OK yeah", message->print());
+  REQUIRE(static_cast<bool>(message));
+  CHECK(message->by_move_);
+  CHECK("OK yeah" == message->print());
 
   std::string nope("nope");
   message.reset(my_factory.create("error", nope));
-  ASSERT_TRUE(static_cast<bool>(message));
-  EXPECT_FALSE(message->by_move_);
-  EXPECT_EQ("ERROR nope", message->print());
+  REQUIRE(static_cast<bool>(message));
+  CHECK_FALSE(message->by_move_);
+  CHECK("ERROR nope" == message->print());
 }
 
-TEST_F(UnitTests, ParsersTools1) {
+TEST_CASE("ParsersTools1", "[ParsersTools1]") {
   using namespace named_types;
   using namespace named_types::extensions::parsing;
 
-  EXPECT_TRUE(is_nullable<int*>::value);
-  EXPECT_TRUE(is_nullable<std::unique_ptr<int>>::value);
-  EXPECT_FALSE(is_nullable<int>::value);
+  CHECK(is_nullable<int*>::value);
+  CHECK(is_nullable<std::unique_ptr<int>>::value);
+  CHECK_FALSE(is_nullable<int>::value);
 
-  EXPECT_FALSE(is_std_basic_string<int>::value);
-  EXPECT_TRUE(is_std_basic_string<std::string>::value);
-  EXPECT_TRUE(is_std_basic_string<std::wstring>::value);
+  CHECK_FALSE(is_std_basic_string<int>::value);
+  CHECK(is_std_basic_string<std::string>::value);
+  CHECK(is_std_basic_string<std::wstring>::value);
 
-  EXPECT_EQ("3", (lexical_cast<std::string>(3)));
-  EXPECT_EQ(1u, (lexical_cast<size_t>(1.f)));
-  EXPECT_EQ(23, (lexical_cast<int>(std::string("23"))));
-  EXPECT_EQ(23, (lexical_cast<int>("23")));
+  CHECK("3" == (lexical_cast<std::string>(3)));
+  CHECK(1u == (lexical_cast<size_t>(1.f)));
+  CHECK(23 == (lexical_cast<int>(std::string("23"))));
+  CHECK(23 == (lexical_cast<int>("23")));
 }

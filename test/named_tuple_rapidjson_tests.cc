@@ -1,5 +1,4 @@
 #include <iostream>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 #include <tuple>
@@ -10,10 +9,7 @@
 #include <named_types/literals/integral_string_literal.hpp>
 #include <named_types/rt_named_tuple.hpp>
 #include <named_types/extensions/rapidjson.hpp>
-
-class UnitTests : public ::testing::Test {
- protected:
-};
+#include "catch.hpp"
 
 namespace {
 size_t constexpr operator"" _s(const char* c, size_t s) {
@@ -35,7 +31,7 @@ using func = attr<"func"_s>;
 };
 
 // Testing the factory
-TEST_F(UnitTests, RapidJson1) {
+TEST_CASE("RapidJson1", "[RapidJson1]") {
   // using namespace named_types::extensions::parsing;
   // using namespace named_types;
   using named_types::extensions::rapidjson::make_reader_handler;
@@ -53,12 +49,12 @@ TEST_F(UnitTests, RapidJson1) {
 
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input.c_str());
-  EXPECT_TRUE(reader.Parse(ss, handler));
-  EXPECT_EQ("Marcelo", named_types::get<name>(output));
-  EXPECT_EQ(57, named_types::get<age>(output));
+  CHECK(reader.Parse(ss, handler));
+  CHECK("Marcelo" == named_types::get<name>(output));
+  CHECK(57 == named_types::get<age>(output));
 }
 
-TEST_F(UnitTests, RapidJson2) {
+TEST_CASE("RapidJson2", "[RapidJson2]") {
   // using namespace named_types::extensions::parsing;
   using namespace named_types;
   using named_types::extensions::rapidjson::make_reader_handler;
@@ -80,14 +76,14 @@ TEST_F(UnitTests, RapidJson2) {
   auto handler = make_reader_handler(t1);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
-  EXPECT_TRUE(reader.Parse(ss, handler));
-  EXPECT_EQ(3, t1.get<child1>().get<age>());
-  EXPECT_EQ("Albertine", t1.get<children>()[0].get<name>());
-  EXPECT_EQ(4, t1[children()][0][age()]);
-  EXPECT_EQ(4, t1.get<matrix>()[1][1]);
+  CHECK(reader.Parse(ss, handler));
+  CHECK(3 == t1.get<child1>().get<age>());
+  CHECK("Albertine" == t1.get<children>()[0].get<name>());
+  CHECK(4 == t1[children()][0][age()]);
+  CHECK(4 == t1.get<matrix>()[1][1]);
 }
 
-TEST_F(UnitTests, RapidJson3) {
+TEST_CASE("RapidJson3", "[RapidJson3]") {
   using namespace named_types;
   using named_types::extensions::rapidjson::make_reader_handler;
 
@@ -104,11 +100,11 @@ TEST_F(UnitTests, RapidJson3) {
   auto handler = make_reader_handler(t1);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
-  EXPECT_TRUE(reader.Parse(ss, handler));
-  EXPECT_EQ(4, t1.get<children>()["Albertine"].get<age>());
+  CHECK(reader.Parse(ss, handler));
+  CHECK(4 == t1.get<children>()["Albertine"].get<age>());
 }
 
-TEST_F(UnitTests, RapidJson4) {
+TEST_CASE("RapidJson4", "[RapidJson4]") {
   using namespace named_types;
   using named_types::extensions::rapidjson::make_reader_handler;
 
@@ -120,6 +116,6 @@ TEST_F(UnitTests, RapidJson4) {
   auto handler = make_reader_handler(data);
   ::rapidjson::Reader reader;
   ::rapidjson::StringStream ss(input1.c_str());
-  EXPECT_TRUE(reader.Parse(ss, handler));
-  EXPECT_EQ("Marcelo", data[1].get<name>());
+  CHECK(reader.Parse(ss, handler));
+  CHECK("Marcelo" == data[1].get<name>());
 }
