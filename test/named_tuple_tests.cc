@@ -272,7 +272,13 @@ SECTION("RuntimeView1") {
   decltype(t1) const& t1_const = t1;
 
   auto const_view1 = make_rt_view(t1_const);
-  //std::cout << *const_view1.retrieve<std::string>("name") << std::endl;
+  CHECK(0 == const_view1.index_of(typeid(attr<"name"_s>)));
+  CHECK(1 == const_view1.index_of(typeid(attr<"surname"_s>)));
+  CHECK(2 == const_view1.index_of(typeid(attr<"size"_s>)));
+
+  void const * raw_ptr = const_view1.retrieve_raw("surname");
+  REQUIRE(raw_ptr != nullptr);
+  CHECK("LeGros" == *reinterpret_cast<std::string const*>(raw_ptr));
 }
 
 SECTION("ForEach1") {

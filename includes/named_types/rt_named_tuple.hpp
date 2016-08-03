@@ -72,7 +72,7 @@ struct const_rt_view_impl<Parent, named_tuple<Types...>> : public Parent {
 template <class Parent, class... Types>
 std::array<std::type_info const*, sizeof...(Types)> const
     const_rt_view_impl<Parent, named_tuple<Types...>>::tag_typeinfos = {
-        {&typeid(typename __ntuple_tag_spec_t<Types>::value_type)...}};
+        {&typeid(typename __ntuple_tag_spec_t<Types>::type)...}};
 
 template <class Parent, class... Types>
 std::array<std::type_info const*, sizeof...(Types)> const
