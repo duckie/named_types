@@ -3,7 +3,7 @@ named\_types
 
 [![Travis CI Build Status](https://api.travis-ci.org/duckie/named_types.svg?branch=master)](https://travis-ci.org/duckie/named_types)
 [![codecov.io](http://codecov.io/github/duckie/named_types/coverage.svg?branch=master)](http://codecov.io/github/duckie/named_types?branch=master)
-[![Documentation Status](https://readthedocs.org/projects/cpp-project-template/badge/?version=latest)](http://named-types.readthedocs.io/en/latest/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/cpp-project-template/badge/?version=latest)](http://named-types.readthedocs.io/en/latest)
 
 `named_types` is a C++14/1z named types implementation. It interacts well with the standard library. `named_types` is a header-only library. The current implementation offers the `named_tuple` facility and tools to manipulate compile-time strings. `named_variant` and `named_any` are planned.
 
