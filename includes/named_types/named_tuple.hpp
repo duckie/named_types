@@ -219,8 +219,7 @@ inline constexpr auto apply(Func&& f, named_tuple<Types...> const& in) -> declty
 
 namespace std {
 template <size_t Index, class... Tags>
-class tuple_element<Index, named_types::named_tuple<Tags...>> {
- public:
+struct tuple_element<Index, named_types::named_tuple<Tags...>> {
   using type =
       tuple_element_t<Index, tuple<named_types::__ntuple_tag_elem_t<Tags>...>>;
 };
