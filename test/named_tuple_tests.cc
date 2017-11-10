@@ -179,25 +179,25 @@ SECTION("ConstexprStrings1") {
             (std::integral_constant<
                 size_t,
                 basic_lowcase_charset_format::max_length_value>::value));
+  CHECK(10u ==
+            (std::integral_constant<
+                size_t,
+                basic_charset_format::max_length_value>::value));
   CHECK(
-      10u ==
-      (std::integral_constant<size_t,
-                              basic_charset_format::max_length_value>::value));
-  CHECK(
-      8u ==
+      9u ==
       (std::integral_constant<size_t,
                               ascii_charset_format::max_length_value>::value));
 
   constexpr uint64_t const str_test1 =
       std::integral_constant<uint64_t,
-                             basic_charset_format::encode("coucou")>::value;
+                             basic_lowcase_charset_format::encode("coucou")>::value;
   CHECK(
       6u ==
       (std::integral_constant<
           size_t,
-          basic_charset_format::decode<str_test1>::type().size()>::value));
+          basic_lowcase_charset_format::decode<str_test1>::type().size()>::value));
   CHECK(std::string("coucou") ==
-            std::string(basic_charset_format::decode<str_test1>::type().str()));
+            std::string(basic_lowcase_charset_format::decode<str_test1>::type().str()));
 
   constexpr uint64_t const str_test2 = std::integral_constant<
       uint64_t,
@@ -231,6 +231,28 @@ SECTION("ConstexprStrings1") {
   CHECK(std::string("") ==
             std::string(
                 basic_lowcase_charset_format::decode<str_test4>::type().str()));
+
+  constexpr uint64_t const str_test5 =
+      std::integral_constant<uint64_t,
+                             ascii_charset_format::encode("Yeah@1!?$")>::value;
+  CHECK(
+      9 ==
+      (std::integral_constant<
+          size_t,
+          ascii_charset_format::decode<str_test5>::type().size()>::value));
+  CHECK(std::string("Yeah@1!?$") ==
+            std::string(ascii_charset_format::decode<str_test5>::type().str()));
+
+  constexpr uint64_t const str_test6 =
+      std::integral_constant<uint64_t,
+                             basic_charset_format::encode("I_love_YOU")>::value;
+  CHECK(
+      10 ==
+      (std::integral_constant<
+          size_t,
+          ascii_charset_format::decode<str_test6>::type().size()>::value));
+  CHECK(std::string("I_love_YOU") ==
+            std::string(basic_charset_format::decode<str_test6>::type().str()));
 
   CHECK(
       std::string("abcdefg") ==

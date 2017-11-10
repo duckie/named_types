@@ -9,9 +9,9 @@ named\_types
 
 `named_types` can be compiled with:
 
- - *GCC* `4.9.2` or higher
- - *Clang* `3.5` or higher
- - *Visual C++* `14.0.23107.0 D14REL` or higher
+ - *GCC* `5.3.1` or higher
+ - *Clang* `3.9` or higher
+ - ~~Visual C++ `14.0.23107.0 D14REL` or higher~~ not test with latest version
 
 ## What can I do with it ?
 
@@ -248,7 +248,6 @@ operator ""_t () { return {}; }
 
 The ``named_types`` project provides a facility to encode strings on unsigned integers. For instance, a 64 bits unsigned integer can store up to 8 characters. By narrowing the charset, you can store more. ``named_types`` can encode any charset (up to 255 chars with *Visual Studio*, due to a constexpr limitation) on any unsigned integer. For instance, any string made of *[0-9][a-b]-_* can be stored up to 12 characters on a 64 bits unsigned integer. If you add capital letters to it, it falls down to 10 characters. If you really need to use longer strings with this tool, they must be concatenated.
 
-
 ```c++
 uint64_t constexpr operator "" _s(const char* c, size_t s) 
 { return basic_lowcase_charset_format::encode(c,s); }
@@ -262,25 +261,15 @@ std::cout << decode<"atmost12char"_s>() << std::endl;
 
 ```c++
 uint64_t constexpr operator "" _s(const char* c, size_t s) 
-{ return basic_charset_format::encode(c,s); }
-
-template <uint64_t EncStr> constexpr char const* decode() {
-  return typename basic_charset_format::decode<EncStr>::type().str();
-}
-// ...
-std::cout << decode<"Max10Chars"_s>() << std::endl;
-```
-
-```c++
-uint64_t constexpr operator "" _s(const char* c, size_t s) 
 { return ascii_charset_format::encode(c,s); }
 
 template <uint64_t EncStr> constexpr char const* decode() {
   return typename ascii_charset_format::decode<EncStr>::type().str();
 }
 // ...
-std::cout << decode<"8chars:("_s>() << std::endl;
+std::cout << decode<"Max9Char!"_s>() << std::endl;
 ```
+
 You can use a charset of your own:
 
 ```c++

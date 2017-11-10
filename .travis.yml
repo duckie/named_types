@@ -24,14 +24,14 @@ matrix:
             - g++-5
       env: C_COMPILER=gcc-5 CXX_COMPILER=g++-5 BUILD_TYPE='Coverage' SANITIZER=""
     #
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-5
-      env: C_COMPILER=gcc-5 CXX_COMPILER=g++-5 BUILD_TYPE='Debug' SANITIZER="address"
+    #- compiler: gcc
+      #addons:
+        #apt:
+          #sources:
+            #- ubuntu-toolchain-r-test
+          #packages:
+            #- g++-5
+      #env: C_COMPILER=gcc-5 CXX_COMPILER=g++-5 BUILD_TYPE='Debug' SANITIZER="address"
     # Not supported on travis, libtsan is missing
     #- compiler: gcc
       #addons:
@@ -136,13 +136,6 @@ matrix:
 install:
   - DEPS_DIR="${TRAVIS_BUILD_DIR}/deps"
   - mkdir -p ${DEPS_DIR} && cd ${DEPS_DIR}
-  - |
-    if [[ "${TRAVIS_OS_NAME}" == "linux" ]]; then
-      echo "Nothin"
-    elif [[ "${TRAVIS_OS_NAME}" == "osx" ]]; then
-      brew install cmake
-      # gtest install workaround
-    fi
 
 before_script:
   - export CC=${C_COMPILER}
