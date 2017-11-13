@@ -260,10 +260,10 @@ struct basic_tag {
     ~getter() = default;
 
    private:
-    friend struct __getters;
+    friend struct std::__getters;
   };
 
-  friend struct __getters;
+  friend struct std::__getters;
 };
 }
 }
