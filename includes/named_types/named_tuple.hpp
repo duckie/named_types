@@ -27,6 +27,48 @@ template <class Spec, class Arg> struct __ntuple_tag_notation<Arg(Spec)> {
 template <class T>
 using __ntuple_tag_notation_t = typename __ntuple_tag_notation<T>::type;
 
+// forward declaration
+template < class ... Types>
+struct named_tuple;
+
+} // namespace named_types
+
+
+// Standard specialization
+
+namespace std {
+
+template <size_t Index, class... Tags>
+struct tuple_element<Index, named_types::named_tuple<Tags...>> {
+  using type =
+      tuple_element_t<Index, tuple<named_types::__ntuple_tag_elem_t<Tags>...>>;
+};
+
+template <size_t Index, class... Tags> inline
+constexpr typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&
+    get (named_types::named_tuple<Tags...>& in)
+{	return get<Index> (static_cast<typename named_types::named_tuple<Tags...>::tuple_type&>(in));
+}
+
+template <size_t Index, class... Tags> inline
+constexpr const typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&
+    get (const named_types::named_tuple<Tags...>& in)
+{	return get<Index> (static_cast<const typename named_types::named_tuple<Tags...>::tuple_type&>(in));
+}
+
+template <size_t Index, class... Tags> inline
+constexpr typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&&
+    get (named_types::named_tuple<Tags...>&& in)
+{	return move (get<Index> (static_cast<typename named_types::named_tuple<Tags...>::tuple_type&&>(in)));
+}
+
+} // namespace std
+
+// end Standard specialization
+
+
+namespace named_types {
+
 template <class... Types>
 struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
                      // struct named_tuple : std::tagged_tuple< Types ...
@@ -215,12 +257,3 @@ inline constexpr auto apply(Func&& f, named_tuple<Types...> const& in) -> declty
 
 } // namespace named_types
 
-// Standard specialization
-
-namespace std {
-template <size_t Index, class... Tags>
-struct tuple_element<Index, named_types::named_tuple<Tags...>> {
-  using type =
-      tuple_element_t<Index, tuple<named_types::__ntuple_tag_elem_t<Tags>...>>;
-};
-} // namespace std
