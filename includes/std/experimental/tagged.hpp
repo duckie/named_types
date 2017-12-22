@@ -245,7 +245,7 @@ template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type&&
 get(tagged_tuple<Types...>&& input) {
   return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
-      static_cast<typename tagged_tuple<Types...>::base_tuple&&>(move(input)));
+      static_cast<typename tagged_tuple<Types...>::base_tuple&&>(input));
 };
 
 namespace tag {
