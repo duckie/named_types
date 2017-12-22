@@ -1,8 +1,8 @@
 #pragma once
-#include <type_traits>
-#include <stdexcept>
-#include <std/experimental/tagged.hpp>
 #include "named_tag.hpp"
+#include <std/experimental/tagged.hpp>
+#include <stdexcept>
+#include <type_traits>
 
 namespace named_types {
 
@@ -28,11 +28,9 @@ template <class T>
 using __ntuple_tag_notation_t = typename __ntuple_tag_notation<T>::type;
 
 // forward declaration
-template < class ... Types>
-struct named_tuple;
+template <class... Types> struct named_tuple;
 
 } // namespace named_types
-
 
 // Standard specialization
 
@@ -44,35 +42,43 @@ struct tuple_element<Index, named_types::named_tuple<Tags...>> {
       tuple_element_t<Index, tuple<named_types::__ntuple_tag_elem_t<Tags>...>>;
 };
 
-template <size_t Index, class... Tags> inline
-constexpr typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&
-    get (named_types::named_tuple<Tags...>& in)
-{	return get<Index> (static_cast<typename named_types::named_tuple<Tags...>::tuple_type&>(in));
+template <size_t Index, class... Tags>
+inline constexpr
+    typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&
+    get(named_types::named_tuple<Tags...>& in) {
+  return get<Index>(
+      static_cast<typename named_types::named_tuple<Tags...>::tuple_type&>(in));
 }
 
-template <size_t Index, class... Tags> inline
-constexpr const typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&
-    get (const named_types::named_tuple<Tags...>& in)
-{	return get<Index> (static_cast<const typename named_types::named_tuple<Tags...>::tuple_type&>(in));
+template <size_t Index, class... Tags>
+inline constexpr const typename tuple_element<
+    Index,
+    named_types::named_tuple<Tags...>>::type&
+get(const named_types::named_tuple<Tags...>& in) {
+  return get<Index>(
+      static_cast<
+          const typename named_types::named_tuple<Tags...>::tuple_type&>(in));
 }
 
-template <size_t Index, class... Tags> inline
-constexpr typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&&
-    get (named_types::named_tuple<Tags...>&& in)
-{	return move (get<Index> (static_cast<typename named_types::named_tuple<Tags...>::tuple_type&&>(in)));
+template <size_t Index, class... Tags>
+inline constexpr
+    typename tuple_element<Index, named_types::named_tuple<Tags...>>::type&&
+    get(named_types::named_tuple<Tags...>&& in) {
+  return move(get<Index>(
+      static_cast<typename named_types::named_tuple<Tags...>::tuple_type&&>(
+          in)));
 }
 
 } // namespace std
 
 // end Standard specialization
 
-
 namespace named_types {
 
 template <class... Types>
 struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
-                     // struct named_tuple : std::tagged_tuple< Types ...
-                     {
+// struct named_tuple : std::tagged_tuple< Types ...
+{
   // Type aliases
   using tuple_type = std::tuple<__ntuple_tag_elem_t<Types>...>;
   using tagged_type = std::tagged_tuple<__ntuple_tag_notation_t<Types>...>;
@@ -115,10 +121,9 @@ struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
   }
 
   template <typename Tag, typename Value, class ForeignTuple>
-  inline typename std::enable_if_t<
-      tag_not_assignable_from<ForeignTuple, Tag>::value,
-      Value>
-  ctor_assign_from(ForeignTuple const& from) {
+  inline typename std::
+      enable_if_t<tag_not_assignable_from<ForeignTuple, Tag>::value, Value>
+      ctor_assign_from(ForeignTuple const& from) {
     return {};
   }
 
@@ -208,7 +213,7 @@ struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
   // Member operator []
 
   template <class Tag>
-  inline decltype(auto) operator[](named_tag<Tag> const&)& {
+  inline decltype(auto) operator[](named_tag<Tag> const&) & {
     return std::get<
         named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(
         *this);
@@ -222,7 +227,7 @@ struct named_tuple : public std::tagged_tuple<__ntuple_tag_notation_t<Types>...>
   }
 
   template <class Tag>
-  inline decltype(auto) operator[](named_tag<Tag> const&)&& {
+  inline decltype(auto) operator[](named_tag<Tag> const&) && {
     return std::get<
         named_tuple::template tag_index<typename named_tag<Tag>::type>::value>(
         std::move(*this));
@@ -242,18 +247,17 @@ inline constexpr decltype(auto) make_named_tuple(Types&&... args) {
 template <class Func, class... Types>
 inline constexpr void for_each(Func&& f, named_tuple<Types...> const& in) {
   using swallow = int[];
-  (void)swallow{
-      int{},
-      (f(__ntuple_tag_spec_t<Types>{}, get<__ntuple_tag_spec_t<Types>>(in)),
-       int{})...};
+  (void)swallow{int{}, (f(__ntuple_tag_spec_t<Types>{},
+                          get<__ntuple_tag_spec_t<Types>>(in)),
+                        int{})...};
 }
 
 // apply : should be replaceable by std::experimental::apply
 
 template <class Func, class... Types>
-inline constexpr auto apply(Func&& f, named_tuple<Types...> const& in) -> decltype(auto) {
+inline constexpr auto apply(Func&& f, named_tuple<Types...> const& in)
+    -> decltype(auto) {
   return f(get<__ntuple_tag_spec_t<Types>>(in)...);
 }
 
 } // namespace named_types
-

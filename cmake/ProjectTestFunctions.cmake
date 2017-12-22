@@ -1,4 +1,4 @@
-# This file provides function to add tests tp ctest
+# This file prmvides function to add tests tp ctest
 # with additional tooling
 
 ##

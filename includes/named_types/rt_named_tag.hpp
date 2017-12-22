@@ -1,6 +1,6 @@
 #pragma once
-#include <typeinfo>
 #include "named_tag.hpp"
+#include <typeinfo>
 
 namespace named_types {
 // Named extraction for runtime default naming
@@ -21,7 +21,7 @@ template <typename T> class type_name {
   static inline auto extract(int) -> decltype(TT::name()) {
     return TT::name();
   }
-  template <typename TT> static inline auto extract(...) -> char const * {
+  template <typename TT> static inline auto extract(...) -> char const* {
     return typeid(TT).name();
   }
 #endif // _MSC_VER

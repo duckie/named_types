@@ -1,7 +1,7 @@
 #pragma once
 #include "literals/string_literal.hpp"
-#include <type_traits>
 #include <std/experimental/tagged.hpp>
+#include <type_traits>
 
 namespace named_types {
 

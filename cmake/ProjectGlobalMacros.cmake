@@ -131,7 +131,7 @@ macro(project_enable_clang_format)
 if (NOT ${CLANG_FORMAT_EXE} STREQUAL "CLANG_FORMAT_EXE-NOTFOUND")
   message("-- clang-format found, whole source formatting enabled through 'format' target.")
   add_custom_target(format
-    COMMAND find ./src -type f -regex .*\\.h\\\|.*\\.hpp\\\|.*\\.hxx\\\|.*\\.c\\\|.*\\.cpp\\\|.*\\.cxx\\\|.*\\.cc -exec clang-format -i {} \;
+    COMMAND find ./includes -type f -regex .*\\.h\\\|.*\\.hpp\\\|.*\\.hxx\\\|.*\\.c\\\|.*\\.cpp\\\|.*\\.cxx\\\|.*\\.cc -exec clang-format -i {} \;
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     VERBATIM
   )
