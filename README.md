@@ -286,7 +286,7 @@ You dont need to build anything to use it, ``named_tuple`` is header-only.
 Tests can be built and ran with CTest.
 
 ```
-cmake ${named_tuple_dir}
+cmake ${named_types_dir}
 make 
 make test
 ```
