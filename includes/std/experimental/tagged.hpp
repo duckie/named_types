@@ -56,6 +56,7 @@ struct __getters {
 template <class Base, class... Tags>
 struct tagged : Base, __getters::collect<tagged<Base, Tags...>, Tags...> {
   using Base::Base;
+  using base_tuple = Base;
   tagged() = default;
   tagged(tagged&&) = default;
   tagged(const tagged&) = default;
@@ -231,20 +232,20 @@ template <class... Types> struct tagged_tuple : __tagged_tuple<Types...> {
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type const&
 get(tagged_tuple<Types...> const& input) {
-  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(static_cast<typename tagged_tuple<Types...>::base_tuple const&>(input));
 };
 
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type&
 get(tagged_tuple<Types...>& input) {
-  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(static_cast<typename tagged_tuple<Types...>::base_tuple&>(input));
 };
 
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type&&
 get(tagged_tuple<Types...>&& input) {
   return move(get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
-      std::forward<tagged_tuple<Types...>>(input)));
+      std::forward<tagged_tuple<Types...>>(static_cast<typename tagged_tuple<Types...>::base_tuple &&>(input))));
 };
 
 namespace tag {
@@ -260,10 +261,10 @@ struct basic_tag {
     ~getter() = default;
 
    private:
-    friend struct __getters;
+    friend struct std::__getters;
   };
 
-  friend struct __getters;
+  friend struct std::__getters;
 };
 }
 }
