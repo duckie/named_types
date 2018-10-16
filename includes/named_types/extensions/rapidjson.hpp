@@ -1,12 +1,12 @@
 #pragma once
-#include <array>
-#include <stack>
-#include <iterator>
-#include <rapidjson/reader.h>
-#include "named_types/named_tuple.hpp"
 #include "named_types/extensions/type_traits.hpp"
-#include <named_types/extensions/parsing_tools.hpp>
+#include "named_types/named_tuple.hpp"
 #include "named_types/rt_named_tuple.hpp"
+#include <array>
+#include <iterator>
+#include <named_types/extensions/parsing_tools.hpp>
+#include <rapidjson/reader.h>
+#include <stack>
 
 namespace named_types {
 namespace extensions {
@@ -15,9 +15,9 @@ namespace rapidjson {
 template <class RootType, class Encoding> class reader_handler;
 
 template <class RootType, class Encoding>
-class reader_handler : public ::rapidjson::BaseReaderHandler<
-                           Encoding,
-                           reader_handler<RootType, Encoding>> {
+class reader_handler
+    : public ::rapidjson::
+          BaseReaderHandler<Encoding, reader_handler<RootType, Encoding>> {
   static_assert(is_sub_object<RootType>::value ||
                     is_sequence_container<RootType>::value,
                 "Root type of a handler must either be a named_tuple, an "

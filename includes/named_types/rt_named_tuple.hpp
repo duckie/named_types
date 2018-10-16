@@ -1,8 +1,8 @@
 #pragma once
 #include "named_tuple.hpp"
 #include "rt_named_tag.hpp"
-#include <array>
 #include <algorithm>
+#include <array>
 
 namespace named_types {
 
@@ -80,10 +80,11 @@ std::array<std::type_info const*, sizeof...(Types)> const
         {&typeid(__ntuple_tag_elem_t<Types>)...}};
 
 template <class Parent, class... Types>
-std::array<std::string const, sizeof...(Types)> const
-    const_rt_view_impl<Parent, named_tuple<Types...>>::attributes = {
-        {std::string(type_name<
-            typename __ntuple_tag_spec_t<Types>::value_type>::value)...}};
+std::array<std::string const, sizeof...(Types)> const const_rt_view_impl<
+    Parent,
+    named_tuple<Types...>>::attributes = {
+    {std::string(
+        type_name<typename __ntuple_tag_spec_t<Types>::value_type>::value)...}};
 
 // Non-const version
 template <class... Types>

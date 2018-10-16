@@ -1,13 +1,13 @@
 #pragma once
-#include <type_traits>
-#include <cstdint>
-#include <vector>
-#include <list>
-#include <map>
-#include <unordered_map>
+#include "named_types/extensions/type_traits.hpp"
 #include "named_types/named_tuple.hpp"
 #include "named_types/rt_named_tuple.hpp"
-#include "named_types/extensions/type_traits.hpp"
+#include <cstdint>
+#include <list>
+#include <map>
+#include <type_traits>
+#include <unordered_map>
+#include <vector>
 
 namespace named_types {
 namespace extensions {
@@ -20,9 +20,9 @@ inline std::enable_if_t<std::is_arithmetic<From>::value &&
                             is_std_basic_string<To>::value,
                         To>
 lexical_cast(From const& value) {
-  std::basic_ostringstream<typename To::value_type,
-                           typename To::traits_type,
-                           typename To::allocator_type> output;
+  std::basic_ostringstream<typename To::value_type, typename To::traits_type,
+                           typename To::allocator_type>
+      output;
   output << value;
   return output.str();
 }
@@ -49,10 +49,9 @@ lexical_cast(From const& value) {
 }
 
 template <class To, class From>
-inline std::enable_if_t<is_raw_string<From>::value &&
-                            std::is_arithmetic<To>::value,
-                        To>
-lexical_cast(From const& value) {
+inline std::
+    enable_if_t<is_raw_string<From>::value && std::is_arithmetic<To>::value, To>
+    lexical_cast(From const& value) {
   To result{};
   std::istringstream(value) >> result;
   return result;
@@ -63,8 +62,9 @@ template <class Source, class Tuple, size_t Index>
 inline std::enable_if_t<tuple_member_assignable<Source, Tuple, Index>::value,
                         std::function<void(Tuple&, Source&&)>>
 make_setter() {
-  return [](Tuple& tuple, Source&& source)
-      -> void { std::get<Index>(tuple) = std::move(source); };
+  return [](Tuple& tuple, Source&& source) -> void {
+    std::get<Index>(tuple) = std::move(source);
+  };
 }
 
 template <class Source, class Tuple, size_t Index>
@@ -144,11 +144,9 @@ inline std::enable_if_t<
     std::function<
         value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_creator() {
-  return [](Tuple & tuple)
-      -> value_setter_interface<KeyCharT, ValueCharT, SizeType> * {
-    return new value_setter<KeyCharT,
-                            ValueCharT,
-                            SizeType,
+  return [](Tuple& tuple)
+             -> value_setter_interface<KeyCharT, ValueCharT, SizeType>* {
+    return new value_setter<KeyCharT, ValueCharT, SizeType,
                             std::tuple_element_t<Index, Tuple>>(
         std::get<Index>(tuple));
   };
@@ -177,11 +175,9 @@ inline std::enable_if_t<
     std::function<
         sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>>
 make_sequence_creator() {
-  return [](Tuple & tuple)
-      -> sequence_pusher_interface<KeyCharT, ValueCharT, SizeType> * {
-    return new sequence_pusher<KeyCharT,
-                               ValueCharT,
-                               SizeType,
+  return [](Tuple& tuple)
+             -> sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>* {
+    return new sequence_pusher<KeyCharT, ValueCharT, SizeType,
                                std::tuple_element_t<Index, Tuple>>(
         std::get<Index>(tuple));
   };
@@ -346,12 +342,11 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
   rt_view<Tuple> rt_root_;
 
   template <class T> bool setFrom(size_t field_index, T&& value) {
-    static std::array<std::function<void(Tuple&, T && )>, Tuple::size> setters =
+    static std::array<std::function<void(Tuple&, T &&)>, Tuple::size> setters =
         {make_setter<
-            T,
-            Tuple,
+            T, Tuple,
             Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
-    std::function<void(Tuple&, T && )> setter(
+    std::function<void(Tuple&, T &&)> setter(
         field_index < setters.size() ? setters[field_index] : nullptr);
     if (setter) {
       setter(root_, std::move(value));
@@ -409,20 +404,17 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
 
   virtual value_setter_interface<KeyCharT, ValueCharT, SizeType>*
   createChildNode(std::basic_string<KeyCharT> const& key) override {
-    static std::array<
-        std::function<
-            value_setter_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
-        Tuple::size> creators = {
-        make_creator<
-            KeyCharT,
-            ValueCharT,
-            SizeType,
-            Tuple,
+    static std::array<std::function<value_setter_interface<KeyCharT, ValueCharT,
+                                                           SizeType>*(Tuple&)>,
+                      Tuple::size>
+        creators = {make_creator<
+            KeyCharT, ValueCharT, SizeType, Tuple,
             Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<value_setter_interface<KeyCharT, ValueCharT, SizeType>*(
-          Tuple&)> creator = creators[field_index];
+          Tuple&)>
+          creator = creators[field_index];
       if (creator)
         return creator(root_);
     }
@@ -431,20 +423,17 @@ class value_setter<KeyCharT, ValueCharT, SizeType, named_tuple<Tags...>>
 
   virtual sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*
   createChildSequence(std::basic_string<KeyCharT> const& key) override {
-    static std::array<
-        std::function<
-            sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
-        Tuple::size> creators = {
-        make_sequence_creator<
-            KeyCharT,
-            ValueCharT,
-            SizeType,
-            Tuple,
+    static std::array<std::function<sequence_pusher_interface<
+                          KeyCharT, ValueCharT, SizeType>*(Tuple&)>,
+                      Tuple::size>
+        creators = {make_sequence_creator<
+            KeyCharT, ValueCharT, SizeType, Tuple,
             Tuple::template tag_index<__ntuple_tag_spec_t<Tags>>::value>()...};
     size_t field_index = rt_root_.index_of(key);
     if (field_index < creators.size()) {
       std::function<sequence_pusher_interface<KeyCharT, ValueCharT, SizeType>*(
-          Tuple&)> creator = creators[field_index];
+          Tuple&)>
+          creator = creators[field_index];
       if (creator)
         return creator(root_);
     }

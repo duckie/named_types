@@ -1,7 +1,9 @@
 #pragma once
+#include "string_literal.hpp"
 #include <type_traits>
 #include <utility>
-#include "string_literal.hpp"
+#include <cstring>
+#include <cstdio>
 
 namespace named_types {
 
@@ -12,10 +14,9 @@ unsigned long long constexpr const_size(Char const* input) {
 
 template <class Char>
 unsigned long long constexpr const_hash(Char const* input) {
-  return *input
-             ? static_cast<unsigned long long>(*input) +
-                   33llu * const_hash(input + 1llu)
-             : 5381llu;
+  return *input ? static_cast<unsigned long long>(*input) +
+                      33llu * const_hash(input + 1llu)
+                : 5381llu;
 }
 
 #ifndef _MSC_VER
@@ -29,19 +30,18 @@ unsigned long long constexpr array_const_hash() { return 5381llu; }
 
 template <class Head, class... Tail>
 unsigned long long constexpr array_const_hash(Head current, Tail... tail) {
-  return 0u != current
-             ? static_cast<unsigned long long>(current) +
-                   33llu * array_const_hash(tail...)
-             : 5381llu;
+  return 0u != current ? static_cast<unsigned long long>(current) +
+                             33llu * array_const_hash(tail...)
+                       : 5381llu;
 }
 #endif
 
 template <class T, T... chars> struct string_literal {
-  static const char data[sizeof...(chars)+1u];
+  static const char data[sizeof...(chars) + 1u];
   static const size_t data_size = sizeof...(chars);
 #ifndef _MSC_VER
   static const unsigned long long hash_value =
-      array_const_hash<T, sizeof...(chars)+1>({chars..., '\0'});
+      array_const_hash<T, sizeof...(chars) + 1>({chars..., '\0'});
 #else
 #pragma warning(disable : 4307)
   static const unsigned long long hash_value = array_const_hash(chars..., '\0');
@@ -70,8 +70,8 @@ template <class T, T... chars> struct string_literal {
 };
 
 template <class T, T... chars>
-const char string_literal<T, chars...>::data[sizeof...(chars)+1u] = {chars...,
-                                                                     '\0'};
+const char string_literal<T, chars...>::data[sizeof...(chars) + 1u] = {chars...,
+                                                                       '\0'};
 
 // concatenate
 
@@ -140,8 +140,9 @@ struct repeat_string<0u, string_literal<CharT, chars...>> {
 
 template <std::size_t Size, class CharT, CharT... chars>
 struct repeat_string<Size, string_literal<CharT, chars...>> {
-  using type = concatenate_t < string_literal<CharT, chars...>,
-        typename repeat_string<Size - 1, string_literal<CharT, chars...>>::type>;
+  using type = concatenate_t<
+      string_literal<CharT, chars...>,
+      typename repeat_string<Size - 1, string_literal<CharT, chars...>>::type>;
 };
 
 template <std::size_t Size, class StringLiteral>
@@ -149,8 +150,8 @@ using repeat_string_t = typename repeat_string<Size, StringLiteral>::type;
 
 // join_repeat
 
-template <std::size_t Size, class CharT, CharT Glue, class StringLiteral> struct join_repeat_string;
-
+template <std::size_t Size, class CharT, CharT Glue, class StringLiteral>
+struct join_repeat_string;
 
 template <class CharT, CharT Glue, CharT... chars>
 struct join_repeat_string<0u, CharT, Glue, string_literal<CharT, chars...>> {
@@ -159,16 +160,21 @@ struct join_repeat_string<0u, CharT, Glue, string_literal<CharT, chars...>> {
 
 template <class CharT, CharT Glue, CharT... chars>
 struct join_repeat_string<1u, CharT, Glue, string_literal<CharT, chars...>> {
-  using type = string_literal<CharT,chars...>;
+  using type = string_literal<CharT, chars...>;
 };
 
 template <std::size_t Size, class CharT, CharT Glue, CharT... chars>
 struct join_repeat_string<Size, CharT, Glue, string_literal<CharT, chars...>> {
-  using type = concatenate_t <string_literal<CharT, chars..., Glue>,
-        typename join_repeat_string<Size - 1, CharT, Glue, string_literal<CharT, chars...>>::type>;
+  using type = concatenate_t<
+      string_literal<CharT, chars..., Glue>,
+      typename join_repeat_string<Size - 1,
+                                  CharT,
+                                  Glue,
+                                  string_literal<CharT, chars...>>::type>;
 };
 
 template <std::size_t Size, class CharT, CharT Glue, class StringLiteral>
-using join_repeat_string_t = typename join_repeat_string<Size, CharT, Glue, StringLiteral>::type;
+using join_repeat_string_t =
+    typename join_repeat_string<Size, CharT, Glue, StringLiteral>::type;
 
-} // namespace string_literal
+} // namespace named_types

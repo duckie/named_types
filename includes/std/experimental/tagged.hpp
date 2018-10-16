@@ -16,10 +16,10 @@
 #ifndef SDT_EXPERIMENTAL_TAGGED_HEADER
 #define SDT_EXPERIMENTAL_TAGGED_HEADER
 
-#include <utility>
 #include <functional>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 namespace std {
 template <class Base, class... Tags> struct tagged;
@@ -56,6 +56,7 @@ struct __getters {
 template <class Base, class... Tags>
 struct tagged : Base, __getters::collect<tagged<Base, Tags...>, Tags...> {
   using Base::Base;
+  using base_tuple = Base;
   tagged() = default;
   tagged(tagged&&) = default;
   tagged(const tagged&) = default;
@@ -119,9 +120,7 @@ struct __indexes {
 
   template <class Type, std::size_t... Is, class... Types>
   struct collect_<Type, index_sequence<Is...>, Types...>
-      : tag_indexer_<__tag_spec_t<Types>,
-                     __tag_elem_t<Types>,
-                     Is>... {
+      : tag_indexer_<__tag_spec_t<Types>, __tag_elem_t<Types>, Is>... {
     constexpr collect_(){};
     ~collect_() = default;
     constexpr collect_(const collect_&) = default;
@@ -161,8 +160,9 @@ struct __indexes {
     }
 
     template <class Tag>
-    static constexpr typename tag_indexer_<Tag, void, sizeof...(Types)>::
-        tag_index permissive_get_tag_index(...) {
+    static constexpr
+        typename tag_indexer_<Tag, void, sizeof...(Types)>::tag_index
+        permissive_get_tag_index(...) {
       return {};
     }
 
@@ -191,7 +191,7 @@ struct __indexes {
 
     template <class Tag>
     static constexpr tag_indexer_<Tag, void, sizeof...(Types)>
-        permissive_get_tag_indexer(...) {
+    permissive_get_tag_indexer(...) {
       return {};
     }
 
@@ -211,14 +211,13 @@ struct indexed_tagged
 };
 
 template <class F, class S>
-using tagged_pair =
-    tagged<pair<__tag_elem_t<F>, __tag_elem_t<S>>,
-           __tag_spec_t<F>,
-           __tag_spec_t<S>>;
+using tagged_pair = tagged<pair<__tag_elem_t<F>, __tag_elem_t<S>>,
+                           __tag_spec_t<F>,
+                           __tag_spec_t<S>>;
 
 template <class... Types>
 using __tagged_tuple =
-    indexed_tagged<tuple<typename __tag_elem<Types>::type ... >, Types...>;
+    indexed_tagged<tuple<typename __tag_elem<Types>::type...>, Types...>;
 
 /**
  * Making tagged_tuple a new type is mandatory to make
@@ -231,20 +230,22 @@ template <class... Types> struct tagged_tuple : __tagged_tuple<Types...> {
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type const&
 get(tagged_tuple<Types...> const& input) {
-  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
+      static_cast<typename tagged_tuple<Types...>::base_tuple const&>(input));
 };
 
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type&
 get(tagged_tuple<Types...>& input) {
-  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(input);
+  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
+      static_cast<typename tagged_tuple<Types...>::base_tuple&>(input));
 };
 
 template <class Tag, class... Types>
 typename tagged_tuple<Types...>::template type_at<Tag>::raw_type&&
 get(tagged_tuple<Types...>&& input) {
-  return move(get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
-      std::forward<tagged_tuple<Types...>>(input)));
+  return get<tagged_tuple<Types...>::template tag_index<Tag>::value>(
+      static_cast<typename tagged_tuple<Types...>::base_tuple&&>(input));
 };
 
 namespace tag {
@@ -260,12 +261,12 @@ struct basic_tag {
     ~getter() = default;
 
    private:
-    friend struct __getters;
+    friend struct std::__getters;
   };
 
-  friend struct __getters;
+  friend struct std::__getters;
 };
-}
-}
+} // namespace tag
+} // namespace std
 
 #endif // SDT_EXPERIMENTAL_TAGGED_HEADER

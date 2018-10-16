@@ -1,9 +1,9 @@
 #pragma once
-#include <type_traits>
-#include <cstdint>
+#include "named_types/extensions/type_traits.hpp"
 #include "named_types/named_tuple.hpp"
 #include "named_types/rt_named_tuple.hpp"
-#include "named_types/extensions/type_traits.hpp"
+#include <cstdint>
+#include <type_traits>
 
 namespace named_types {
 namespace extensions {
@@ -11,7 +11,7 @@ namespace generation {
 
 template <class T> struct printf_sequence {
   using type = void;
-  static T evaluate(T value){ return value; };
+  static T evaluate(T value) { return value; };
 };
 
 template <> struct printf_sequence<char const*> {
@@ -61,7 +61,7 @@ template <> struct printf_sequence<double> {
   static inline double evaluate(double data) { return data; };
 };
 
-//template <typename ... T> forward_as_flattened_tuple(
+// template <typename ... T> forward_as_flattened_tuple(
 
 } // namespace generation
 } // namespace extensions
